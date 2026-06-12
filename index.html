@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>arome — créations</title>
-  <meta name="description" content="arome — créations de Mathys Lemarié : photo, vidéo, design." />
+  <meta name="description" content="arome — photo, vidéo, design." />
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=45" />
+  <link rel="stylesheet" href="css/style.css?v=48" />
 </head>
 <body class="mode-home">
 
@@ -18,11 +18,12 @@
   <!-- ===== Marque : se déplace de l'écran d'accueil vers la barre du haut ===== -->
   <header class="brand">
     <a class="brand__logo" data-go="home" data-admin-trigger aria-label="arome — accueil">
-      <img class="brand__logomark" src="images/arome_logo.svg?v=45" alt="arome" />
+      <img class="brand__logomark" src="images/arome_logo.svg?v=48" alt="arome" />
     </a>
     <p class="brand__tag" id="heroTagline">…</p>
     <nav class="brand__nav">
       <button type="button" data-go="portfolio">Portfolio</button>
+      <button type="button" data-go="inspirations">Inspirations</button>
       <button type="button" data-go="about">À propos</button>
       <button type="button" data-go="contact">Contact</button>
     </nav>
@@ -74,6 +75,19 @@
       </div>
     </section>
 
+    <!-- Inspirations -->
+    <section class="panel" data-panel="inspirations">
+      <div class="section">
+        <header class="section__head">
+          <h2 class="section__title">Inspirations</h2>
+          <p class="section__lead">Les films, musiques et lectures qui nourrissent mon univers.</p>
+        </header>
+        <div class="insp-wall" id="inspWall">
+          <div class="gallery__loading">Chargement…</div>
+        </div>
+      </div>
+    </section>
+
     <!-- À propos -->
     <section class="panel" data-panel="about">
       <div class="section">
@@ -95,26 +109,12 @@
         <h2 class="section__title section__title--xl">On travaille ensemble ?</h2>
         <p class="section__lead">Un projet, une collab, une question — la porte est ouverte.</p>
         <div class="contact-links" id="contactLinks"></div>
-
-        <div class="guestbook">
-          <h3 class="section__title">Livre d'or</h3>
-          <p class="section__lead">Laisse un mot, il s'affiche en temps réel.</p>
-          <form id="guestbookForm" class="gb-form">
-            <input type="text" id="gbName" name="name" placeholder="Ton nom" maxlength="40" required />
-            <textarea id="gbMessage" name="message" placeholder="Ton message…" maxlength="280" rows="3" required></textarea>
-            <button type="submit" class="btn">Envoyer</button>
-            <p id="gbStatus" class="gb-form__status" role="status"></p>
-          </form>
-          <ul id="gbList" class="gb-list">
-            <li class="gb-list__empty">Chargement des messages…</li>
-          </ul>
-        </div>
       </div>
     </section>
 
     <footer class="foot">
-      <span class="foot__sign">arome</span>
-      <span class="foot__meta">Paris · © <span id="year"></span> Mathys Lemarié · <span class="visit"><span id="visitCount">…</span> visites</span></span>
+      <img class="foot__logo" src="images/arome_logo.svg?v=48" alt="arome" />
+      <span class="foot__meta">Paris · © <span id="year"></span> arome</span>
     </footer>
   </main>
 
@@ -138,8 +138,8 @@
   <!-- ===== Curseur personnalisé ===== -->
   <div class="cursor" id="cursor" aria-hidden="true"></div>
 
-  <script type="module" src="js/app.js?v=45"></script>
-  <script type="module" src="js/home-fx.js?v=45"></script>
-  <script type="module" src="js/cursor.js?v=45"></script>
+  <script type="module" src="js/app.js?v=48"></script>
+  <script type="module" src="js/home-fx.js?v=48"></script>
+  <script type="module" src="js/cursor.js?v=48"></script>
 </body>
 </html>

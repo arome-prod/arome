@@ -40,3 +40,11 @@ export const DEMO = [
   { id: "demo-affiches", title: "Affiches", category: "Design", order: 2, photos: [] },
   { id: "demo-echos", title: "Échos — clip", category: "Vidéo", order: 3, link: "#", photos: [] },
 ];
+
+// Inspirations fictives affichées tant que la base est vide.
+// kind : music | video | film | serie | livre | autre
+export const DEMO_INSP = [
+  { id: "di-film", kind: "film", title: "Exemple de film", subtitle: "Réalisateur", order: 0 },
+  { id: "di-livre", kind: "livre", title: "Exemple de livre", subtitle: "Auteur", order: 1 },
+  { id: "di-serie", kind: "serie", title: "Exemple de série", subtitle: "Créateur", order: 2 },
+];

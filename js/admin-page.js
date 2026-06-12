@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=45";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=45";
+import { db, isConfigured } from "./firebase.js?v=48";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=48";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -29,7 +29,14 @@ if ($("gateHint")) {
 let content = JSON.parse(JSON.stringify(DEFAULTS));
 let albums = [];
 let videos = [];
+let insp = [];
+let inspCover = "";
 let managingId = null;
+
+const INSP_LABEL = {
+  music: "Musique", video: "Vidéo", film: "Film",
+  serie: "Série", livre: "Livre", autre: "Autre",
+};
 
 // ====================================================================
 //  Connexion
@@ -378,6 +385,19 @@ function wire() {
       if (t) $("yt-title").value = t;
     }
   });
+
+  // Inspirations
+  $("inspAdd").addEventListener("click", addInspiration);
+  $("insp-kind").addEventListener("change", toggleInspCover);
+  $("insp-cover").addEventListener("change", async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try {
+      inspCover = await fileToDataURL(f);
+      $("insp-coverPrev").innerHTML = `<img src="${inspCover}" alt="" /><span>Couverture prête ✦</span>`;
+    } catch (err) { console.error(err); toast("Image non valide."); }
+  });
+  toggleInspCover();
 }
 
 // ====================================================================
@@ -444,6 +464,128 @@ async function moveVideo(id, dir) {
 }
 
 // ====================================================================
+//  Inspirations
+// ====================================================================
+// Construit l'URL d'intégration d'un lien Spotify / Apple Music.
+function musicEmbed(url) {
+  const s = String(url || "").trim();
+  let m = s.match(/open\.spotify\.com\/(?:intl-[a-z]{2}\/)?(track|album|playlist|artist|episode|show)\/([A-Za-z0-9]+)/);
+  if (m) {
+    const type = m[1], id = m[2];
+    const compact = (type === "track" || type === "episode");
+    return { source: "spotify", embed: `https://open.spotify.com/embed/${type}/${id}`, h: compact ? 152 : 352 };
+  }
+  if (/music\.apple\.com\//.test(s)) {
+    let embed = s.replace("music.apple.com", "embed.music.apple.com");
+    embed += (embed.includes("?") ? "&" : "?") + "theme=dark";
+    return { source: "apple", embed, h: 175 };
+  }
+  return null;
+}
+function ytIdFromEmbed(e) {
+  const m = String(e || "").match(/embed\/([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : "";
+}
+
+function toggleInspCover() {
+  const kind = $("insp-kind").value;
+  const poster = !(kind === "music" || kind === "video");
+  $("insp-coverLabel").style.display = poster ? "" : "none";
+  $("insp-url").placeholder = kind === "music"
+    ? "Lien Spotify ou Apple Music"
+    : kind === "video" ? "Lien YouTube (youtu.be/… ou watch?v=…)"
+      : "Lien externe (optionnel — Letterboxd, Babelio, IMDb…)";
+}
+
+function renderInspAdmin() {
+  const box = $("inspList"); if (!box) return;
+  $("inspCount").textContent = insp.length;
+  if (!insp.length) { box.innerHTML = '<p class="adm-empty">Aucune inspiration. Ajoute-en ci-dessus.</p>'; return; }
+  box.innerHTML = insp.map((it, i) => {
+    const label = INSP_LABEL[it.kind] || "Autre";
+    const ytId = it.source === "youtube" ? ytIdFromEmbed(it.embed) : "";
+    const thumb = it.cover
+      ? `<img class="adm-arow__img" src="${esc(it.cover)}" alt="" />`
+      : (ytId
+          ? `<img class="adm-arow__img" src="https://img.youtube.com/vi/${esc(ytId)}/default.jpg" alt="" />`
+          : `<span class="adm-arow__img adm-arow__img--empty">${esc(label.slice(0, 1))}</span>`);
+    return `<div class="adm-arow">
+        ${thumb}
+        <div class="adm-arow__body">
+          <span class="adm-arow__title">${esc(it.title || "(sans titre)")}</span>
+          <span class="adm-arow__meta">${esc(label)}${it.subtitle ? " · " + esc(it.subtitle) : ""}</span>
+        </div>
+        <div class="adm-arow__actions">
+          <button data-iact="up" data-id="${it.id}" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button>
+          <button data-iact="down" data-id="${it.id}" ${i === insp.length - 1 ? "disabled" : ""} aria-label="Descendre">↓</button>
+          <button data-iact="del" data-id="${it.id}" class="adm-danger" aria-label="Supprimer">Suppr.</button>
+        </div>
+      </div>`;
+  }).join("");
+  box.querySelectorAll("[data-iact]").forEach((b) => {
+    const id = b.dataset.id, act = b.dataset.iact;
+    b.addEventListener("click", () => {
+      if (act === "del") delInsp(id);
+      else if (act === "up") moveInsp(id, -1);
+      else if (act === "down") moveInsp(id, 1);
+    });
+  });
+}
+
+async function addInspiration() {
+  if (!isConfigured) { toast("Firebase non configuré."); return; }
+  const kind = $("insp-kind").value;
+  const url = $("insp-url").value.trim();
+  const title = $("insp-title").value.trim();
+  const subtitle = $("insp-sub").value.trim();
+  let source = "", embed = "", h = 0;
+
+  if (kind === "music") {
+    const e = musicEmbed(url);
+    if (!e) { toast("Lien Spotify ou Apple Music non reconnu."); return; }
+    source = e.source; embed = e.embed; h = e.h;
+  } else if (kind === "video") {
+    const vid = youtubeId(url);
+    if (!vid) { toast("Lien YouTube non reconnu."); return; }
+    source = "youtube"; embed = `https://www.youtube.com/embed/${vid}?rel=0`;
+  } else if (!title) {
+    toast("Donne un titre."); return;
+  }
+
+  const order = insp.length ? Math.max(...insp.map((x) => x.order || 0)) + 1 : 0;
+  const btn = $("inspAdd"); btn.disabled = true;
+  try {
+    await push(ref(db, "inspirations"), {
+      kind, source, embed, h,
+      url: url || "", title: title || "", subtitle: subtitle || "",
+      cover: inspCover || "", order, createdAt: Date.now(),
+    });
+    $("insp-url").value = ""; $("insp-title").value = ""; $("insp-sub").value = "";
+    $("insp-cover").value = ""; inspCover = ""; $("insp-coverPrev").innerHTML = "";
+    toast("Inspiration ajoutée ✦");
+  } catch (e) {
+    console.error(e);
+    toast("Échec : " + (e.message || "écriture refusée"));
+  } finally { btn.disabled = false; }
+}
+
+async function delInsp(id) {
+  if (!confirm("Supprimer cette inspiration ?")) return;
+  await remove(ref(db, "inspirations/" + id));
+  toast("Inspiration supprimée");
+}
+async function moveInsp(id, dir) {
+  const idx = insp.findIndex((x) => x.id === id);
+  const swap = idx + dir;
+  if (idx < 0 || swap < 0 || swap >= insp.length) return;
+  const a = insp[idx], b = insp[swap];
+  await update(ref(db, "inspirations"), {
+    [`${a.id}/order`]: b.order ?? swap,
+    [`${b.id}/order`]: a.order ?? idx,
+  });
+}
+
+// ====================================================================
 //  Données en direct
 // ====================================================================
 if (isConfigured) {
@@ -470,6 +612,13 @@ if (isConfigured) {
     arr.sort((a, b) => (a.order || 0) - (b.order || 0));
     videos = arr;
     renderVideos();
+  });
+  onValue(ref(db, "inspirations"), (snap) => {
+    const arr = [];
+    snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    insp = arr;
+    renderInspAdmin();
   });
 }
 

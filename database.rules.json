@@ -61,6 +61,24 @@
       }
     },
 
+    "inspirations": {
+      ".read": true,
+      ".write": true,
+      "$i": {
+        "kind":      { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "source":    { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "embed":     { ".validate": "newData.isString() && newData.val().length <= 800" },
+        "h":         { ".validate": "newData.isNumber()" },
+        "url":       { ".validate": "newData.isString() && newData.val().length <= 800" },
+        "title":     { ".validate": "newData.isString() && newData.val().length <= 200" },
+        "subtitle":  { ".validate": "newData.isString() && newData.val().length <= 200" },
+        "cover":     { ".validate": "newData.isString() && newData.val().length <= 3000000" },
+        "order":     { ".validate": "newData.isNumber()" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "$other":    { ".validate": false }
+      }
+    },
+
     "guestbook": {
       ".read": true,
       ".write": false,

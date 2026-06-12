@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=45";
-import { DEFAULTS, DEMO } from "./config.js?v=45";
+import { db, isConfigured } from "./firebase.js?v=48";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=48";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -211,6 +211,7 @@ function renderContent(c) {
 // ====================================================================
 let allAlbums = [];
 let allVideos = [];
+let allInsp = [];
 let activeFilter = "all";
 
 function shownAlbums() { return allAlbums.length ? allAlbums : DEMO; }
@@ -323,28 +324,54 @@ function renderAlbums() {
   requestAnimationFrame(updateAlbumArrows);
 }
 
-// Survol d'une carte album → mini-diaporama de ses photos
+// Survol d'une carte album → mini-diaporama de ses photos (fondu enchaîné)
+const HOVER_FADE = 900;     // durée du fondu (doit suivre le CSS .tile__fade)
+const HOVER_HOLD = 1700;    // intervalle entre deux photos (pause + fondu)
 function setupAlbumHover() {
   const grid = $("albums");
   if (!grid) return;
   grid.querySelectorAll('.tile[data-album]').forEach((tile) => {
     const a = shownAlbums().find((x) => x.id === tile.dataset.album);
-    const img = tile.querySelector(".tile__media img");
-    if (!a || !img) return;
+    const media = tile.querySelector(".tile__media");
+    const base = media && media.querySelector("img");
+    if (!a || !base) return;
     const srcs = photosOf(a).map(mediaThumb).filter(Boolean);
     if (srcs.length < 2) return;
 
-    const cover = img.getAttribute("src");
-    let timer = null, i = 0;
+    const cover = base.getAttribute("src");
+    // Calque superposé qui apparaît en fondu par-dessus la couverture
+    const fade = document.createElement("img");
+    fade.className = "tile__fade";
+    fade.alt = "";
+    media.appendChild(fade);
+
+    let timer = null, i = 0, swap = null;
+
+    const step = () => {
+      i = (i + 1) % srcs.length;
+      const next = srcs[i];
+      const pre = new Image();
+      pre.onload = () => {
+        fade.src = next;
+        requestAnimationFrame(() => fade.classList.add("is-on"));
+        // une fois le fondu terminé, on fige la couverture et on efface le calque
+        clearTimeout(swap);
+        swap = setTimeout(() => { base.src = next; fade.classList.remove("is-on"); }, HOVER_FADE);
+      };
+      pre.src = next;
+    };
+
     tile.addEventListener("mouseenter", () => {
       i = 0;
-      clearInterval(timer);
-      timer = setInterval(() => { i = (i + 1) % srcs.length; img.src = srcs[i]; }, 750);
+      clearInterval(timer); clearTimeout(swap);
+      step();
+      timer = setInterval(step, HOVER_HOLD);
     });
     tile.addEventListener("mouseleave", () => {
-      clearInterval(timer);
+      clearInterval(timer); clearTimeout(swap);
       timer = null;
-      img.src = cover;
+      fade.classList.remove("is-on");
+      base.src = cover;
     });
   });
 }
@@ -460,6 +487,68 @@ document.addEventListener("click", (e) => {
   iframe.allowFullscreen = true;
   f.replaceWith(iframe);
 });
+
+// ====================================================================
+//  Inspirations : films, musiques, lectures (lecteurs intégrés + posters)
+// ====================================================================
+const KIND_LABEL = {
+  music: "Musique", video: "Vidéo", film: "Film",
+  serie: "Série", livre: "Livre", autre: "Autre",
+};
+
+function shownInsp() { return allInsp.length ? allInsp : DEMO_INSP; }
+
+function inspCardHTML(it) {
+  const kind = it.kind || "autre";
+  const title = esc(it.title || "");
+  const sub = esc(it.subtitle || "");
+  const cap = (title || sub)
+    ? `<div class="insp-cap">${title ? `<span class="insp-cap__title">${title}</span>` : ""}${sub ? `<span class="insp-cap__sub">${sub}</span>` : ""}</div>`
+    : "";
+
+  // Vidéo YouTube → lecteur 16:9
+  if (kind === "video" && it.embed) {
+    return `<div class="insp-card">
+        <div class="insp-embed insp-embed--video">
+          <iframe src="${esc(it.embed)}" title="${title || "Vidéo"}" loading="lazy"
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen></iframe>
+        </div>${cap}
+      </div>`;
+  }
+  // Musique → lecteur Spotify / Apple Music à hauteur fixe
+  if (kind === "music" && it.embed) {
+    const h = it.h || 152;
+    return `<div class="insp-card">
+        <iframe class="insp-embed insp-embed--music" style="height:${h}px"
+          src="${esc(it.embed)}" title="${title || "Musique"}" loading="lazy"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+        ${cap}
+      </div>`;
+  }
+  // Poster → film / série / livre / autre
+  const label = KIND_LABEL[kind] || "Autre";
+  const media = it.cover
+    ? `<img src="${esc(it.cover)}" alt="${title}" loading="lazy" />`
+    : `<span class="insp-poster__empty">${esc((it.title || label).slice(0, 1).toUpperCase())}</span>`;
+  const inner = `<span class="insp-poster">${media}<span class="insp-poster__tag">${esc(label)}</span></span>
+      <div class="insp-cap">
+        ${title ? `<span class="insp-cap__title">${title}</span>` : ""}
+        <span class="insp-cap__sub">${sub ? sub + (it.url ? " · " : "") : ""}${it.url ? "Voir ↗" : (sub ? "" : esc(label))}</span>
+      </div>`;
+  return it.url
+    ? `<a class="insp-card insp-card--poster" href="${esc(it.url)}" target="_blank" rel="noopener">${inner}</a>`
+    : `<div class="insp-card insp-card--poster">${inner}</div>`;
+}
+
+function renderInspirations() {
+  const wall = $("inspWall");
+  if (!wall) return;
+  const list = shownInsp();
+  wall.innerHTML = list.length
+    ? list.map(inspCardHTML).join("")
+    : '<div class="gallery__loading">Bientôt — mes inspirations arrivent ici.</div>';
+}
 
 function openAlbum(id) {
   const a = shownAlbums().find((x) => x.id === id);
@@ -582,76 +671,6 @@ function observeReveals() {
 observeReveals();
 
 // ====================================================================
-//  Firebase : compteur + livre d'or
-// ====================================================================
-function initVisitCounter() {
-  const el = $("visitCount");
-  if (!el) return;
-  const counterRef = ref(db, "stats/visits");
-  if (sessionStorage.getItem("counted") !== "1") {
-    runTransaction(counterRef, (cur) => (cur || 0) + 1)
-      .then(() => sessionStorage.setItem("counted", "1"))
-      .catch((err) => console.error("Compteur :", err));
-  }
-  onValue(counterRef, (snap) => {
-    el.textContent = (snap.val() || 0).toLocaleString("fr-FR");
-  });
-}
-
-function initGuestbook() {
-  const messagesRef = ref(db, "guestbook");
-  const form = $("guestbookForm"), statusEl = $("gbStatus"), listEl = $("gbList");
-  if (!form || !listEl) return;
-
-  const recent = query(messagesRef, orderByChild("createdAt"), limitToLast(50));
-  onValue(recent, (snap) => {
-    const items = [];
-    snap.forEach((c) => { items.push({ id: c.key, ...c.val() }); });
-    items.reverse();
-    listEl.innerHTML = items.length
-      ? items.map(renderMessage).join("")
-      : '<li class="gb-list__empty">Aucun message. Sois le premier !</li>';
-  });
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = $("gbName").value.trim();
-    const message = $("gbMessage").value.trim();
-    if (!name || !message) return;
-    const btn = form.querySelector("button");
-    btn.disabled = true; statusEl.textContent = "Envoi…";
-    try {
-      await push(messagesRef, {
-        name: name.slice(0, 40),
-        message: message.slice(0, 280),
-        createdAt: serverTimestamp(),
-      });
-      form.reset();
-      statusEl.textContent = "Merci pour ton message ! ✦";
-    } catch (err) {
-      console.error("Envoi :", err);
-      statusEl.textContent = "Oups, échec de l'envoi.";
-    } finally {
-      btn.disabled = false;
-      setTimeout(() => (statusEl.textContent = ""), 4000);
-    }
-  });
-}
-
-function renderMessage(it) {
-  const date = it.createdAt
-    ? new Date(it.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })
-    : "";
-  return `<li class="gb-list__item">
-      <div class="gb-list__head">
-        <span class="gb-list__name">${esc(it.name)}</span>
-        <span class="gb-list__date">${date}</span>
-      </div>
-      <p class="gb-list__msg">${esc(it.message)}</p>
-    </li>`;
-}
-
-// ====================================================================
 //  Démarrage
 // ====================================================================
 if (isConfigured) {
@@ -670,14 +689,15 @@ if (isConfigured) {
     allVideos = arr;
     renderAll();
   });
-  initVisitCounter();
-  initGuestbook();
+  onValue(ref(db, "inspirations"), (snap) => {
+    const arr = [];
+    snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    allInsp = arr;
+    renderInspirations();
+  });
 } else {
   renderContent({});
   renderAll();
-  const vc = $("visitCount"); if (vc) vc.textContent = "—";
-  const gb = $("gbList");
-  if (gb)
-    gb.innerHTML =
-      '<li class="gb-list__empty">⚙️ Configure Firebase dans js/firebase-config.js pour activer le livre d\'or et l’admin.</li>';
+  renderInspirations();
 }

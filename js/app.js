@@ -9,8 +9,8 @@ import {
   onValue,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=68";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=68";
+import { db, isConfigured } from "./firebase.js?v=70";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=70";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -152,23 +152,15 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
 })();
 
 // ====================================================================
-//  Accès admin : #admin dans l'URL, ou triple-clic sur « arome »
-//  → ouvre la page dédiée admin.html
+//  Accès admin : uniquement via #admin dans l'URL → ouvre admin.html
+//  (plus de triple-clic sur le logo)
 // ====================================================================
 (function adminAccess() {
-  if (location.hash === "#admin") { location.href = "admin.html"; return; }
-  document.querySelectorAll("[data-admin-trigger]").forEach((el) => {
-    let clicks = 0, timer = null;
-    el.addEventListener("click", () => {
-      clicks++; clearTimeout(timer);
-      timer = setTimeout(() => (clicks = 0), 600);
-      if (clicks >= 3) { location.href = "admin.html"; }
-    });
-  });
+  if (location.hash === "#admin") location.href = "admin.html";
 })();
 
 // ====================================================================
-//  Easter egg : taper « arome » au clavier → petit clin d'œil en fondu
+//  Easter egg : taper « cyberpunk » → curseur spécial (et retour)
 // ====================================================================
 (function easterEgg() {
   let buf = "", el = null, timer = null;
@@ -187,7 +179,6 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
   }
 
   const EGGS = [
-    { seq: "arome", run: () => flash("✦ arôme — ce qui reste quand l’image s’efface") },
     { seq: "cyberpunk", run: () => {
         const on = document.documentElement.classList.toggle("cursor-cyber");
         flash(on ? "▮ mode cyberpunk — wake the f*** up, samurai" : "curseur normal rétabli");

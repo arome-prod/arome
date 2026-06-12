@@ -49,6 +49,18 @@
       }
     },
 
+    "youtube": {
+      ".read": true,
+      ".write": true,
+      "$v": {
+        "vid":       { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "title":     { ".validate": "newData.isString() && newData.val().length <= 200" },
+        "order":     { ".validate": "newData.isNumber()" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "$other":    { ".validate": false }
+      }
+    },
+
     "guestbook": {
       ".read": true,
       ".write": false,

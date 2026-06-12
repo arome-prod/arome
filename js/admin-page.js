@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=24";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=24";
+import { db, isConfigured } from "./firebase.js?v=26";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=26";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -28,6 +28,7 @@ if ($("gateHint")) {
 
 let content = JSON.parse(JSON.stringify(DEFAULTS));
 let albums = [];
+let videos = [];
 let managingId = null;
 
 // ====================================================================
@@ -313,26 +314,6 @@ async function addPhotos(files) {
   toast(`${done} photo(s) ajoutée(s) ✦`);
 }
 
-async function addVideo() {
-  if (!managingId) return;
-  const id = youtubeId($("m-yturl").value);
-  if (!id) { toast("Lien YouTube non reconnu."); return; }
-  let title = $("m-yttitle").value.trim();
-  if (!title) title = await fetchYoutubeTitle(id); // best effort
-  const a = albumById(managingId);
-  const order = photosOf(a).length ? Math.max(...photosOf(a).map((p) => p.order || 0)) + 1 : 0;
-  try {
-    await push(ref(db, `albums/${managingId}/photos`), {
-      youtube: id, title: title || "", order, createdAt: Date.now(),
-    });
-    $("m-yturl").value = ""; $("m-yttitle").value = "";
-    toast("Vidéo ajoutée ✦");
-  } catch (e) {
-    console.error(e);
-    toast("Échec : " + (e.message || "écriture refusée"));
-  }
-}
-
 async function setCover(pid) {
   if (!managingId) return;
   await update(ref(db, "albums/" + managingId), { coverId: pid });
@@ -387,14 +368,78 @@ function wire() {
   $("m-files").addEventListener("change", (e) => {
     if (e.target.files && e.target.files.length) addPhotos(e.target.files);
   });
-  $("addVideo").addEventListener("click", addVideo);
-  // Récupère le titre automatiquement quand on quitte le champ lien
-  $("m-yturl").addEventListener("blur", async () => {
-    const id = youtubeId($("m-yturl").value);
-    if (id && !$("m-yttitle").value.trim()) {
+
+  // Contenu YouTube (indépendant)
+  $("ytAdd").addEventListener("click", addYoutube);
+  $("yt-url").addEventListener("blur", async () => {
+    const id = youtubeId($("yt-url").value);
+    if (id && !$("yt-title").value.trim()) {
       const t = await fetchYoutubeTitle(id);
-      if (t) $("m-yttitle").value = t;
+      if (t) $("yt-title").value = t;
     }
+  });
+}
+
+// ====================================================================
+//  Contenu YouTube
+// ====================================================================
+function renderVideos() {
+  const box = $("ytList"); if (!box) return;
+  $("ytCount").textContent = videos.length;
+  if (!videos.length) { box.innerHTML = '<p class="adm-empty">Aucune vidéo. Ajoute-en ci-dessus.</p>'; return; }
+  box.innerHTML = videos.map((v, i) => `
+    <div class="adm-arow">
+      <img class="adm-arow__img" src="https://img.youtube.com/vi/${esc(v.vid)}/default.jpg" alt="" />
+      <div class="adm-arow__body">
+        <span class="adm-arow__title">${esc(v.title || "(sans titre)")}</span>
+        <span class="adm-arow__meta">YouTube · ${esc(v.vid)}</span>
+      </div>
+      <div class="adm-arow__actions">
+        <button data-vact="up" data-id="${v.id}" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button>
+        <button data-vact="down" data-id="${v.id}" ${i === videos.length - 1 ? "disabled" : ""} aria-label="Descendre">↓</button>
+        <button data-vact="del" data-id="${v.id}" class="adm-danger" aria-label="Supprimer">Suppr.</button>
+      </div>
+    </div>`).join("");
+  box.querySelectorAll("[data-vact]").forEach((b) => {
+    const id = b.dataset.id, act = b.dataset.vact;
+    b.addEventListener("click", () => {
+      if (act === "del") delVideo(id);
+      else if (act === "up") moveVideo(id, -1);
+      else if (act === "down") moveVideo(id, 1);
+    });
+  });
+}
+
+async function addYoutube() {
+  if (!isConfigured) { toast("Firebase non configuré."); return; }
+  const id = youtubeId($("yt-url").value);
+  if (!id) { toast("Lien YouTube non reconnu."); return; }
+  let title = $("yt-title").value.trim();
+  if (!title) title = await fetchYoutubeTitle(id);
+  const order = videos.length ? Math.max(...videos.map((v) => v.order || 0)) + 1 : 0;
+  const btn = $("ytAdd"); btn.disabled = true;
+  try {
+    await push(ref(db, "youtube"), { vid: id, title: title || "", order, createdAt: Date.now() });
+    $("yt-url").value = ""; $("yt-title").value = "";
+    toast("Vidéo ajoutée ✦");
+  } catch (e) {
+    console.error(e);
+    toast("Échec : " + (e.message || "écriture refusée"));
+  } finally { btn.disabled = false; }
+}
+async function delVideo(id) {
+  if (!confirm("Supprimer cette vidéo ?")) return;
+  await remove(ref(db, "youtube/" + id));
+  toast("Vidéo supprimée");
+}
+async function moveVideo(id, dir) {
+  const idx = videos.findIndex((v) => v.id === id);
+  const swap = idx + dir;
+  if (idx < 0 || swap < 0 || swap >= videos.length) return;
+  const a = videos[idx], b = videos[swap];
+  await update(ref(db, "youtube"), {
+    [`${a.id}/order`]: b.order ?? swap,
+    [`${b.id}/order`]: a.order ?? idx,
   });
 }
 
@@ -418,6 +463,13 @@ if (isConfigured) {
     renderAdminAlbums();
     refreshCatList();
     if (managingId && !$("albumManager").hidden) renderManagerPhotos();
+  });
+  onValue(ref(db, "youtube"), (snap) => {
+    const arr = [];
+    snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    videos = arr;
+    renderVideos();
   });
 }
 

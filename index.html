@@ -8,14 +8,14 @@
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=24" />
+  <link rel="stylesheet" href="css/style.css?v=26" />
 </head>
 <body class="mode-home">
 
   <!-- ===== Marque : se déplace de l'écran d'accueil vers la barre du haut ===== -->
   <header class="brand">
     <a class="brand__logo" data-go="home" data-admin-trigger aria-label="arome — accueil">
-      <img class="brand__logomark" src="images/arome_logo.svg?v=24" alt="arome" />
+      <img class="brand__logomark" src="images/arome_logo.svg?v=26" alt="arome" />
     </a>
     <p class="brand__tag" id="heroTagline">…</p>
     <nav class="brand__nav">
@@ -53,6 +53,16 @@
             <div id="albumLinkWrap"></div>
           </header>
           <div class="gallery" id="albumPhotos"></div>
+        </div>
+
+        <!-- Vue : contenu YouTube (liste de vidéos) -->
+        <div id="youtubeView" hidden>
+          <button class="album-back" id="ytBack">← Tous les projets</button>
+          <header class="album-head">
+            <p class="eyebrow">Vidéos</p>
+            <h2 class="section__title section__title--xl">Contenu YouTube</h2>
+          </header>
+          <div class="yt-list" id="youtubeList"></div>
         </div>
 
       </div>
@@ -117,6 +127,6 @@
     <button class="lightbox__nav lightbox__next" id="lbNext" aria-label="Suivant">›</button>
   </div>
 
-  <script type="module" src="js/app.js?v=24"></script>
+  <script type="module" src="js/app.js?v=26"></script>
 </body>
 </html>

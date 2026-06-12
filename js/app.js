@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=24";
-import { DEFAULTS, DEMO } from "./config.js?v=24";
+import { db, isConfigured } from "./firebase.js?v=26";
+import { DEFAULTS, DEMO } from "./config.js?v=26";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -48,8 +48,13 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
   }
   setActive("portfolio");
 
+  // Durées selon le sens (le retour à l'accueil est plus lent pour
+  // que le zoom du logo reste en phase avec son déplacement).
+  const TRANS_TO_SECTION = "transform 0.62s cubic-bezier(0.7, 0, 0.2, 1)";
+  const TRANS_TO_HOME = "transform 0.95s cubic-bezier(0.6, 0, 0.25, 1)";
+
   // Anime les éléments de la marque entre deux mises en page.
-  function flip(change) {
+  function flip(change, trans) {
     if (reduce) { change(); return; }
     const first = flipEls.map((el) => el.getBoundingClientRect());
     change();
@@ -65,7 +70,7 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
     void brand.offsetWidth; // force un reflow
     requestAnimationFrame(() => {
       flipEls.forEach((el) => {
-        el.style.transition = "transform 0.85s cubic-bezier(0.65, 0, 0.35, 1)";
+        el.style.transition = trans || TRANS_TO_SECTION;
         el.style.transform = "";
       });
     });
@@ -103,7 +108,7 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
 
     if (key === "home") {
       if (home) return;
-      flip(() => body.classList.add("mode-home"));
+      flip(() => body.classList.add("mode-home"), TRANS_TO_HOME);
       return;
     }
 
@@ -186,6 +191,7 @@ function renderContent(c) {
 //  Portfolio : albums par catégorie → page album → photos
 // ====================================================================
 let allAlbums = [];
+let allVideos = [];
 let activeFilter = "all";
 
 function shownAlbums() { return allAlbums.length ? allAlbums : DEMO; }
@@ -263,6 +269,22 @@ function renderAlbums() {
         </span>
       </button>`;
   }).join("");
+
+  // Carte spéciale « Contenu YouTube » (si des vidéos existent)
+  if (allVideos.length && (activeFilter === "all" || activeFilter === "Vidéo")) {
+    const thumb = `https://img.youtube.com/vi/${esc(allVideos[0].vid)}/hqdefault.jpg`;
+    grid.insertAdjacentHTML("beforeend", `
+      <button class="tile" data-youtube="1" aria-label="Contenu YouTube">
+        <span class="tile__media">
+          <img src="${thumb}" alt="" loading="lazy" />
+          <span class="tile__play" aria-hidden="true">▶</span>
+        </span>
+        <span class="tile__cap">
+          <span class="tile__name">Contenu YouTube</span>
+          <span class="tile__cat">${allVideos.length} vidéo${allVideos.length > 1 ? "s" : ""}</span>
+        </span>
+      </button>`);
+  }
 }
 
 function renderAll() { renderFilters(); renderAlbums(); }
@@ -279,6 +301,49 @@ document.addEventListener("click", (e) => {
 document.addEventListener("click", (e) => {
   const card = e.target.closest(".tile[data-album]");
   if (card) openAlbum(card.dataset.album);
+});
+
+// Ouvrir le contenu YouTube
+document.addEventListener("click", (e) => {
+  if (e.target.closest(".tile[data-youtube]")) openYoutube();
+});
+
+function openYoutube() {
+  const listEl = $("youtubeList");
+  listEl.innerHTML = allVideos.length
+    ? allVideos.map((v) => {
+        const thumb = `https://img.youtube.com/vi/${esc(v.vid)}/hqdefault.jpg`;
+        return `<div class="yt-item">
+            <button class="yt-frame" data-vid="${esc(v.vid)}" aria-label="Lire ${esc(v.title || "la vidéo")}">
+              <img src="${thumb}" alt="" loading="lazy" />
+              <span class="yt-frame__play" aria-hidden="true">▶</span>
+            </button>
+            ${v.title ? `<p class="yt-item__title">${esc(v.title)}</p>` : ""}
+          </div>`;
+      }).join("")
+    : '<div class="gallery__loading">Aucune vidéo pour l’instant.</div>';
+
+  $("albumsView").hidden = true;
+  $("albumView").hidden = true;
+  $("youtubeView").hidden = false;
+  window.scrollTo(0, 0);
+}
+function closeYoutube() {
+  $("youtubeView").hidden = true;
+  $("albumsView").hidden = false;
+}
+if ($("ytBack")) $("ytBack").addEventListener("click", closeYoutube);
+
+// Lecture directe : remplace la vignette par le lecteur YouTube
+document.addEventListener("click", (e) => {
+  const f = e.target.closest(".yt-frame[data-vid]");
+  if (!f) return;
+  const iframe = document.createElement("iframe");
+  iframe.src = `https://www.youtube.com/embed/${f.dataset.vid}?rel=0&autoplay=1`;
+  iframe.title = "Lecteur vidéo";
+  iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+  iframe.allowFullscreen = true;
+  f.replaceWith(iframe);
 });
 
 function openAlbum(id) {
@@ -481,7 +546,13 @@ if (isConfigured) {
     snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
     arr.sort((a, b) => (a.order || 0) - (b.order || 0));
     allAlbums = arr;
-    // Si l'album ouvert a changé, on reste cohérent : on re-render la grille
+    renderAll();
+  });
+  onValue(ref(db, "youtube"), (snap) => {
+    const arr = [];
+    snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    allVideos = arr;
     renderAll();
   });
   initVisitCounter();

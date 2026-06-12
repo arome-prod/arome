@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=11";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=11";
+import { db, isConfigured } from "./firebase.js?v=12";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=12";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -128,19 +128,19 @@ function renderAdminAlbums() {
     const cover = coverSrc(a);
     const n = photosOf(a).length;
     const thumb = cover
-      ? `<img class="adm-acard__img" src="${esc(cover)}" alt="" />`
-      : `<span class="adm-acard__img adm-acard__img--empty">arome</span>`;
-    return `<div class="adm-acard">
+      ? `<img class="adm-arow__img" src="${esc(cover)}" alt="" />`
+      : `<span class="adm-arow__img adm-arow__img--empty">○</span>`;
+    return `<div class="adm-arow">
         ${thumb}
-        <div class="adm-acard__body">
-          <span class="adm-acard__title">${esc(a.title || "(sans titre)")}</span>
-          <span class="adm-acard__meta">${esc(a.category || "—")} · ${n} photo${n > 1 ? "s" : ""}</span>
+        <div class="adm-arow__body">
+          <span class="adm-arow__title">${esc(a.title || "(sans titre)")}</span>
+          <span class="adm-arow__meta">${esc(a.category || "—")} · ${n} photo${n > 1 ? "s" : ""}</span>
         </div>
-        <div class="adm-acard__actions">
+        <div class="adm-arow__actions">
           <button data-aact="manage" data-id="${a.id}" class="btn btn--sm">Gérer</button>
           <button data-aact="up" data-id="${a.id}" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button>
           <button data-aact="down" data-id="${a.id}" ${i === albums.length - 1 ? "disabled" : ""} aria-label="Descendre">↓</button>
-          <button data-aact="del" data-id="${a.id}" class="adm-danger" aria-label="Supprimer">Supprimer</button>
+          <button data-aact="del" data-id="${a.id}" class="adm-danger" aria-label="Supprimer">Suppr.</button>
         </div>
       </div>`;
   }).join("");

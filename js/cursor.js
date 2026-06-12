@@ -1,14 +1,12 @@
 // ====================================================================
-//  cursor.js — curseur personnalisé (anneau qui suit la souris)
-//  Grossit sur les éléments cliquables, affiche « Voir » sur les
-//  vignettes. Uniquement sur appareils à pointeur fin (pas tactile).
+//  cursor.js — curseur personnalisé (petit anneau qui suit la souris)
+//  Grossit sur les éléments cliquables. Uniquement sur pointeur fin.
 // ====================================================================
 
 const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 const cur = document.getElementById("cursor");
-const lab = document.getElementById("cursorLabel");
 
-if (fine && cur && lab) {
+if (fine && cur) {
   document.documentElement.classList.add("cursor-on");
 
   let x = window.innerWidth / 2, y = window.innerHeight / 2;
@@ -23,18 +21,14 @@ if (fine && cur && lab) {
   document.addEventListener("mouseup", () => cur.classList.remove("is-down"));
 
   const CLICKABLE = "a, button, .tile, .filter, .albums-arrow, [role='button'], label, input, textarea, summary";
-  const VIEWABLE = ".tile[data-album], .tile[data-youtube], .tile[data-lb], .yt-frame";
-
   document.addEventListener("mouseover", (e) => {
     cur.classList.toggle("is-hover", !!e.target.closest(CLICKABLE));
-    lab.classList.toggle("is-on", !!e.target.closest(VIEWABLE));
   });
 
   function loop() {
-    x += (tx - x) * 0.2;
-    y += (ty - y) * 0.2;
+    x += (tx - x) * 0.4;   // peu de traîne → précis
+    y += (ty - y) * 0.4;
     cur.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
-    lab.style.transform = `translate(${tx}px, ${ty}px) translate(-50%, 22px)`;
     requestAnimationFrame(loop);
   }
   loop();

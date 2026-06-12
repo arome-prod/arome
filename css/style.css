@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=44") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=45") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -56,35 +56,22 @@ a { color: var(--text); text-decoration: none; }
 /* ===== Curseur personnalisé ===== */
 .cursor {
   position: fixed; top: 0; left: 0;
-  width: 22px; height: 22px;
+  width: 13px; height: 13px;
   border: 1px solid #fff;
   border-radius: 50%;
   pointer-events: none;
   z-index: 10000;
   mix-blend-mode: difference;
   opacity: 0;
-  transition: width 0.25s ease, height 0.25s ease, opacity 0.3s ease, background 0.25s ease;
+  transition: width 0.22s ease, height 0.22s ease, opacity 0.3s ease;
 }
 .cursor.is-on { opacity: 1; }
-.cursor.is-hover { width: 46px; height: 46px; }
-.cursor.is-down { width: 18px; height: 18px; }
-.cursor-label {
-  position: fixed; top: 0; left: 0;
-  pointer-events: none;
-  z-index: 10001;
-  color: #fff;
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-.cursor-label.is-on { opacity: 1; }
+.cursor.is-hover { width: 30px; height: 30px; }
+.cursor.is-down { width: 10px; height: 10px; }
 /* On masque le curseur natif quand le personnalisé est actif (sauf champs texte) */
 html.cursor-on, html.cursor-on * { cursor: none !important; }
 html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] { cursor: auto !important; }
-@media (pointer: coarse) { .cursor, .cursor-label { display: none !important; } }
+@media (pointer: coarse) { .cursor { display: none !important; } }
 
 /* ===== Navigation ===== */
 .nav {

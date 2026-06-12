@@ -9,8 +9,8 @@ import {
   onValue,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=71";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=71";
+import { db, isConfigured } from "./firebase.js?v=73";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=73";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>

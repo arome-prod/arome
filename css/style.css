@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=38") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=40") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -493,8 +493,7 @@ body.mode-home { overflow: hidden; height: 100vh; }
   z-index: 1;
   pointer-events: none;
   filter: blur(34px);
-  opacity: 0.6;
-  mix-blend-mode: soft-light;
+  opacity: 0.8;
   transition: opacity 0.6s ease;
 }
 body:not(.mode-home) .home-fx { opacity: 0; }

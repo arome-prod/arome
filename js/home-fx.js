@@ -30,7 +30,7 @@ if (canvas && !reduce) {
         r: 0.28 + Math.random() * 0.32,   // taille relative
         ph: Math.random() * Math.PI * 2,  // phase
         sp: 0.12 + Math.random() * 0.22,  // vitesse d'ondulation
-        a: 0.05 + Math.random() * 0.06,   // opacité de la volute
+        a: 0.08 + Math.random() * 0.1,    // opacité de la volute
       });
     }
   }
@@ -44,10 +44,10 @@ if (canvas && !reduce) {
       const cx = (b.x + Math.sin(time * b.sp + b.ph) * 0.14) * W;
       const cy = (b.y + Math.cos(time * b.sp * 0.8 + b.ph) * 0.14) * H;
       const rad = b.r * Math.min(W, H) * (0.9 + Math.sin(time * b.sp + b.ph) * 0.1);
-      // Gris chaud neutre, accordé aux nuances du fond
+      // Gris clair / blanc (fumée)
       const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
-      g.addColorStop(0, `rgba(150, 143, 132, ${b.a})`);
-      g.addColorStop(1, "rgba(150, 143, 132, 0)");
+      g.addColorStop(0, `rgba(230, 231, 235, ${b.a})`);
+      g.addColorStop(1, "rgba(230, 231, 235, 0)");
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
     }

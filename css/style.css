@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=16") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=20") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -420,16 +420,30 @@ body.mode-home .brand {
   background: transparent;
   border-bottom: 1px solid transparent;
 }
-body.mode-home .brand__logo {
-  font-size: clamp(4rem, 14vw, 9rem);
-  font-weight: 300;
-}
+body.mode-home .brand__logo { font-size: clamp(4rem, 14vw, 9rem); font-weight: 300; }
+body.mode-home .brand__logomark { width: clamp(240px, 56vw, 540px); }
 body.mode-home .brand__tag { display: block; }
 body.mode-home .brand__nav {
-  margin-top: clamp(2.6rem, 6vw, 3.8rem);
-  gap: clamp(1.6rem, 4vw, 3rem);
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: clamp(2.4rem, 6vw, 3.6rem);
+  gap: clamp(1.4rem, 4vw, 2.6rem);
 }
-body.mode-home .brand__nav button { font-size: 0.82rem; }
+body.mode-home .brand__nav button {
+  font-size: clamp(0.82rem, 1.9vw, 0.98rem);
+  color: var(--text);
+  letter-spacing: 0.18em;
+  padding: 0.2rem 0;
+}
+body.mode-home .brand__nav button::after {
+  content: "";
+  position: absolute;
+  left: 50%; bottom: -2px; width: 0; height: 1px;
+  background: var(--text);
+  transition: width 0.32s ease, left 0.32s ease;
+}
+body.mode-home .brand__nav button:hover::after { left: 0; width: 100%; }
 
 /* --- État section : barre du haut --- */
 body:not(.mode-home) .brand {
@@ -444,6 +458,7 @@ body:not(.mode-home) .brand {
   transition: background 0.5s ease, border-color 0.5s ease;
 }
 body:not(.mode-home) .brand__logo { font-size: 1.3rem; font-weight: 400; }
+body:not(.mode-home) .brand__logomark { width: 104px; }
 body:not(.mode-home) .brand__tag { display: none; }
 body:not(.mode-home) .brand__nav { gap: clamp(1rem, 3vw, 2rem); }
 body:not(.mode-home) .brand__nav button { font-size: 0.7rem; }
@@ -456,7 +471,9 @@ body:not(.mode-home) .brand__nav button { font-size: 0.7rem; }
   letter-spacing: 0.01em;
   cursor: pointer;
   will-change: transform;
+  display: inline-block;
 }
+.brand__logomark { display: block; width: 104px; height: auto; transition: width 0.2s; }
 .brand__tag {
   color: var(--muted);
   font-size: clamp(0.7rem, 2vw, 0.82rem);
@@ -467,8 +484,10 @@ body:not(.mode-home) .brand__nav button { font-size: 0.7rem; }
 }
 .brand__nav { display: flex; }
 .brand__nav button {
+  position: relative;
   background: none; border: none; color: var(--muted); font: inherit;
-  text-transform: uppercase; letter-spacing: 0.2em;
+  font-family: var(--font-display); font-weight: 400;
+  text-transform: uppercase; letter-spacing: 0.18em;
   cursor: pointer; padding: 0.3rem 0;
   border-bottom: 1px solid transparent;
   transition: color 0.25s, border-color 0.25s;

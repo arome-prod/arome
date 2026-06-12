@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=14";
-import { DEFAULTS, DEMO } from "./config.js?v=14";
+import { db, isConfigured } from "./firebase.js?v=16";
+import { DEFAULTS, DEMO } from "./config.js?v=16";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -367,7 +367,7 @@ function initGuestbook() {
   const recent = query(messagesRef, orderByChild("createdAt"), limitToLast(50));
   onValue(recent, (snap) => {
     const items = [];
-    snap.forEach((c) => items.push({ id: c.key, ...c.val() }));
+    snap.forEach((c) => { items.push({ id: c.key, ...c.val() }); });
     items.reverse();
     listEl.innerHTML = items.length
       ? items.map(renderMessage).join("")
@@ -419,7 +419,7 @@ if (isConfigured) {
   onValue(ref(db, "content"), (snap) => renderContent(snap.val() || {}));
   onValue(ref(db, "albums"), (snap) => {
     const arr = [];
-    snap.forEach((c) => arr.push({ id: c.key, ...c.val() }));
+    snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
     arr.sort((a, b) => (a.order || 0) - (b.order || 0));
     allAlbums = arr;
     // Si l'album ouvert a changé, on reste cohérent : on re-render la grille

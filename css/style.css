@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=35") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=36") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -238,6 +238,7 @@ a { color: var(--text); text-decoration: none; }
 }
 .about__text p { color: var(--muted); margin-bottom: 1rem; }
 .about__text p:first-child { color: var(--text); }
+.about__files { display: flex; flex-wrap: wrap; gap: 1.8rem; margin-top: 2rem; }
 .skills {
   list-style: none;
   display: flex;

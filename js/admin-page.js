@@ -12,31 +12,59 @@ import {
 import { db, isConfigured } from "./firebase.js";
 import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js";
 
+console.log("admin-page chargé · Firebase configuré :", isConfigured);
+
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
-let content = structuredClone(DEFAULTS);
+let content = JSON.parse(JSON.stringify(DEFAULTS));
 let items = [];
 let editingId = null;     // null = mode "ajout"
 let pendingImage = null;  // nouvelle image (data URL) choisie dans l'éditeur
 
-// --- Garde-fou config -----------------------------------------------
-if (!isConfigured) {
-  document.body.innerHTML =
-    '<p style="padding:2rem;font-family:sans-serif;color:#ccc">⚙️ Configure Firebase dans js/firebase-config.js pour utiliser l\'admin. <a href="index.html" style="color:#9bf">Retour</a></p>';
+// ====================================================================
+//  CONNEXION — attachée tout de suite, sans condition
+// ====================================================================
+function unlock() {
+  $("gate").hidden = true;
+  $("app").hidden = false;
+  try { fillContentForms(); } catch (e) { console.error(e); }
+  if (!isConfigured) {
+    toast("⚠️ Firebase non configuré : l'enregistrement ne marchera pas.");
+  }
 }
 
-// --- Toast ----------------------------------------------------------
+const gateForm = $("gateForm");
+if (gateForm) {
+  gateForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const val = ($("gatePass").value || "").trim();
+    if (val === ADMIN_PASSWORD) {
+      $("gateErr").textContent = "";
+      unlock();
+    } else {
+      $("gateErr").textContent = "Mot de passe incorrect.";
+    }
+  });
+} else {
+  console.error("Formulaire de connexion introuvable (#gateForm).");
+}
+
+if ($("logout")) $("logout").addEventListener("click", () => { location.href = "index.html"; });
+
+// ====================================================================
+//  Helpers
+// ====================================================================
 function toast(msg) {
   const t = $("toast");
+  if (!t) return;
   t.textContent = msg;
   t.classList.add("is-on");
-  setTimeout(() => t.classList.remove("is-on"), 2000);
+  setTimeout(() => t.classList.remove("is-on"), 2200);
 }
 
-// --- Compression image → data URL -----------------------------------
 function fileToDataURL(file) {
   return new Promise((resolve, reject) => {
     if (!file.type.startsWith("image/")) { reject(new Error("Pas une image")); return; }
@@ -63,44 +91,6 @@ function fileToDataURL(file) {
 const kb = (d) => Math.round((d.length * 0.75) / 1024);
 
 // ====================================================================
-//  Connexion
-// ====================================================================
-if (isConfigured) {
-  $("gateForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    if ($("gatePass").value === ADMIN_PASSWORD) {
-      $("gate").hidden = true;
-      $("app").hidden = false;
-      fillContentForms();
-    } else {
-      $("gateErr").textContent = "Mot de passe incorrect.";
-    }
-  });
-
-  $("logout").addEventListener("click", () => { location.href = "index.html"; });
-
-  // --- Données en direct ---
-  onValue(ref(db, "content"), (snap) => {
-    const v = snap.val() || {};
-    content = {
-      hero: { ...DEFAULTS.hero, ...(v.hero || {}) },
-      about: { ...DEFAULTS.about, ...(v.about || {}) },
-      contact: { ...DEFAULTS.contact, ...(v.contact || {}) },
-    };
-    // On ne ré-écrit pas les champs si l'utilisateur est en train d'éditer.
-  });
-
-  onValue(ref(db, "portfolio"), (snap) => {
-    const arr = [];
-    snap.forEach((c) => arr.push({ id: c.key, ...c.val() }));
-    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
-    items = arr;
-    renderList();
-    refreshCatList();
-  });
-}
-
-// ====================================================================
 //  Textes
 // ====================================================================
 function fillContentForms() {
@@ -113,50 +103,19 @@ function fillContentForms() {
   $("c-vinted").value = content.contact.vinted || "";
 }
 
-function wire() {
-  $("saveHero").addEventListener("click", async () => {
-    await update(ref(db, "content/hero"), { tagline: $("c-tagline").value.trim() });
-    toast("Accueil enregistré ✦");
-  });
-  $("saveAbout").addEventListener("click", async () => {
-    const skills = $("c-skills").value.split(",").map((s) => s.trim()).filter(Boolean);
-    await set(ref(db, "content/about"), { text: $("c-about").value, skills });
-    toast("À propos enregistré ✦");
-  });
-  $("saveContact").addEventListener("click", async () => {
-    await set(ref(db, "content/contact"), {
-      email: $("c-email").value.trim(),
-      instagram: $("c-insta").value.trim(),
-      vinted: $("c-vinted").value.trim(),
-    });
-    toast("Contact enregistré ✦");
-  });
-
-  $("saveProject").addEventListener("click", saveProject);
-  $("resetEditor").addEventListener("click", resetEditor);
-
-  $("f-file").addEventListener("change", async () => {
-    const f = $("f-file").files[0];
-    const prev = $("newPreview");
-    if (!f) { pendingImage = null; prev.innerHTML = ""; return; }
-    prev.textContent = "Compression…";
-    try {
-      pendingImage = await fileToDataURL(f);
-      prev.innerHTML = `<img src="${pendingImage}" alt="" /><span>${kb(pendingImage)} Ko</span>`;
-    } catch (e) { prev.textContent = "Image illisible."; pendingImage = null; }
-  });
-}
-
 // ====================================================================
 //  Projets
 // ====================================================================
 function refreshCatList() {
+  const dl = $("catlist");
+  if (!dl) return;
   const cats = [...new Set(items.map((i) => (i.category || "").trim()).filter(Boolean))];
-  $("catlist").innerHTML = cats.map((c) => `<option value="${esc(c)}">`).join("");
+  dl.innerHTML = cats.map((c) => `<option value="${esc(c)}">`).join("");
 }
 
 function renderList() {
   const box = $("projList");
+  if (!box) return;
   $("projCount").textContent = items.length;
   if (!items.length) { box.innerHTML = '<p class="adm-empty">Aucun projet pour l\'instant.</p>'; return; }
   box.innerHTML = items.map((it, i) => {
@@ -179,8 +138,7 @@ function renderList() {
   }).join("");
 
   box.querySelectorAll("[data-act]").forEach((b) => {
-    const id = b.dataset.id;
-    const act = b.dataset.act;
+    const id = b.dataset.id, act = b.dataset.act;
     b.addEventListener("click", () => {
       if (act === "edit") startEdit(id);
       else if (act === "del") delProject(id);
@@ -224,13 +182,15 @@ function resetEditor() {
 }
 
 async function saveProject() {
+  if (!isConfigured) { toast("Firebase non configuré."); return; }
   const title = $("f-title").value.trim();
   const category = $("f-cat").value.trim();
   const link = $("f-link").value.trim();
   const imgUrl = $("f-imgurl").value.trim();
   const newImage = pendingImage || imgUrl || "";
+  const existingImage = editingId && items.find((i) => i.id === editingId)?.image;
 
-  if (!title && !newImage && !link && !(editingId && items.find((i) => i.id === editingId)?.image)) {
+  if (!title && !newImage && !link && !existingImage) {
     toast("Ajoute au moins un titre, une image ou un lien.");
     return;
   }
@@ -239,13 +199,11 @@ async function saveProject() {
   btn.disabled = true;
   try {
     if (editingId) {
-      // Modification : on met à jour les champs ; image seulement si remplacée.
       const patch = { title, category };
       patch.link = link || null;            // null = supprime le champ
       if (newImage) patch.image = newImage; // sinon on garde l'image existante
       await update(ref(db, "portfolio/" + editingId), patch);
       toast("Projet modifié ✦");
-      resetEditor();
     } else {
       const order = items.length ? Math.max(...items.map((i) => i.order || 0)) + 1 : 0;
       const data = { title, category, order, createdAt: Date.now() };
@@ -253,8 +211,8 @@ async function saveProject() {
       if (link) data.link = link;
       await push(ref(db, "portfolio"), data);
       toast("Projet ajouté ✦");
-      resetEditor();
     }
+    resetEditor();
   } catch (e) {
     console.error("Enregistrement échoué :", e);
     toast("Échec : " + (e && e.message ? e.message : "écriture refusée"));
@@ -281,5 +239,67 @@ async function moveProject(id, dir) {
   });
 }
 
-// --- Démarrage ------------------------------------------------------
-if (isConfigured) wire();
+// ====================================================================
+//  Boutons « enregistrer » des textes + champ image
+// ====================================================================
+function wire() {
+  $("saveHero").addEventListener("click", async () => {
+    if (!isConfigured) { toast("Firebase non configuré."); return; }
+    await update(ref(db, "content/hero"), { tagline: $("c-tagline").value.trim() });
+    toast("Accueil enregistré ✦");
+  });
+  $("saveAbout").addEventListener("click", async () => {
+    if (!isConfigured) { toast("Firebase non configuré."); return; }
+    const skills = $("c-skills").value.split(",").map((s) => s.trim()).filter(Boolean);
+    await set(ref(db, "content/about"), { text: $("c-about").value, skills });
+    toast("À propos enregistré ✦");
+  });
+  $("saveContact").addEventListener("click", async () => {
+    if (!isConfigured) { toast("Firebase non configuré."); return; }
+    await set(ref(db, "content/contact"), {
+      email: $("c-email").value.trim(),
+      instagram: $("c-insta").value.trim(),
+      vinted: $("c-vinted").value.trim(),
+    });
+    toast("Contact enregistré ✦");
+  });
+
+  $("saveProject").addEventListener("click", saveProject);
+  $("resetEditor").addEventListener("click", resetEditor);
+
+  $("f-file").addEventListener("change", async () => {
+    const f = $("f-file").files[0];
+    const prev = $("newPreview");
+    if (!f) { pendingImage = null; prev.innerHTML = ""; return; }
+    prev.textContent = "Compression…";
+    try {
+      pendingImage = await fileToDataURL(f);
+      prev.innerHTML = `<img src="${pendingImage}" alt="" /><span>${kb(pendingImage)} Ko</span>`;
+    } catch (e) { prev.textContent = "Image illisible."; pendingImage = null; }
+  });
+}
+
+// ====================================================================
+//  Données en direct (seulement si configuré)
+// ====================================================================
+if (isConfigured) {
+  onValue(ref(db, "content"), (snap) => {
+    const v = snap.val() || {};
+    content = {
+      hero: { ...DEFAULTS.hero, ...(v.hero || {}) },
+      about: { ...DEFAULTS.about, ...(v.about || {}) },
+      contact: { ...DEFAULTS.contact, ...(v.contact || {}) },
+    };
+  });
+  onValue(ref(db, "portfolio"), (snap) => {
+    const arr = [];
+    snap.forEach((c) => arr.push({ id: c.key, ...c.val() }));
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    items = arr;
+    renderList();
+    refreshCatList();
+  });
+}
+
+// Branche les boutons de l'interface (sans dépendre de Firebase)
+wire();

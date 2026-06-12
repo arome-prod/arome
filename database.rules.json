@@ -61,6 +61,19 @@
       }
     },
 
+    "textes": {
+      ".read": true,
+      ".write": true,
+      "$t": {
+        "title":     { ".validate": "newData.isString() && newData.val().length <= 200" },
+        "type":      { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "body":      { ".validate": "newData.isString() && newData.val().length <= 30000" },
+        "order":     { ".validate": "newData.isNumber()" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "$other":    { ".validate": false }
+      }
+    },
+
     "inspirations": {
       ".read": true,
       ".write": true,

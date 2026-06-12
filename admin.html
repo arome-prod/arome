@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=70" />
-  <link rel="stylesheet" href="css/admin.css?v=70" />
+  <link rel="stylesheet" href="css/style.css?v=71" />
+  <link rel="stylesheet" href="css/admin.css?v=71" />
 </head>
 <body class="adm">
 
@@ -130,6 +130,38 @@
         <div class="adm-albumgrid" id="inspList"></div>
       </section>
 
+      <!-- ===== ÉCRITS (projets « Textes ») ===== -->
+      <section class="adm-block" id="writingsSection">
+        <h2 class="adm-h2">Écrits <span id="wrCount" class="adm-count">0</span></h2>
+        <p class="adm-hint">Poèmes, scripts, nouvelles… Mise en forme libre (gras, italique, souligné). Apparaissent dans le portfolio sous l'onglet « Textes ».</p>
+
+        <div class="adm-create">
+          <div class="adm-create__row">
+            <input id="wr-title" placeholder="Titre" />
+            <input id="wr-type" list="wrtypes" placeholder="Type (Poème, Script, Nouvelle…)" />
+          </div>
+          <datalist id="wrtypes">
+            <option value="Poème"></option>
+            <option value="Script"></option>
+            <option value="Nouvelle"></option>
+            <option value="Essai"></option>
+            <option value="Chanson"></option>
+          </datalist>
+          <div class="adm-rich-tools" aria-label="Mise en forme">
+            <button type="button" data-cmd="bold" title="Gras (Ctrl/Cmd+B)"><b>B</b></button>
+            <button type="button" data-cmd="italic" title="Italique (Ctrl/Cmd+I)"><i>I</i></button>
+            <button type="button" data-cmd="underline" title="Souligné (Ctrl/Cmd+U)"><u>U</u></button>
+          </div>
+          <div id="wr-body" class="adm-rich" contenteditable="true" data-ph="Écris ton texte ici… (gras / italique / souligné disponibles)"></div>
+          <div class="adm-actions">
+            <button type="button" class="btn" id="wrSave">+ Ajouter le texte</button>
+            <button type="button" class="btn btn--sm" id="wrCancel" style="display:none">Annuler la modification</button>
+          </div>
+        </div>
+
+        <div class="adm-albumgrid" id="wrList"></div>
+      </section>
+
       <!-- ===== TEXTES ===== -->
       <section class="adm-block">
         <h2 class="adm-h2">Textes du site</h2>
@@ -168,6 +200,6 @@
 
   <div id="toast" class="adm-toast"></div>
 
-  <script type="module" src="js/admin-page.js?v=70"></script>
+  <script type="module" src="js/admin-page.js?v=71"></script>
 </body>
 </html>

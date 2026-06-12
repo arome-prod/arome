@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=70") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=71") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -76,7 +76,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=70") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=71") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -282,6 +282,48 @@ html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau 
   color: var(--faint);
   white-space: nowrap;
 }
+
+/* ===== Cartes « Textes » (écrits) ===== */
+.albums > .tile--text {
+  flex: 0 0 auto;
+  width: clamp(190px, 60vw, 230px);
+  scroll-snap-align: start;
+}
+.tile--text { cursor: pointer; }
+.txtcard {
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  gap: 0.8rem;
+  min-height: 190px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 1.2rem 1.1rem;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.tile--text:hover .txtcard { border-color: var(--line-strong); }
+.txtcard__type {
+  font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.18em;
+  color: var(--faint);
+}
+.txtcard__title {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 1.5rem; line-height: 1.12; color: var(--text);
+  flex: 1;
+}
+.txtcard__more { font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); }
+
+/* ===== Lecture d'un texte (vue dédiée) ===== */
+.prose {
+  max-width: 68ch;
+  color: var(--muted);
+  font-size: 1.04rem;
+  line-height: 1.9;
+}
+.prose p { margin-bottom: 1.15rem; }
+.prose p:last-child { margin-bottom: 0; }
+.prose strong { color: var(--text); font-weight: 500; }
+.prose em { font-style: italic; }
+.prose u { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ===== À propos ===== */
 .about { max-width: 64ch; }

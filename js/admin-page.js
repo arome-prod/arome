@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=70";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=70";
+import { db, isConfigured } from "./firebase.js?v=71";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=71";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -31,7 +31,31 @@ let albums = [];
 let videos = [];
 let insp = [];
 let inspCover = "";
+let writings = [];
+let editingWr = null;
 let managingId = null;
+
+// Nettoie le HTML de l'éditeur : on ne garde que gras / italique / souligné + paragraphes.
+const RICH_OK = { B: "strong", STRONG: "strong", I: "em", EM: "em", U: "u", P: "p", BR: "br", DIV: "p" };
+function sanitizeRich(html) {
+  let doc;
+  try { doc = new DOMParser().parseFromString(String(html || ""), "text/html"); }
+  catch (e) { return ""; }
+  const walk = (node) => {
+    let out = "";
+    node.childNodes.forEach((n) => {
+      if (n.nodeType === 3) out += esc(n.nodeValue);
+      else if (n.nodeType === 1) {
+        const tag = RICH_OK[n.tagName];
+        if (tag === "br") out += "<br>";
+        else if (tag) out += `<${tag}>${walk(n)}</${tag}>`;
+        else out += walk(n);
+      }
+    });
+    return out;
+  };
+  return walk(doc.body).trim();
+}
 
 const INSP_LABEL = {
   music: "Musique", video: "Vidéo", film: "Film",
@@ -386,6 +410,16 @@ function wire() {
     }
   });
 
+  // Écrits (textes) — barre de mise en forme + enregistrement
+  document.querySelectorAll(".adm-rich-tools [data-cmd]").forEach((b) => {
+    b.addEventListener("mousedown", (e) => {
+      e.preventDefault();                       // garde le focus/la sélection dans l'éditeur
+      document.execCommand(b.dataset.cmd, false, null);
+    });
+  });
+  $("wrSave").addEventListener("click", saveWriting);
+  $("wrCancel").addEventListener("click", resetWritingForm);
+
   // Inspirations
   $("inspAdd").addEventListener("click", addInspiration);
   $("insp-kind").addEventListener("change", toggleInspCover);
@@ -586,6 +620,98 @@ async function moveInsp(id, dir) {
 }
 
 // ====================================================================
+//  Écrits (projets « Textes »)
+// ====================================================================
+function resetWritingForm() {
+  editingWr = null;
+  $("wr-title").value = ""; $("wr-type").value = ""; $("wr-body").innerHTML = "";
+  $("wrSave").textContent = "+ Ajouter le texte";
+  $("wrCancel").style.display = "none";
+}
+
+function renderWritings() {
+  const box = $("wrList"); if (!box) return;
+  $("wrCount").textContent = writings.length;
+  if (!writings.length) { box.innerHTML = '<p class="adm-empty">Aucun texte. Ajoute-en ci-dessus.</p>'; return; }
+  box.innerHTML = writings.map((w, i) => `
+    <div class="adm-arow">
+      <span class="adm-arow__img adm-arow__img--empty">¶</span>
+      <div class="adm-arow__body">
+        <span class="adm-arow__title">${esc(w.title || "(sans titre)")}</span>
+        <span class="adm-arow__meta">${esc(w.type || "Texte")}</span>
+      </div>
+      <div class="adm-arow__actions">
+        <button data-wact="edit" data-id="${w.id}" class="btn btn--sm">Modifier</button>
+        <button data-wact="up" data-id="${w.id}" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button>
+        <button data-wact="down" data-id="${w.id}" ${i === writings.length - 1 ? "disabled" : ""} aria-label="Descendre">↓</button>
+        <button data-wact="del" data-id="${w.id}" class="adm-danger" aria-label="Supprimer">Suppr.</button>
+      </div>
+    </div>`).join("");
+  box.querySelectorAll("[data-wact]").forEach((b) => {
+    const id = b.dataset.id, act = b.dataset.wact;
+    b.addEventListener("click", () => {
+      if (act === "edit") editWriting(id);
+      else if (act === "del") delWriting(id);
+      else if (act === "up") moveWriting(id, -1);
+      else if (act === "down") moveWriting(id, 1);
+    });
+  });
+}
+
+function editWriting(id) {
+  const w = writings.find((x) => x.id === id);
+  if (!w) return;
+  editingWr = id;
+  $("wr-title").value = w.title || "";
+  $("wr-type").value = w.type || "";
+  $("wr-body").innerHTML = sanitizeRich(w.body || "");
+  $("wrSave").textContent = "Enregistrer les modifications";
+  $("wrCancel").style.display = "";
+  $("writingsSection").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function saveWriting() {
+  if (!isConfigured) { toast("Firebase non configuré."); return; }
+  const title = $("wr-title").value.trim();
+  const type = $("wr-type").value.trim();
+  const body = sanitizeRich($("wr-body").innerHTML);
+  if (!title) { toast("Donne un titre."); return; }
+  if (!body) { toast("Le texte est vide."); return; }
+  const btn = $("wrSave"); btn.disabled = true;
+  try {
+    if (editingWr) {
+      await update(ref(db, "textes/" + editingWr), { title, type, body });
+      toast("Texte mis à jour ✦");
+    } else {
+      const order = writings.length ? Math.max(...writings.map((w) => w.order || 0)) + 1 : 0;
+      await push(ref(db, "textes"), { title, type, body, order, createdAt: Date.now() });
+      toast("Texte ajouté ✦");
+    }
+    resetWritingForm();
+  } catch (e) {
+    console.error(e);
+    toast("Échec : " + (e.message || "écriture refusée"));
+  } finally { btn.disabled = false; }
+}
+
+async function delWriting(id) {
+  if (!confirm("Supprimer ce texte ?")) return;
+  await remove(ref(db, "textes/" + id));
+  if (editingWr === id) resetWritingForm();
+  toast("Texte supprimé");
+}
+async function moveWriting(id, dir) {
+  const idx = writings.findIndex((w) => w.id === id);
+  const swap = idx + dir;
+  if (idx < 0 || swap < 0 || swap >= writings.length) return;
+  const a = writings[idx], b = writings[swap];
+  await update(ref(db, "textes"), {
+    [`${a.id}/order`]: b.order ?? swap,
+    [`${b.id}/order`]: a.order ?? idx,
+  });
+}
+
+// ====================================================================
 //  Données en direct
 // ====================================================================
 if (isConfigured) {
@@ -619,6 +745,13 @@ if (isConfigured) {
     arr.sort((a, b) => (a.order || 0) - (b.order || 0));
     insp = arr;
     renderInspAdmin();
+  });
+  onValue(ref(db, "textes"), (snap) => {
+    const arr = [];
+    snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    writings = arr;
+    renderWritings();
   });
 }
 

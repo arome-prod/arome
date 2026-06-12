@@ -9,8 +9,8 @@ import {
   onValue,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=70";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=70";
+import { db, isConfigured } from "./firebase.js?v=71";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=71";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -181,7 +181,7 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
   const EGGS = [
     { seq: "cyberpunk", run: () => {
         const on = document.documentElement.classList.toggle("cursor-cyber");
-        flash(on ? "▮ mode cyberpunk — wake the f*** up, samurai" : "curseur normal rétabli");
+        flash(on ? "▮ mode cyberpunk activé" : "curseur normal rétabli");
       } },
   ];
 
@@ -318,8 +318,34 @@ function renderContent(c) {
 let allAlbums = [];
 let allVideos = [];
 let allInsp = [];
+let allTextes = [];
 let activeFilter = "all";
 let inspFilter = "all";
+
+// Nettoie un HTML riche en ne gardant que gras/italique/souligné + sauts/paragraphes.
+// IMPORTANT : appelé aussi à l'affichage public (les règles d'écriture sont ouvertes,
+// on ne fait donc jamais confiance au HTML stocké) → empêche toute injection.
+const RICH_OK = { B: "strong", STRONG: "strong", I: "em", EM: "em", U: "u", P: "p", BR: "br", DIV: "p" };
+function sanitizeRich(html) {
+  let doc;
+  try { doc = new DOMParser().parseFromString(String(html || ""), "text/html"); }
+  catch (e) { return ""; }
+  const walk = (node) => {
+    let out = "";
+    node.childNodes.forEach((n) => {
+      if (n.nodeType === 3) {
+        out += esc(n.nodeValue);
+      } else if (n.nodeType === 1) {
+        const tag = RICH_OK[n.tagName];
+        if (tag === "br") out += "<br>";
+        else if (tag) out += `<${tag}>${walk(n)}</${tag}>`;
+        else out += walk(n);   // balise inconnue : on garde juste le contenu
+      }
+    });
+    return out;
+  };
+  return walk(doc.body).trim();
+}
 
 function shownAlbums() { return allAlbums.length ? allAlbums : DEMO; }
 function isDemo() { return allAlbums.length === 0; }
@@ -360,16 +386,42 @@ function renderFilters() {
   if (!bar) return;
   const cats = categoriesOf(shownAlbums());
   const hasYt = allVideos.length > 0;
-  if (cats.length + (hasYt ? 1 : 0) <= 1) { bar.innerHTML = ""; return; }
+  const hasTxt = allTextes.length > 0;
+  if (cats.length + (hasYt ? 1 : 0) + (hasTxt ? 1 : 0) <= 1) { bar.innerHTML = ""; return; }
 
   let html = `<button class="filter${activeFilter === "all" ? " is-active" : ""}" data-filter="all">Tout</button>`;
   html += cats.map((c) =>
     `<button class="filter${activeFilter === c ? " is-active" : ""}" data-filter="${esc(c)}">${esc(c)}</button>`
   ).join("");
+  if (hasTxt) {
+    html += `<button class="filter${activeFilter === "__txt" ? " is-active" : ""}" data-filter="__txt">Textes</button>`;
+  }
   if (hasYt) {
     html += `<button class="filter${activeFilter === "__yt" ? " is-active" : ""}" data-filter="__yt">YouTube</button>`;
   }
   bar.innerHTML = html;
+}
+
+// Petite carte « écrit » (titre + type) — bloc plus compact
+function texteCardHTML(t) {
+  return `<button class="tile tile--text" data-texte="${esc(t.id)}" aria-label="${esc(t.title || "Texte")}">
+      <span class="txtcard">
+        <span class="txtcard__type">${esc(t.type || "Texte")}</span>
+        <span class="txtcard__title">${esc(t.title || "Sans titre")}</span>
+        <span class="txtcard__more">Lire →</span>
+      </span>
+    </button>`;
+}
+// Carte récapitulative « Textes » affichée dans l'onglet « Tout »
+function textesSummaryHTML() {
+  if (!allTextes.length) return "";
+  return `<button class="tile tile--text" data-go-txt="1" aria-label="Textes">
+      <span class="txtcard">
+        <span class="txtcard__type">Écrits</span>
+        <span class="txtcard__title">Textes</span>
+        <span class="txtcard__more">${allTextes.length} texte${allTextes.length > 1 ? "s" : ""} →</span>
+      </span>
+    </button>`;
 }
 
 function youtubeCardHTML() {
@@ -394,6 +446,15 @@ function renderAlbums() {
   // Onglet YouTube : on n'affiche que la carte vidéo
   if (activeFilter === "__yt") {
     grid.innerHTML = youtubeCardHTML() || '<div class="gallery__loading">Aucune vidéo.</div>';
+    return;
+  }
+
+  // Onglet Textes : petits blocs (titre + type)
+  if (activeFilter === "__txt") {
+    grid.innerHTML = allTextes.length
+      ? allTextes.map(texteCardHTML).join("")
+      : '<div class="gallery__loading">Aucun texte.</div>';
+    requestAnimationFrame(updateAlbumArrows);
     return;
   }
 
@@ -424,8 +485,11 @@ function renderAlbums() {
       </button>`;
   }).join("");
 
-  // Carte « Contenu YouTube » en fin de grille (vue « Tout »)
-  if (activeFilter === "all") grid.insertAdjacentHTML("beforeend", youtubeCardHTML());
+  // Cartes récap (Textes + YouTube) en fin de grille (vue « Tout »)
+  if (activeFilter === "all") {
+    grid.insertAdjacentHTML("beforeend", textesSummaryHTML());
+    grid.insertAdjacentHTML("beforeend", youtubeCardHTML());
+  }
 
   setupAlbumHover();
   requestAnimationFrame(updateAlbumArrows);
@@ -636,6 +700,31 @@ document.addEventListener("click", (e) => {
 document.addEventListener("click", (e) => {
   if (e.target.closest(".tile[data-youtube]")) openYoutube();
 });
+
+// Textes : ouvrir un écrit, ou la carte récap (→ onglet Textes)
+document.addEventListener("click", (e) => {
+  const card = e.target.closest(".tile[data-texte]");
+  if (card) { openTexte(card.dataset.texte); return; }
+  if (e.target.closest(".tile[data-go-txt]")) { activeFilter = "__txt"; renderAll(); }
+});
+
+function openTexte(id) {
+  const t = allTextes.find((x) => x.id === id);
+  if (!t) return;
+  $("txtType").textContent = t.type || "";
+  $("txtTitle").textContent = t.title || "";
+  $("txtBody").innerHTML = sanitizeRich(t.body || "");
+  $("albumsView").hidden = true;
+  $("albumView").hidden = true;
+  $("youtubeView").hidden = true;
+  $("textView").hidden = false;
+  window.scrollTo(0, 0);
+}
+function closeTexte() {
+  $("textView").hidden = true;
+  $("albumsView").hidden = false;
+}
+if ($("txtBack")) $("txtBack").addEventListener("click", closeTexte);
 
 function openYoutube() {
   const listEl = $("youtubeList");
@@ -894,6 +983,13 @@ if (isConfigured) {
     arr.sort((a, b) => (a.order || 0) - (b.order || 0));
     allInsp = arr;
     renderInspirations();
+  });
+  onValue(ref(db, "textes"), (snap) => {
+    const arr = [];
+    snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    allTextes = arr;
+    renderAll();
   });
 } else {
   renderContent({});

@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=70" />
+  <link rel="stylesheet" href="css/style.css?v=71" />
 </head>
 <body class="mode-home">
 
@@ -21,7 +21,7 @@
   <!-- ===== Marque : se déplace de l'écran d'accueil vers la barre du haut ===== -->
   <header class="brand">
     <a class="brand__logo" data-go="home" data-admin-trigger aria-label="arome — accueil">
-      <img class="brand__logomark" src="images/arome_logo.svg?v=70" alt="arome" />
+      <img class="brand__logomark" src="images/arome_logo.svg?v=71" alt="arome" />
     </a>
     <p class="brand__tag" id="heroTagline">…</p>
     <nav class="brand__nav">
@@ -75,6 +75,16 @@
           <div class="yt-list" id="youtubeList"></div>
         </div>
 
+        <!-- Vue : texte (lecture du texte complet) -->
+        <div id="textView" hidden>
+          <button class="album-back" id="txtBack">← Tous les projets</button>
+          <header class="album-head">
+            <p class="eyebrow" id="txtType"></p>
+            <h2 class="section__title section__title--xl" id="txtTitle"></h2>
+          </header>
+          <div class="prose" id="txtBody"></div>
+        </div>
+
       </div>
     </section>
 
@@ -121,7 +131,7 @@
     </section>
 
     <footer class="foot">
-      <img class="foot__logo" src="images/arome_logo.svg?v=70" alt="arome" />
+      <img class="foot__logo" src="images/arome_logo.svg?v=71" alt="arome" />
       <span class="foot__meta">Paris · © <span id="year"></span> arome</span>
     </footer>
   </main>
@@ -149,8 +159,8 @@
   <!-- ===== Curseur personnalisé ===== -->
   <div class="cursor" id="cursor" aria-hidden="true"></div>
 
-  <script type="module" src="js/app.js?v=70"></script>
-  <script type="module" src="js/home-fx.js?v=70"></script>
-  <script type="module" src="js/cursor.js?v=70"></script>
+  <script type="module" src="js/app.js?v=71"></script>
+  <script type="module" src="js/home-fx.js?v=71"></script>
+  <script type="module" src="js/cursor.js?v=71"></script>
 </body>
 </html>

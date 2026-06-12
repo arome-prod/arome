@@ -162,6 +162,24 @@
 .adm-photo__bar button:disabled { opacity: 0.3; cursor: default; }
 .adm-photo__bar .adm-danger:hover { color: #e08a6a; }
 
+/* ===== Éditeur de texte riche (écrits) ===== */
+.adm-rich-tools { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.adm-rich-tools button {
+  width: 34px; height: 30px;
+  background: #0e0e0e; border: 1px solid var(--line); color: var(--muted);
+  cursor: pointer; font-size: 0.9rem; line-height: 1;
+}
+.adm-rich-tools button:hover { color: var(--text); border-color: var(--text); }
+.adm-rich {
+  min-height: 170px;
+  background: #0e0e0e; border: 1px solid var(--line); color: var(--text);
+  padding: 0.7rem 0.8rem; font: inherit; font-size: 0.95rem; line-height: 1.7;
+  overflow: auto;
+}
+.adm-rich:focus { outline: none; border-color: var(--text); }
+.adm-rich:empty::before { content: attr(data-ph); color: var(--faint); }
+.adm-rich u { text-underline-offset: 2px; }
+
 /* ===== Toast ===== */
 .adm-toast {
   position: fixed; bottom: 1.6rem; left: 50%; transform: translateX(-50%) translateY(20px);

@@ -9,8 +9,8 @@ import {
   onValue,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=62";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=62";
+import { db, isConfigured } from "./firebase.js?v=64";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=64";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -173,7 +173,7 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
 //  une musique au hasard parmi les inspirations. Un clic = retour.
 // ====================================================================
 (function ambientMode() {
-  const IDLE_MS = 300000;   // 5 minutes d'inactivité
+  const IDLE_MS = 12000;   // 12 s (test) — repasser à 300000 (5 min) en prod
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const body = document.body;
   const player = $("ambientPlayer");
@@ -505,13 +505,15 @@ function updateAlbumArrows() {
 
   function autoTick() {
     if (eligible()) {
+      el.style.scrollSnapType = "none";   // sinon le snap fait sauter bloc à bloc
       const max = el.scrollWidth - el.clientWidth;
-      pos += dir * SPEED;                 // accumulateur flottant (sinon la fraction est perdue)
+      pos += dir * SPEED;                  // accumulateur flottant (sinon la fraction est perdue)
       if (pos >= max) { pos = max; dir = -1; }
       else if (pos <= 0) { pos = 0; dir = 1; }
       el.scrollLeft = pos;
     } else {
-      pos = el.scrollLeft;                // resync quand en pause / défilement manuel
+      el.style.scrollSnapType = "";       // snap rétabli pour le défilement manuel
+      pos = el.scrollLeft;                 // resync quand en pause / défilement manuel
     }
     requestAnimationFrame(autoTick);
   }
@@ -565,12 +567,14 @@ function updateInspArrows() {
   }
   function autoTick() {
     if (eligible()) {
+      el.style.scrollSnapType = "none";
       const max = el.scrollWidth - el.clientWidth;
       pos += dir * SPEED;
       if (pos >= max) { pos = max; dir = -1; }
       else if (pos <= 0) { pos = 0; dir = 1; }
       el.scrollLeft = pos;
     } else {
+      el.style.scrollSnapType = "";
       pos = el.scrollLeft;
     }
     requestAnimationFrame(autoTick);

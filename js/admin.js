@@ -69,15 +69,15 @@ if (overlay) {
   if (location.hash === "#admin") openAdmin();
   window.addEventListener("hashchange", () => { if (location.hash === "#admin") openAdmin(); });
 
-  const sign = document.querySelector(".footer__sign");
-  if (sign) {
+  // Triple-clic sur un mot-marque « arome » (landing ou topbar) ouvre l'admin.
+  document.querySelectorAll("[data-admin-trigger]").forEach((el) => {
     let clicks = 0, timer = null;
-    sign.addEventListener("click", () => {
+    el.addEventListener("click", () => {
       clicks++; clearTimeout(timer);
       timer = setTimeout(() => (clicks = 0), 600);
       if (clicks >= 3) { clicks = 0; openAdmin(); }
     });
-  }
+  });
 
   // --- Données en direct -------------------------------------------
   if (isConfigured) {

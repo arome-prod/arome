@@ -37,7 +37,7 @@ Site **one-page** statique (HTML / CSS / JavaScript, **sans build**) de **arome*
 
 ## 2. L'admin (accès secret)
 
-- **Ouvrir :** ajoute `#admin` à l'URL (`…/index.html#admin`) **ou** triple-clique sur la signature « arome » du footer.
+- **Ouvrir :** ajoute `#admin` à l'URL (`…/index.html#admin`) **ou** triple-clique sur le mot-marque « arome » (grand titre de la home, ou logo en haut à gauche).
 - **Mot de passe :** dans `js/config.js` (`ADMIN_PASSWORD`, défaut `arome2026`). **Change-le.**
 - Tu peux éditer : l'accroche du hero, le texte « à propos » + compétences, les liens de contact, et **ajouter / réordonner / supprimer** des projets. Chaque projet a une **catégorie libre** que tu tapes (les filtres du site se génèrent à partir des catégories utilisées) ; une **image** ; et un **lien externe** optionnel (si renseigné, cliquer le projet ouvre ce lien ; sinon, l'image s'ouvre en grand).
 

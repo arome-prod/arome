@@ -27,6 +27,57 @@ const yearEl = $("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 
 // ====================================================================
+//  Navigation à rideau (home → sections)
+// ====================================================================
+(function navigation() {
+  const body = document.body;
+  const curtain = document.querySelector(".curtain");
+  const panels = document.querySelectorAll(".panel");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const D = 460; // doit correspondre à la transition CSS du rideau
+
+  function showPanel(key) {
+    panels.forEach((p) => p.classList.toggle("is-active", p.dataset.panel === key));
+    document.querySelectorAll("[data-go]").forEach((b) =>
+      b.classList.toggle("is-active", b.dataset.go === key));
+  }
+  // Panneau par défaut prêt sous le rideau
+  showPanel("portfolio");
+
+  function wipe(swap) {
+    if (reduce) { swap(); return; }
+    curtain.classList.add("is-cover");
+    setTimeout(() => {
+      swap();
+      curtain.classList.add("is-reveal");
+      setTimeout(() => curtain.classList.remove("is-cover", "is-reveal"), D);
+    }, D);
+  }
+
+  function navTo(key) {
+    if (key === "home") {
+      if (body.classList.contains("mode-home")) return;
+      wipe(() => { body.classList.add("mode-home"); });
+      return;
+    }
+    const fromHome = body.classList.contains("mode-home");
+    const sameSection = !fromHome &&
+      document.querySelector(`.panel[data-panel="${key}"]`)?.classList.contains("is-active");
+    if (sameSection) return;
+    wipe(() => {
+      body.classList.remove("mode-home");
+      showPanel(key);
+      const stage = document.querySelector(".stage");
+      if (stage) stage.scrollTop = 0;
+      window.scrollTo(0, 0);
+    });
+  }
+
+  document.querySelectorAll("[data-go]").forEach((b) =>
+    b.addEventListener("click", (e) => { e.preventDefault(); navTo(b.dataset.go); }));
+})();
+
+// ====================================================================
 //  Contenu éditorial (hero / à propos / contact)
 // ====================================================================
 function renderContent(c) {
@@ -59,11 +110,11 @@ function renderContent(c) {
   if (links) {
     const out = [];
     if (data.contact.email)
-      out.push(`<a class="btn" href="mailto:${esc(data.contact.email)}">✉ Email</a>`);
+      out.push(`<a class="btn" href="mailto:${esc(data.contact.email)}">Email</a>`);
     if (data.contact.instagram)
-      out.push(`<a class="btn" href="${esc(data.contact.instagram)}" target="_blank" rel="noopener">◎ Instagram</a>`);
+      out.push(`<a class="btn" href="${esc(data.contact.instagram)}" target="_blank" rel="noopener">Instagram</a>`);
     if (data.contact.vinted)
-      out.push(`<a class="btn" href="${esc(data.contact.vinted)}" target="_blank" rel="noopener">◈ Vinted</a>`);
+      out.push(`<a class="btn" href="${esc(data.contact.vinted)}" target="_blank" rel="noopener">Vinted</a>`);
     links.innerHTML = out.join("");
   }
 }
@@ -116,21 +167,19 @@ function renderPortfolio() {
     : "";
 
   gallery.innerHTML = demoNote + list.map((it) => {
-    const cat = it.category ? `<span class="tile__cat">${esc(it.category)}</span>` : "";
-    const titleBar = `<span class="tile__title">${esc(it.title || "")}${cat}</span>`;
     const media = it.image
-      ? `<img src="${esc(it.image)}" alt="${esc(it.title || "")}" loading="lazy" />`
-      : `<span class="tile__empty">${esc(it.category || "projet")}</span>`;
+      ? `<span class="tile__media"><img src="${esc(it.image)}" alt="${esc(it.title || "")}" loading="lazy" /></span>`
+      : `<span class="tile__media"><span class="tile__empty">arome</span></span>`;
+    const cap = `<span class="tile__cap">
+        <span class="tile__name">${esc(it.title || "Sans titre")}</span>
+        ${it.category ? `<span class="tile__cat">${esc(it.category)}</span>` : ""}
+      </span>`;
 
     // Lien externe → ouvre dans un onglet ; sinon image cliquable (lightbox)
     if (it.link) {
-      return `<a class="tile tile--link reveal" data-cat="${esc(it.category || "")}" href="${esc(it.link)}" target="_blank" rel="noopener">
-          ${media}<span class="tile__play" aria-hidden="true">↗</span>${titleBar}
-        </a>`;
+      return `<a class="tile" href="${esc(it.link)}" target="_blank" rel="noopener">${media}${cap}</a>`;
     }
-    return `<button class="tile reveal" data-cat="${esc(it.category || "")}" data-full="${esc(it.image || "")}" aria-label="${esc(it.title || "Projet")}">
-        ${media}${titleBar}
-      </button>`;
+    return `<button class="tile" data-full="${esc(it.image || "")}" aria-label="${esc(it.title || "Projet")}">${media}${cap}</button>`;
   }).join("");
 
   observeReveals();

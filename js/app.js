@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=53";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=53";
+import { db, isConfigured } from "./firebase.js?v=54";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=54";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -131,12 +131,21 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
       return;
     }
 
-    // Déjà dans une section : basculement direct (pas de store, plus léger)
+    // Déjà dans une section : transition douce (fondu sortant → entrant)
     if (!home) {
       const active = document.querySelector(".panel.is-active");
       if (active && active.dataset.panel === key) return;
-      setActive(key);
-      window.scrollTo(0, 0);
+      if (reduce || !active) {
+        setActive(key);
+        window.scrollTo(0, 0);
+        return;
+      }
+      active.classList.add("is-leaving");
+      setTimeout(() => {
+        active.classList.remove("is-leaving");
+        setActive(key);          // le nouveau panneau joue l'animation panelIn
+        window.scrollTo(0, 0);
+      }, 170);
       return;
     }
 

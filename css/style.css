@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=53") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=54") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -667,8 +667,20 @@ body:not(.mode-home) .brand__nav button.is-active { color: var(--text); border-c
 .stage { padding-top: 60px; min-height: 100vh; }
 body.mode-home .stage { display: none; }
 .panel { display: none; }
-.panel.is-active { display: block; }
+.panel.is-active { display: block; animation: panelIn 0.55s cubic-bezier(0.22, 0.7, 0.25, 1); }
+.panel.is-leaving { animation: panelOut 0.18s ease forwards; }
 .panel .section { border-bottom: none; }
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes panelOut {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(-8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel.is-active, .panel.is-leaving { animation: none; }
+}
 
 /* Pied de page */
 .foot {

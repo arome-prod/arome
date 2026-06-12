@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=32";
-import { DEFAULTS, DEMO } from "./config.js?v=32";
+import { db, isConfigured } from "./firebase.js?v=33";
+import { DEFAULTS, DEMO } from "./config.js?v=33";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -341,6 +341,8 @@ function updateAlbumArrows() {
   next.addEventListener("click", () => el.scrollBy({ left: step(), behavior: "smooth" }));
   el.addEventListener("scroll", updateAlbumArrows, { passive: true });
   window.addEventListener("resize", updateAlbumArrows);
+  // Recalcule quand la zone change de taille (ex. quand le panneau devient visible)
+  if ("ResizeObserver" in window) new ResizeObserver(updateAlbumArrows).observe(el);
 })();
 
 // Filtres

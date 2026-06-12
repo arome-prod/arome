@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=32") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=33") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -375,13 +375,10 @@ a { color: var(--text); text-decoration: none; }
 }
 .albums-arrow:hover { background: rgba(20, 20, 20, 0.9); border-color: var(--line-strong); }
 .albums-arrow[hidden] { display: none; }
-.albums-arrow--prev { left: -6px; }
-.albums-arrow--next { right: -6px; }
-@media (max-width: 620px) {
-  .albums-arrow { width: 38px; height: 38px; font-size: 1.3rem; }
-  .albums-arrow--prev { left: 2px; }
-  .albums-arrow--next { right: 2px; }
-}
+.albums-arrow--prev { left: -3rem; }
+.albums-arrow--next { right: -3rem; }
+/* Sur petit écran, pas de place dans la marge → on s'appuie sur le défilement tactile */
+@media (max-width: 760px) { .albums-arrow { display: none !important; } }
 
 .albums {
   display: flex;

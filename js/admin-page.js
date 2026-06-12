@@ -15,6 +15,13 @@ import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
 const $ = (id) => document.getElementById(id);
+
+// Indicateur visible : prouve que le script s'exécute bien.
+if (document.getElementById("gateHint")) {
+  document.getElementById("gateHint").textContent = isConfigured
+    ? "Accès réservé."
+    : "⚠️ Firebase non configuré (vérifie js/firebase-config.js).";
+}
 const esc = (s = "") =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");

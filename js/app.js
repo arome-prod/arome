@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=26";
-import { DEFAULTS, DEMO } from "./config.js?v=26";
+import { db, isConfigured } from "./firebase.js?v=28";
+import { DEFAULTS, DEMO } from "./config.js?v=28";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -60,11 +60,16 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
     change();
     const last = flipEls.map((el) => el.getBoundingClientRect());
     flipEls.forEach((el, i) => {
-      const dx = first[i].left - last[i].left;
-      const dy = first[i].top - last[i].top;
+      // On anime le CENTRE de l'élément : il grandit et se déplace ensemble
+      const fcx = first[i].left + first[i].width / 2;
+      const fcy = first[i].top + first[i].height / 2;
+      const lcx = last[i].left + last[i].width / 2;
+      const lcy = last[i].top + last[i].height / 2;
+      const dx = fcx - lcx;
+      const dy = fcy - lcy;
       const s = last[i].height ? first[i].height / last[i].height : 1;
       el.style.transition = "none";
-      el.style.transformOrigin = "left top";
+      el.style.transformOrigin = "center center";
       el.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
     });
     void brand.offsetWidth; // force un reflow
@@ -232,17 +237,44 @@ function renderFilters() {
   const bar = $("filters");
   if (!bar) return;
   const cats = categoriesOf(shownAlbums());
-  if (cats.length <= 1) { bar.innerHTML = ""; return; }
-  bar.innerHTML =
-    `<button class="filter${activeFilter === "all" ? " is-active" : ""}" data-filter="all">Tout</button>` +
-    cats.map((c) =>
-      `<button class="filter${activeFilter === c ? " is-active" : ""}" data-filter="${esc(c)}">${esc(c)}</button>`
-    ).join("");
+  const hasYt = allVideos.length > 0;
+  if (cats.length + (hasYt ? 1 : 0) <= 1) { bar.innerHTML = ""; return; }
+
+  let html = `<button class="filter${activeFilter === "all" ? " is-active" : ""}" data-filter="all">Tout</button>`;
+  html += cats.map((c) =>
+    `<button class="filter${activeFilter === c ? " is-active" : ""}" data-filter="${esc(c)}">${esc(c)}</button>`
+  ).join("");
+  if (hasYt) {
+    html += `<button class="filter${activeFilter === "__yt" ? " is-active" : ""}" data-filter="__yt">YouTube</button>`;
+  }
+  bar.innerHTML = html;
+}
+
+function youtubeCardHTML() {
+  if (!allVideos.length) return "";
+  const thumb = `https://img.youtube.com/vi/${esc(allVideos[0].vid)}/hqdefault.jpg`;
+  return `<button class="tile" data-youtube="1" aria-label="Contenu YouTube">
+      <span class="tile__media">
+        <img src="${thumb}" alt="" loading="lazy" />
+        <span class="tile__play" aria-hidden="true">▶</span>
+      </span>
+      <span class="tile__cap">
+        <span class="tile__name">Contenu YouTube</span>
+        <span class="tile__cat">${allVideos.length} vidéo${allVideos.length > 1 ? "s" : ""}</span>
+      </span>
+    </button>`;
 }
 
 function renderAlbums() {
   const grid = $("albums");
   if (!grid) return;
+
+  // Onglet YouTube : on n'affiche que la carte vidéo
+  if (activeFilter === "__yt") {
+    grid.innerHTML = youtubeCardHTML() || '<div class="gallery__loading">Aucune vidéo.</div>';
+    return;
+  }
+
   const list = shownAlbums().filter((a) => activeFilter === "all" || a.category === activeFilter);
 
   if (list.length === 0) {
@@ -270,21 +302,8 @@ function renderAlbums() {
       </button>`;
   }).join("");
 
-  // Carte spéciale « Contenu YouTube » (si des vidéos existent)
-  if (allVideos.length && (activeFilter === "all" || activeFilter === "Vidéo")) {
-    const thumb = `https://img.youtube.com/vi/${esc(allVideos[0].vid)}/hqdefault.jpg`;
-    grid.insertAdjacentHTML("beforeend", `
-      <button class="tile" data-youtube="1" aria-label="Contenu YouTube">
-        <span class="tile__media">
-          <img src="${thumb}" alt="" loading="lazy" />
-          <span class="tile__play" aria-hidden="true">▶</span>
-        </span>
-        <span class="tile__cap">
-          <span class="tile__name">Contenu YouTube</span>
-          <span class="tile__cat">${allVideos.length} vidéo${allVideos.length > 1 ? "s" : ""}</span>
-        </span>
-      </button>`);
-  }
+  // Carte « Contenu YouTube » en fin de grille (vue « Tout »)
+  if (activeFilter === "all") grid.insertAdjacentHTML("beforeend", youtubeCardHTML());
 }
 
 function renderAll() { renderFilters(); renderAlbums(); }

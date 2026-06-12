@@ -27,50 +27,70 @@ const yearEl = $("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 
 // ====================================================================
-//  Navigation à rideau (home → sections)
+//  Navigation : la marque glisse de l'accueil vers la barre du haut
+//  (technique FLIP : on mesure avant/après et on anime la différence)
 // ====================================================================
 (function navigation() {
   const body = document.body;
-  const curtain = document.querySelector(".curtain");
+  const brand = document.querySelector(".brand");
   const panels = document.querySelectorAll(".panel");
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const D = 460; // doit correspondre à la transition CSS du rideau
+  const flipEls = [
+    brand.querySelector(".brand__logo"),
+    ...brand.querySelectorAll(".brand__nav button"),
+  ];
 
-  function showPanel(key) {
+  function setActive(key) {
     panels.forEach((p) => p.classList.toggle("is-active", p.dataset.panel === key));
     document.querySelectorAll("[data-go]").forEach((b) =>
       b.classList.toggle("is-active", b.dataset.go === key));
   }
-  // Panneau par défaut prêt sous le rideau
-  showPanel("portfolio");
+  setActive("portfolio");
 
-  function wipe(swap) {
-    if (reduce) { swap(); return; }
-    curtain.classList.add("is-cover");
-    setTimeout(() => {
-      swap();
-      curtain.classList.add("is-reveal");
-      setTimeout(() => curtain.classList.remove("is-cover", "is-reveal"), D);
-    }, D);
+  // Anime les éléments de la marque entre deux mises en page.
+  function flip(change) {
+    if (reduce) { change(); return; }
+    const first = flipEls.map((el) => el.getBoundingClientRect());
+    change();
+    const last = flipEls.map((el) => el.getBoundingClientRect());
+    flipEls.forEach((el, i) => {
+      const dx = first[i].left - last[i].left;
+      const dy = first[i].top - last[i].top;
+      const s = last[i].height ? first[i].height / last[i].height : 1;
+      el.style.transition = "none";
+      el.style.transformOrigin = "left top";
+      el.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
+    });
+    void brand.offsetWidth; // force un reflow
+    requestAnimationFrame(() => {
+      flipEls.forEach((el) => {
+        el.style.transition = "transform 0.62s cubic-bezier(0.7, 0, 0.2, 1)";
+        el.style.transform = "";
+      });
+    });
   }
 
   function navTo(key) {
+    const home = body.classList.contains("mode-home");
+
     if (key === "home") {
-      if (body.classList.contains("mode-home")) return;
-      wipe(() => { body.classList.add("mode-home"); });
+      if (home) return;
+      flip(() => body.classList.add("mode-home"));
       return;
     }
-    const fromHome = body.classList.contains("mode-home");
-    const sameSection = !fromHome &&
-      document.querySelector(`.panel[data-panel="${key}"]`)?.classList.contains("is-active");
-    if (sameSection) return;
-    wipe(() => {
-      body.classList.remove("mode-home");
-      showPanel(key);
-      const stage = document.querySelector(".stage");
-      if (stage) stage.scrollTop = 0;
+
+    // Déjà dans une section : on change juste de panneau (la barre ne bouge pas)
+    if (!home) {
+      const active = document.querySelector(".panel.is-active");
+      if (active && active.dataset.panel === key) return;
+      setActive(key);
       window.scrollTo(0, 0);
-    });
+      return;
+    }
+
+    // Depuis l'accueil → section : la marque glisse vers le haut
+    flip(() => { body.classList.remove("mode-home"); setActive(key); });
+    window.scrollTo(0, 0);
   }
 
   document.querySelectorAll("[data-go]").forEach((b) =>

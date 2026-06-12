@@ -12,26 +12,16 @@
 </head>
 <body class="mode-home">
 
-  <!-- ===== Barre du haut (mode section) ===== -->
-  <header class="topbar">
-    <a class="topbar__logo" data-go="home" data-admin-trigger>arome</a>
-    <nav class="topbar__nav">
+  <!-- ===== Marque : se déplace de l'écran d'accueil vers la barre du haut ===== -->
+  <header class="brand">
+    <a class="brand__logo" data-go="home" data-admin-trigger>arome</a>
+    <p class="brand__tag" id="heroTagline">…</p>
+    <nav class="brand__nav">
       <button type="button" data-go="portfolio">Portfolio</button>
       <button type="button" data-go="about">À propos</button>
       <button type="button" data-go="contact">Contact</button>
     </nav>
   </header>
-
-  <!-- ===== Landing (mode home) ===== -->
-  <section class="landing">
-    <h1 class="landing__word" data-admin-trigger>arome</h1>
-    <p class="landing__tag" id="heroTagline">…</p>
-    <nav class="landing__menu">
-      <button type="button" class="landing__btn" data-go="portfolio">Portfolio</button>
-      <button type="button" class="landing__btn" data-go="about">À propos</button>
-      <button type="button" class="landing__btn" data-go="contact">Contact</button>
-    </nav>
-  </section>
 
   <!-- ===== Contenu (panneaux) ===== -->
   <main class="stage">
@@ -90,9 +80,6 @@
       <span class="foot__meta">Paris · © <span id="year"></span> Mathys Lemarié · <span class="visit"><span id="visitCount">…</span> visites</span></span>
     </footer>
   </main>
-
-  <!-- ===== Rideau de transition ===== -->
-  <div class="curtain" aria-hidden="true"></div>
 
   <!-- ===== Lightbox ===== -->
   <div id="lightbox" class="lightbox" aria-hidden="true">

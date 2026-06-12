@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>arome — créations</title>
+  <meta name="description" content="arome — créations de Mathys Lemarié : photo, vidéo, design." />
+  <meta name="theme-color" content="#08080b" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="acc-violet">
+  <header class="nav">
+    <a href="#hero" class="nav__logo">arome</a>
+    <nav class="nav__links">
+      <a href="#portfolio">Portfolio</a>
+      <a href="#about">À propos</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ===== Hero ===== -->
+    <section id="hero" class="hero">
+      <div class="hero__matrix" aria-hidden="true"></div>
+      <h1 class="hero__wordmark">arome</h1>
+      <p class="hero__tagline" id="heroTagline">…</p>
+      <a href="#portfolio" class="hero__scroll" aria-label="Aller au portfolio">défiler</a>
+    </section>
+
+    <!-- ===== Portfolio (rendu depuis la base) ===== -->
+    <section id="portfolio" class="section">
+      <header class="section__head reveal">
+        <p class="eyebrow">Travaux</p>
+        <h2 class="section__title">Portfolio</h2>
+        <div class="filters" id="filters"></div>
+      </header>
+      <div class="gallery" id="gallery">
+        <div class="gallery__loading">Chargement…</div>
+      </div>
+    </section>
+
+    <!-- ===== À propos ===== -->
+    <section id="about" class="section">
+      <div class="about reveal">
+        <p class="eyebrow">Le projet</p>
+        <h2 class="about__big">arome</h2>
+        <div id="aboutText" class="about__text"></div>
+        <ul class="skills" id="aboutSkills"></ul>
+      </div>
+    </section>
+
+    <!-- ===== Contact ===== -->
+    <section id="contact" class="section">
+      <div class="reveal">
+        <p class="eyebrow">Écris-moi</p>
+        <h2 class="section__title section__title--xl">On travaille ensemble ?</h2>
+        <p class="section__lead">Un projet, une collab, une question — la porte est ouverte.</p>
+        <div class="contact-links" id="contactLinks"></div>
+      </div>
+
+      <div class="guestbook reveal">
+        <h3 class="section__title">Livre d'or</h3>
+        <p class="section__lead">Laisse un mot, il s'affiche en temps réel.</p>
+        <form id="guestbookForm" class="gb-form">
+          <input type="text" id="gbName" name="name" placeholder="Ton nom" maxlength="40" required />
+          <textarea id="gbMessage" name="message" placeholder="Ton message…" maxlength="280" rows="3" required></textarea>
+          <button type="submit" class="btn">Envoyer</button>
+          <p id="gbStatus" class="gb-form__status" role="status"></p>
+        </form>
+        <ul id="gbList" class="gb-list">
+          <li class="gb-list__empty">Chargement des messages…</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span class="footer__sign" title="">arome</span>
+    <span class="footer__meta">
+      Paris · © <span id="year"></span> Mathys Lemarié ·
+      <span class="visit"><span id="visitCount">…</span> visites</span>
+    </span>
+  </footer>
+
+  <!-- ===== Lightbox ===== -->
+  <div id="lightbox" class="lightbox" aria-hidden="true">
+    <button class="lightbox__close" id="lbClose" aria-label="Fermer">✕</button>
+    <img class="lightbox__img" id="lbImg" alt="" />
+  </div>
+
+  <!-- ===== Admin (mini-CMS, accès secret) ===== -->
+  <div id="adminOverlay" class="admin" aria-hidden="true"></div>
+
+  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

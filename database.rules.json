@@ -1,0 +1,54 @@
+{
+  "rules": {
+    "stats": {
+      "visits": {
+        ".read": true,
+        ".write": true,
+        ".validate": "newData.isNumber()"
+      }
+    },
+
+    "content": {
+      ".read": true,
+      ".write": true,
+      "hero":    { "tagline": { ".validate": "newData.isString() && newData.val().length <= 160" } },
+      "about": {
+        "text":   { ".validate": "newData.isString() && newData.val().length <= 5000" },
+        "skills": { ".validate": "newData.exists()" }
+      },
+      "contact": {
+        "email":     { ".validate": "newData.isString() && newData.val().length <= 160" },
+        "instagram": { ".validate": "newData.isString() && newData.val().length <= 400" },
+        "vinted":    { ".validate": "newData.isString() && newData.val().length <= 400" }
+      }
+    },
+
+    "portfolio": {
+      ".read": true,
+      ".write": true,
+      "$item": {
+        ".validate": "!newData.exists() || newData.hasChild('order')",
+        "title":     { ".validate": "newData.isString() && newData.val().length <= 160" },
+        "category":  { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "image":     { ".validate": "newData.isString() && newData.val().length <= 3000000" },
+        "link":      { ".validate": "newData.isString() && newData.val().length <= 600" },
+        "order":     { ".validate": "newData.isNumber()" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "$other":    { ".validate": false }
+      }
+    },
+
+    "guestbook": {
+      ".read": true,
+      ".write": false,
+      "$msg": {
+        ".write": "!data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['name','message','createdAt'])",
+        "name":      { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "message":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 280" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "$other":    { ".validate": false }
+      }
+    }
+  }
+}

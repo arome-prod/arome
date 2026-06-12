@@ -9,8 +9,8 @@ import {
   onValue,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=65";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=65";
+import { db, isConfigured } from "./firebase.js?v=67";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=67";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -164,6 +164,36 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
       timer = setTimeout(() => (clicks = 0), 600);
       if (clicks >= 3) { location.href = "admin.html"; }
     });
+  });
+})();
+
+// ====================================================================
+//  Easter egg : taper « arome » au clavier → petit clin d'œil en fondu
+// ====================================================================
+(function easterEgg() {
+  const SEQ = "arome";
+  let buf = "", el = null, timer = null;
+
+  function show() {
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "egg";
+      el.setAttribute("aria-hidden", "true");
+      document.body.appendChild(el);
+    }
+    el.textContent = "✦ arôme — ce qui reste quand l’image s’efface";
+    requestAnimationFrame(() => el.classList.add("is-on"));
+    clearTimeout(timer);
+    timer = setTimeout(() => el.classList.remove("is-on"), 4200);
+  }
+
+  document.addEventListener("keydown", (e) => {
+    const t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+    const k = (e.key || "").toLowerCase();
+    if (k.length !== 1) return;          // ignore Shift, flèches, etc.
+    buf = (buf + k).slice(-SEQ.length);
+    if (buf === SEQ) { buf = ""; show(); }
   });
 })();
 
@@ -484,7 +514,7 @@ function updateAlbumArrows() {
 
   // --- Défilement automatique (onglet « Tout »), pause au survol ---
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const SPEED = 0.5;          // px par frame (lent)
+  const SPEED = 0.28;          // px par frame (lent)
   const START_DELAY = 2500;   // pause avant de (re)démarrer le défilement
   let dir = 1, paused = false, pos = 0, wasOk = false, resumeAt = 0;
   el.style.scrollSnapType = "none";   // pas d'aimantation : s'arrête sur place, défilement fluide
@@ -553,7 +583,7 @@ function updateInspArrows() {
   if ("ResizeObserver" in window) new ResizeObserver(updateInspArrows).observe(el);
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const SPEED = 0.5;
+  const SPEED = 0.28;
   const START_DELAY = 2500;
   let dir = 1, paused = false, pos = 0, wasOk = false, resumeAt = 0;
   el.style.scrollSnapType = "none";

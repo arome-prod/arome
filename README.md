@@ -35,11 +35,12 @@ Site **one-page** statique (HTML / CSS / JavaScript, **sans build**) de **arome*
 4. Copie `firebaseConfig` dans **`js/firebase-config.js`** (vérifie `databaseURL`).
 5. Console → **Realtime Database** → **Règles** → colle `database.rules.json` → **Publier**.
 
-## 2. L'admin (accès secret)
+## 2. L'admin (page dédiée `admin.html`)
 
-- **Ouvrir :** ajoute `#admin` à l'URL (`…/index.html#admin`) **ou** triple-clique sur le mot-marque « arome » (grand titre de la home, ou logo en haut à gauche).
+- **Ouvrir :** va sur **`admin.html`** (ou `…/index.html#admin`, ou triple-clique sur le mot-marque « arome » — ça redirige vers la page admin).
 - **Mot de passe :** dans `js/config.js` (`ADMIN_PASSWORD`, défaut `arome2026`). **Change-le.**
-- Tu peux éditer : l'accroche du hero, le texte « à propos » + compétences, les liens de contact, et **ajouter / réordonner / supprimer** des projets. Chaque projet a une **catégorie libre** que tu tapes (les filtres du site se génèrent à partir des catégories utilisées) ; une **image** ; et un **lien externe** optionnel (si renseigné, cliquer le projet ouvre ce lien ; sinon, l'image s'ouvre en grand).
+- C'est une vraie page pleine, confortable. Tu peux **ajouter, MODIFIER, réordonner et supprimer** des projets, et éditer les textes (accroche d'accueil, « à propos » + compétences, liens de contact). Chaque projet a une **catégorie libre** que tu tapes (les filtres du site se génèrent à partir des catégories utilisées), une **image**, et un **lien externe** optionnel (si renseigné, cliquer le projet ouvre ce lien ; sinon l'image s'ouvre en grand).
+- **Modifier un projet :** clique « Modifier » sur sa carte → ses infos se chargent dans l'éditeur en haut → change ce que tu veux (l'image n'est remplacée que si tu en choisis une nouvelle) → « Enregistrer les modifications ».
 
 ### ⚠️ Sécurité de l'admin
 

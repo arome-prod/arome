@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>arome — admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="css/style.css?v=5" />
+  <link rel="stylesheet" href="css/admin.css?v=5" />
+</head>
+<body class="adm">
+
+  <!-- ===== Connexion ===== -->
+  <section id="gate" class="adm-gate">
+    <form id="gateForm" class="adm-gate__box">
+      <h1 class="adm-gate__title">arome · admin</h1>
+      <p class="adm-gate__hint">Accès réservé.</p>
+      <input type="password" id="gatePass" placeholder="Mot de passe" autocomplete="current-password" />
+      <button type="submit" class="btn">Entrer</button>
+      <p id="gateErr" class="adm-gate__err"></p>
+      <p class="adm-gate__back"><a href="index.html">← Retour au site</a></p>
+    </form>
+  </section>
+
+  <!-- ===== Application admin (cachée tant que non connecté) ===== -->
+  <div id="app" class="adm-app" hidden>
+    <header class="adm-top">
+      <span class="adm-top__logo">arome · admin</span>
+      <nav class="adm-top__links">
+        <a href="index.html" target="_blank" rel="noopener">Voir le site ↗</a>
+        <button type="button" id="logout">Quitter</button>
+      </nav>
+    </header>
+
+    <main class="adm-wrap">
+
+      <!-- ===== PROJETS ===== -->
+      <section class="adm-block">
+        <h2 class="adm-h2">Projets <span id="projCount" class="adm-count">0</span></h2>
+
+        <!-- Éditeur (ajout / modification) -->
+        <div class="adm-editor">
+          <h3 id="editorTitle" class="adm-h3">Ajouter un projet</h3>
+          <div class="adm-form">
+            <label>Titre
+              <input id="f-title" placeholder="Titre du projet" />
+            </label>
+            <label>Catégorie
+              <input id="f-cat" list="catlist" placeholder="Photo, Vidéo, Design, Musique…" />
+              <datalist id="catlist"></datalist>
+            </label>
+            <label>Lien externe (optionnel — vidéo, site…)
+              <input id="f-link" placeholder="https://…" />
+            </label>
+
+            <div class="adm-imgrow">
+              <div class="adm-imgcur" id="curImage" hidden>
+                <span class="adm-imglabel">Image actuelle</span>
+                <img id="curImageImg" alt="" />
+              </div>
+              <label>Image (fichier — compressé auto)
+                <input id="f-file" type="file" accept="image/*" />
+              </label>
+              <label>…ou URL d'image
+                <input id="f-imgurl" placeholder="https://… ou images/photo.jpg" />
+              </label>
+              <div id="newPreview" class="adm-preview"></div>
+            </div>
+
+            <div class="adm-actions">
+              <button type="button" class="btn" id="saveProject">Enregistrer</button>
+              <button type="button" class="btn btn--ghost" id="resetEditor" hidden>Annuler</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Liste des projets -->
+        <div class="adm-list" id="projList"></div>
+      </section>
+
+      <!-- ===== TEXTES ===== -->
+      <section class="adm-block">
+        <h2 class="adm-h2">Textes du site</h2>
+
+        <div class="adm-form">
+          <h3 class="adm-h3">Accueil</h3>
+          <label>Accroche (sous le nom « arome »)
+            <input id="c-tagline" />
+          </label>
+          <button type="button" class="btn btn--sm" id="saveHero">Enregistrer l'accueil</button>
+        </div>
+
+        <div class="adm-form">
+          <h3 class="adm-h3">À propos</h3>
+          <label>Texte (ligne vide = nouveau paragraphe)
+            <textarea id="c-about" rows="6"></textarea>
+          </label>
+          <label>Compétences (séparées par des virgules)
+            <input id="c-skills" />
+          </label>
+          <button type="button" class="btn btn--sm" id="saveAbout">Enregistrer à propos</button>
+        </div>
+
+        <div class="adm-form">
+          <h3 class="adm-h3">Contact</h3>
+          <label>Email <input id="c-email" /></label>
+          <label>Instagram (URL) <input id="c-insta" /></label>
+          <label>Vinted (URL) <input id="c-vinted" /></label>
+          <button type="button" class="btn btn--sm" id="saveContact">Enregistrer le contact</button>
+        </div>
+      </section>
+
+      <p class="adm-foot">Astuce : garde des images légères. La compression vise ~150–300 Ko par image. Le contenu apparaît sur le site en direct.</p>
+    </main>
+  </div>
+
+  <div id="toast" class="adm-toast"></div>
+
+  <script type="module" src="js/admin-page.js?v=5"></script>
+</body>
+</html>

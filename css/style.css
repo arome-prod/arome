@@ -437,7 +437,8 @@ body:not(.mode-home) .brand__nav button { font-size: 0.7rem; }
   will-change: transform;
 }
 .brand__nav button:hover { color: var(--text); }
-.brand__nav button.is-active { color: var(--text); border-color: var(--text); }
+/* Surlignage uniquement en mode barre-du-haut (rien de sélectionné sur l'accueil) */
+body:not(.mode-home) .brand__nav button.is-active { color: var(--text); border-color: var(--text); }
 
 /* Scène + panneaux */
 .stage { padding-top: 60px; min-height: 100vh; }

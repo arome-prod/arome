@@ -98,6 +98,22 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
 })();
 
 // ====================================================================
+//  Accès admin : #admin dans l'URL, ou triple-clic sur « arome »
+//  → ouvre la page dédiée admin.html
+// ====================================================================
+(function adminAccess() {
+  if (location.hash === "#admin") { location.href = "admin.html"; return; }
+  document.querySelectorAll("[data-admin-trigger]").forEach((el) => {
+    let clicks = 0, timer = null;
+    el.addEventListener("click", () => {
+      clicks++; clearTimeout(timer);
+      timer = setTimeout(() => (clicks = 0), 600);
+      if (clicks >= 3) { location.href = "admin.html"; }
+    });
+  });
+})();
+
+// ====================================================================
 //  Contenu éditorial (hero / à propos / contact)
 // ====================================================================
 function renderContent(c) {

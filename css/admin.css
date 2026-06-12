@@ -140,6 +140,15 @@
 .adm-addphotos span { display: block; margin-bottom: 0.5rem; }
 .adm-addphotos input { font-size: 0.8rem; }
 
+/* ===== Ajout vidéo YouTube ===== */
+.adm-addvideo {
+  border: 1px dashed var(--line-strong); border-radius: 4px;
+  padding: 1rem; margin: 0.6rem 0 1rem; display: grid; gap: 0.6rem;
+}
+.adm-addvideo__label { color: var(--muted); font-size: 0.84rem; }
+.adm-addvideo button { justify-self: start; }
+.adm-photo__badge--vid { background: rgba(10,10,10,0.85); color: #fff; }
+
 /* ===== Grille des photos d'un album ===== */
 .adm-photogrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.7rem; }
 .adm-photo { position: relative; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #0a0a0a; }

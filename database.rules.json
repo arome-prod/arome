@@ -38,6 +38,8 @@
         "photos": {
           "$photo": {
             "src":       { ".validate": "newData.isString() && newData.val().length <= 3000000" },
+            "youtube":   { ".validate": "newData.isString() && newData.val().length <= 40" },
+            "title":     { ".validate": "newData.isString() && newData.val().length <= 200" },
             "order":     { ".validate": "newData.isNumber()" },
             "createdAt": { ".validate": "newData.isNumber()" },
             "$other":    { ".validate": false }

@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=23";
-import { DEFAULTS, DEMO } from "./config.js?v=23";
+import { db, isConfigured } from "./firebase.js?v=24";
+import { DEFAULTS, DEMO } from "./config.js?v=24";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -199,13 +199,17 @@ function photosOf(a) {
     .map(([id, p]) => ({ id, ...p }))
     .sort((x, y) => (x.order || 0) - (y.order || 0));
 }
+function mediaThumb(m) {
+  if (!m) return "";
+  return m.youtube ? `https://img.youtube.com/vi/${m.youtube}/hqdefault.jpg` : (m.src || "");
+}
 function coverSrc(a) {
   const ph = photosOf(a);
   if (a.coverId && ph.length) {
     const c = ph.find((p) => p.id === a.coverId);
-    if (c) return c.src;
+    if (c) return mediaThumb(c);
   }
-  if (ph.length) return ph[0].src;
+  if (ph.length) return mediaThumb(ph[0]);
   return a.cover || "";
 }
 
@@ -291,13 +295,27 @@ function openAlbum(id) {
 
   const grid = $("albumPhotos");
   grid.innerHTML = ph.length
-    ? ph.map((p, i) =>
-        `<button class="tile" data-lb="${i}"><span class="tile__media"><img src="${esc(p.src)}" alt="" loading="lazy" /></span></button>`
-      ).join("")
+    ? ph.map((m, i) => {
+        if (m.youtube) {
+          const thumb = `https://img.youtube.com/vi/${esc(m.youtube)}/hqdefault.jpg`;
+          return `<button class="tile" data-lb="${i}">
+              <span class="tile__media">
+                <img src="${thumb}" alt="${esc(m.title || "")}" loading="lazy" />
+                <span class="tile__play" aria-hidden="true">▶</span>
+              </span>
+              ${m.title ? `<span class="tile__cap"><span class="tile__name">${esc(m.title)}</span></span>` : ""}
+            </button>`;
+        }
+        return `<button class="tile" data-lb="${i}"><span class="tile__media"><img src="${esc(m.src)}" alt="" loading="lazy" /></span></button>`;
+      }).join("")
     : '<div class="gallery__loading">Album vide pour l’instant.</div>';
 
-  // Liste pour la lightbox
-  lbList = ph.map((p) => p.src);
+  // Éléments pour la lightbox (image ou vidéo)
+  lbList = ph.map((m) =>
+    m.youtube
+      ? { type: "video", id: m.youtube, title: m.title || "" }
+      : { type: "image", src: m.src, title: "" }
+  );
 
   $("albumsView").hidden = true;
   $("albumView").hidden = false;
@@ -319,7 +337,19 @@ const lb = $("lightbox"), lbImg = $("lbImg");
 function showLb(i) {
   if (!lbList.length) return;
   lbIndex = (i + lbList.length) % lbList.length;
-  lbImg.src = lbList[lbIndex];
+  const item = lbList[lbIndex];
+  const img = $("lbImg"), vWrap = $("lbVideoWrap"), vFrame = $("lbVideo"), title = $("lbTitle");
+
+  if (item.type === "video") {
+    img.hidden = true; img.src = "";
+    vWrap.hidden = false;
+    vFrame.src = `https://www.youtube.com/embed/${item.id}?rel=0&autoplay=1`;
+  } else {
+    vWrap.hidden = true; vFrame.src = "";
+    img.hidden = false; img.src = item.src;
+  }
+  title.textContent = item.title || "";
+
   const multi = lbList.length > 1;
   $("lbPrev").style.display = multi ? "" : "none";
   $("lbNext").style.display = multi ? "" : "none";
@@ -332,7 +362,9 @@ function openLb(i) {
 function closeLb() {
   lb.classList.remove("is-open");
   lb.setAttribute("aria-hidden", "true");
-  lbImg.src = "";
+  $("lbImg").src = "";
+  $("lbVideo").src = ""; // stoppe la lecture
+  $("lbVideoWrap").hidden = true;
 }
 document.addEventListener("click", (e) => {
   const t = e.target.closest("#albumPhotos .tile[data-lb]");

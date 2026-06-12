@@ -8,14 +8,14 @@
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=23" />
+  <link rel="stylesheet" href="css/style.css?v=24" />
 </head>
 <body class="mode-home">
 
   <!-- ===== Marque : se déplace de l'écran d'accueil vers la barre du haut ===== -->
   <header class="brand">
     <a class="brand__logo" data-go="home" data-admin-trigger aria-label="arome — accueil">
-      <img class="brand__logomark" src="images/arome_logo.svg?v=23" alt="arome" />
+      <img class="brand__logomark" src="images/arome_logo.svg?v=24" alt="arome" />
     </a>
     <p class="brand__tag" id="heroTagline">…</p>
     <nav class="brand__nav">
@@ -103,14 +103,20 @@
   <!-- ===== Store de transition (remonte pour révéler la page) ===== -->
   <div class="store" aria-hidden="true"></div>
 
-  <!-- ===== Lightbox (avec navigation) ===== -->
+  <!-- ===== Lightbox (image ou lecteur vidéo) ===== -->
   <div id="lightbox" class="lightbox" aria-hidden="true">
     <button class="lightbox__close" id="lbClose" aria-label="Fermer">✕</button>
     <button class="lightbox__nav lightbox__prev" id="lbPrev" aria-label="Précédent">‹</button>
-    <img class="lightbox__img" id="lbImg" alt="" />
+    <div class="lightbox__stage">
+      <img class="lightbox__img" id="lbImg" alt="" hidden />
+      <div class="lightbox__video" id="lbVideoWrap" hidden>
+        <iframe id="lbVideo" title="Lecteur vidéo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div>
+      <p class="lightbox__title" id="lbTitle"></p>
+    </div>
     <button class="lightbox__nav lightbox__next" id="lbNext" aria-label="Suivant">›</button>
   </div>
 
-  <script type="module" src="js/app.js?v=23"></script>
+  <script type="module" src="js/app.js?v=24"></script>
 </body>
 </html>

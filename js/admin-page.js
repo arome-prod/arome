@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=23";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=23";
+import { db, isConfigured } from "./firebase.js?v=24";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=24";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -87,12 +87,34 @@ function photosOf(a) {
     .map(([id, p]) => ({ id, ...p }))
     .sort((x, y) => (x.order || 0) - (y.order || 0));
 }
+function mediaThumb(m) {
+  if (!m) return "";
+  return m.youtube ? `https://img.youtube.com/vi/${m.youtube}/hqdefault.jpg` : (m.src || "");
+}
 function coverSrc(a) {
   const ph = photosOf(a);
-  if (a.coverId) { const c = ph.find((p) => p.id === a.coverId); if (c) return c.src; }
-  return ph.length ? ph[0].src : (a.cover || "");
+  if (a.coverId) { const c = ph.find((p) => p.id === a.coverId); if (c) return mediaThumb(c); }
+  return ph.length ? mediaThumb(ph[0]) : (a.cover || "");
 }
 const albumById = (id) => albums.find((a) => a.id === id);
+
+// Extrait l'identifiant d'une vidéo YouTube depuis un lien (plusieurs formats)
+function youtubeId(url) {
+  const s = String(url || "").trim();
+  const m = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/|live\/))([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+  return "";
+}
+// Tente de récupérer le titre via l'oEmbed YouTube (sans clé API ; best effort)
+async function fetchYoutubeTitle(id) {
+  try {
+    const r = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);
+    if (!r.ok) return "";
+    const data = await r.json();
+    return data.title || "";
+  } catch (e) { return ""; }
+}
 
 // ====================================================================
 //  Textes
@@ -238,13 +260,16 @@ function renderManagerPhotos() {
   if (!grid) return;
   const ph = photosOf(a);
   $("mgrPhotoCount").textContent = ph.length;
-  if (!ph.length) { grid.innerHTML = '<p class="adm-empty">Aucune photo. Ajoute-en ci-dessus.</p>'; return; }
+  if (!ph.length) { grid.innerHTML = '<p class="adm-empty">Aucun média. Ajoute des photos ou une vidéo ci-dessus.</p>'; return; }
 
   grid.innerHTML = ph.map((p, i) => {
     const isCover = (a.coverId && a.coverId === p.id) || (!a.coverId && i === 0);
+    const thumb = mediaThumb(p);
+    const badge = p.youtube ? '<span class="adm-photo__badge adm-photo__badge--vid">▶ vidéo</span>'
+      : (isCover ? '<span class="adm-photo__badge">Couverture</span>' : "");
     return `<div class="adm-photo${isCover ? " is-cover" : ""}">
-        <img src="${esc(p.src)}" alt="" />
-        ${isCover ? '<span class="adm-photo__badge">Couverture</span>' : ""}
+        <img src="${esc(thumb)}" alt="" />
+        ${badge}
         <div class="adm-photo__bar">
           <button data-pact="cover" data-id="${p.id}" title="Définir comme couverture">★</button>
           <button data-pact="up" data-id="${p.id}" ${i === 0 ? "disabled" : ""} title="Avancer">↑</button>
@@ -286,6 +311,26 @@ async function addPhotos(files) {
   $("m-files").value = "";
   $("m-progress").textContent = "";
   toast(`${done} photo(s) ajoutée(s) ✦`);
+}
+
+async function addVideo() {
+  if (!managingId) return;
+  const id = youtubeId($("m-yturl").value);
+  if (!id) { toast("Lien YouTube non reconnu."); return; }
+  let title = $("m-yttitle").value.trim();
+  if (!title) title = await fetchYoutubeTitle(id); // best effort
+  const a = albumById(managingId);
+  const order = photosOf(a).length ? Math.max(...photosOf(a).map((p) => p.order || 0)) + 1 : 0;
+  try {
+    await push(ref(db, `albums/${managingId}/photos`), {
+      youtube: id, title: title || "", order, createdAt: Date.now(),
+    });
+    $("m-yturl").value = ""; $("m-yttitle").value = "";
+    toast("Vidéo ajoutée ✦");
+  } catch (e) {
+    console.error(e);
+    toast("Échec : " + (e.message || "écriture refusée"));
+  }
 }
 
 async function setCover(pid) {
@@ -341,6 +386,15 @@ function wire() {
   $("saveAlbumMeta").addEventListener("click", saveAlbumMeta);
   $("m-files").addEventListener("change", (e) => {
     if (e.target.files && e.target.files.length) addPhotos(e.target.files);
+  });
+  $("addVideo").addEventListener("click", addVideo);
+  // Récupère le titre automatiquement quand on quitte le champ lien
+  $("m-yturl").addEventListener("blur", async () => {
+    const id = youtubeId($("m-yturl").value);
+    if (id && !$("m-yttitle").value.trim()) {
+      const t = await fetchYoutubeTitle(id);
+      if (t) $("m-yttitle").value = t;
+    }
   });
 }
 

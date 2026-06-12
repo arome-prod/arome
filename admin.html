@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=23" />
-  <link rel="stylesheet" href="css/admin.css?v=23" />
+  <link rel="stylesheet" href="css/style.css?v=24" />
+  <link rel="stylesheet" href="css/admin.css?v=24" />
 </head>
 <body class="adm">
 
@@ -71,11 +71,21 @@
           <button type="button" class="btn btn--sm" id="saveAlbumMeta">Enregistrer les infos</button>
         </div>
 
-        <h3 class="adm-h3" style="margin-top:1.5rem">Photos <span id="mgrPhotoCount" class="adm-count">0</span></h3>
+        <h3 class="adm-h3" style="margin-top:1.5rem">Médias <span id="mgrPhotoCount" class="adm-count">0</span></h3>
         <label class="adm-addphotos">
           <span>+ Ajouter des photos (plusieurs à la fois — compressées auto)</span>
           <input id="m-files" type="file" accept="image/*" multiple />
         </label>
+
+        <div class="adm-addvideo">
+          <span class="adm-addvideo__label">+ Ajouter une vidéo YouTube</span>
+          <div class="adm-create__row">
+            <input id="m-yturl" placeholder="Lien YouTube (https://youtu.be/… ou watch?v=…)" />
+            <input id="m-yttitle" placeholder="Titre (récupéré auto si possible)" />
+          </div>
+          <button type="button" class="btn btn--sm" id="addVideo">Ajouter la vidéo</button>
+        </div>
+
         <p id="m-progress" class="adm-hint"></p>
         <div class="adm-photogrid" id="mgrPhotos"></div>
       </section>
@@ -118,6 +128,6 @@
 
   <div id="toast" class="adm-toast"></div>
 
-  <script type="module" src="js/admin-page.js?v=23"></script>
+  <script type="module" src="js/admin-page.js?v=24"></script>
 </body>
 </html>

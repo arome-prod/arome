@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=12";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=12";
+import { db, isConfigured } from "./firebase.js?v=14";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=14";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -361,6 +361,7 @@ if (isConfigured) {
     snap.forEach((c) => arr.push({ id: c.key, ...c.val() }));
     arr.sort((a, b) => (a.order || 0) - (b.order || 0));
     albums = arr;
+    console.log("[admin] albums reçus :", arr.length, arr.map((a) => a.title));
     renderAdminAlbums();
     refreshCatList();
     if (managingId && !$("albumManager").hidden) renderManagerPhotos();

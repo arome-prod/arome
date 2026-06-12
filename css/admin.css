@@ -3,7 +3,7 @@
    Réutilise les variables de style.css (couleurs, polices).
    ==================================================================== */
 
-.adm { background: var(--bg); color: var(--text); min-height: 100vh; }
+.adm { background: transparent; color: var(--text); min-height: 100vh; }
 
 /* L'attribut HTML [hidden] doit TOUJOURS l'emporter sur display:flex/grid */
 [hidden] { display: none !important; }

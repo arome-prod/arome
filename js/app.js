@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=51";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=51";
+import { db, isConfigured } from "./firebase.js?v=52";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=52";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>

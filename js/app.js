@@ -9,8 +9,8 @@ import {
   onValue,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=64";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=64";
+import { db, isConfigured } from "./firebase.js?v=65";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=65";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -484,8 +484,10 @@ function updateAlbumArrows() {
 
   // --- Défilement automatique (onglet « Tout »), pause au survol ---
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const SPEED = 0.5;    // px par frame (lent)
-  let dir = 1, paused = false, pos = 0;
+  const SPEED = 0.5;          // px par frame (lent)
+  const START_DELAY = 2500;   // pause avant de (re)démarrer le défilement
+  let dir = 1, paused = false, pos = 0, wasOk = false, resumeAt = 0;
+  el.style.scrollSnapType = "none";   // pas d'aimantation : s'arrête sur place, défilement fluide
 
   if (wrap) {
     wrap.addEventListener("mouseenter", () => (paused = true));
@@ -504,16 +506,17 @@ function updateAlbumArrows() {
   }
 
   function autoTick() {
-    if (eligible()) {
-      el.style.scrollSnapType = "none";   // sinon le snap fait sauter bloc à bloc
+    const ok = eligible();
+    if (ok && !wasOk) resumeAt = performance.now() + START_DELAY;  // délai au (re)démarrage
+    wasOk = ok;
+    if (ok && performance.now() >= resumeAt) {
       const max = el.scrollWidth - el.clientWidth;
-      pos += dir * SPEED;                  // accumulateur flottant (sinon la fraction est perdue)
+      pos += dir * SPEED;
       if (pos >= max) { pos = max; dir = -1; }
       else if (pos <= 0) { pos = 0; dir = 1; }
       el.scrollLeft = pos;
     } else {
-      el.style.scrollSnapType = "";       // snap rétabli pour le défilement manuel
-      pos = el.scrollLeft;                 // resync quand en pause / défilement manuel
+      pos = el.scrollLeft;   // immobile (survol ou délai) → on reste synchro, sans saut
     }
     requestAnimationFrame(autoTick);
   }
@@ -551,7 +554,9 @@ function updateInspArrows() {
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const SPEED = 0.5;
-  let dir = 1, paused = false, pos = 0;
+  const START_DELAY = 2500;
+  let dir = 1, paused = false, pos = 0, wasOk = false, resumeAt = 0;
+  el.style.scrollSnapType = "none";
   if (wrap) {
     wrap.addEventListener("mouseenter", () => (paused = true));
     wrap.addEventListener("mouseleave", () => (paused = false));
@@ -566,15 +571,16 @@ function updateInspArrows() {
     return el.scrollWidth - el.clientWidth > 4;
   }
   function autoTick() {
-    if (eligible()) {
-      el.style.scrollSnapType = "none";
+    const ok = eligible();
+    if (ok && !wasOk) resumeAt = performance.now() + START_DELAY;
+    wasOk = ok;
+    if (ok && performance.now() >= resumeAt) {
       const max = el.scrollWidth - el.clientWidth;
       pos += dir * SPEED;
       if (pos >= max) { pos = max; dir = -1; }
       else if (pos <= 0) { pos = 0; dir = 1; }
       el.scrollLeft = pos;
     } else {
-      el.style.scrollSnapType = "";
       pos = el.scrollLeft;
     }
     requestAnimationFrame(autoTick);

@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=67") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=68") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -72,6 +72,13 @@ a { color: var(--text); text-decoration: none; }
 html.cursor-on, html.cursor-on * { cursor: none !important; }
 html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] { cursor: auto !important; }
 @media (pointer: coarse) { .cursor { display: none !important; } }
+
+/* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
+/* Flèche angulaire jaune CP2077, recréée en SVG (placée APRÈS pour l'emporter). */
+html.cursor-cyber, html.cursor-cyber * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpolygon points='4,2 4,24 10,18.5 14,28 18.5,26 14.5,17 23,17' fill='%23fcee0a' stroke='%23000' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E") 4 2, auto !important;
+}
+html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
 /* ===== Easter egg (taper « arome ») ===== */
 .egg {

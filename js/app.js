@@ -9,8 +9,8 @@ import {
   onValue,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=67";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=67";
+import { db, isConfigured } from "./firebase.js?v=68";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=68";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -171,29 +171,38 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
 //  Easter egg : taper « arome » au clavier → petit clin d'œil en fondu
 // ====================================================================
 (function easterEgg() {
-  const SEQ = "arome";
   let buf = "", el = null, timer = null;
 
-  function show() {
+  function flash(text) {
     if (!el) {
       el = document.createElement("div");
       el.className = "egg";
       el.setAttribute("aria-hidden", "true");
       document.body.appendChild(el);
     }
-    el.textContent = "✦ arôme — ce qui reste quand l’image s’efface";
+    el.textContent = text;
     requestAnimationFrame(() => el.classList.add("is-on"));
     clearTimeout(timer);
     timer = setTimeout(() => el.classList.remove("is-on"), 4200);
   }
+
+  const EGGS = [
+    { seq: "arome", run: () => flash("✦ arôme — ce qui reste quand l’image s’efface") },
+    { seq: "cyberpunk", run: () => {
+        const on = document.documentElement.classList.toggle("cursor-cyber");
+        flash(on ? "▮ mode cyberpunk — wake the f*** up, samurai" : "curseur normal rétabli");
+      } },
+  ];
 
   document.addEventListener("keydown", (e) => {
     const t = e.target;
     if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
     const k = (e.key || "").toLowerCase();
     if (k.length !== 1) return;          // ignore Shift, flèches, etc.
-    buf = (buf + k).slice(-SEQ.length);
-    if (buf === SEQ) { buf = ""; show(); }
+    buf = (buf + k).slice(-24);
+    for (const egg of EGGS) {
+      if (buf.endsWith(egg.seq)) { buf = ""; egg.run(); break; }
+    }
   });
 })();
 

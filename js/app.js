@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=21";
-import { DEFAULTS, DEMO } from "./config.js?v=21";
+import { db, isConfigured } from "./firebase.js?v=22";
+import { DEFAULTS, DEMO } from "./config.js?v=22";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -34,6 +34,7 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
   const body = document.body;
   const brand = document.querySelector(".brand");
   const panels = document.querySelectorAll(".panel");
+  const store = document.querySelector(".store");
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const flipEls = [
     brand.querySelector(".brand__logo"),
@@ -70,6 +71,33 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
     });
   }
 
+  // Aller vers une section avec l'effet « store » qui remonte pour révéler.
+  function goSection(key, fromHome) {
+    const swap = () => {
+      if (fromHome) body.classList.remove("mode-home");
+      setActive(key);
+      window.scrollTo(0, 0);
+    };
+
+    if (reduce || !store) {
+      if (fromHome) flip(swap); else swap();
+      return;
+    }
+
+    // 1. Le store couvre instantanément le contenu
+    store.classList.add("no-anim", "is-cover");
+    void store.offsetHeight; // reflow
+
+    // 2. On change le contenu derrière le store (la marque glisse si on vient de l'accueil)
+    if (fromHome) flip(swap); else swap();
+
+    // 3. Le store remonte pour dévoiler la page
+    requestAnimationFrame(() => {
+      store.classList.remove("no-anim");
+      requestAnimationFrame(() => store.classList.remove("is-cover"));
+    });
+  }
+
   function navTo(key) {
     const home = body.classList.contains("mode-home");
 
@@ -79,18 +107,16 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
       return;
     }
 
-    // Déjà dans une section : on change juste de panneau (la barre ne bouge pas)
+    // Déjà dans une section : changement de panneau (la barre ne bouge pas)
     if (!home) {
       const active = document.querySelector(".panel.is-active");
       if (active && active.dataset.panel === key) return;
-      setActive(key);
-      window.scrollTo(0, 0);
+      goSection(key, false);
       return;
     }
 
-    // Depuis l'accueil → section : la marque glisse vers le haut
-    flip(() => { body.classList.remove("mode-home"); setActive(key); });
-    window.scrollTo(0, 0);
+    // Depuis l'accueil → section
+    goSection(key, true);
   }
 
   document.querySelectorAll("[data-go]").forEach((b) =>

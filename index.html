@@ -8,14 +8,14 @@
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=21" />
+  <link rel="stylesheet" href="css/style.css?v=22" />
 </head>
 <body class="mode-home">
 
   <!-- ===== Marque : se déplace de l'écran d'accueil vers la barre du haut ===== -->
   <header class="brand">
     <a class="brand__logo" data-go="home" data-admin-trigger aria-label="arome — accueil">
-      <img class="brand__logomark" src="images/arome_logo.svg?v=21" alt="arome" />
+      <img class="brand__logomark" src="images/arome_logo.svg?v=22" alt="arome" />
     </a>
     <p class="brand__tag" id="heroTagline">…</p>
     <nav class="brand__nav">
@@ -100,6 +100,9 @@
     </footer>
   </main>
 
+  <!-- ===== Store de transition (remonte pour révéler la page) ===== -->
+  <div class="store" aria-hidden="true"></div>
+
   <!-- ===== Lightbox (avec navigation) ===== -->
   <div id="lightbox" class="lightbox" aria-hidden="true">
     <button class="lightbox__close" id="lbClose" aria-label="Fermer">✕</button>
@@ -108,6 +111,6 @@
     <button class="lightbox__nav lightbox__next" id="lbNext" aria-label="Suivant">›</button>
   </div>
 
-  <script type="module" src="js/app.js?v=21"></script>
+  <script type="module" src="js/app.js?v=22"></script>
 </body>
 </html>

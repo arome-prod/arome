@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=30";
-import { DEFAULTS, DEMO } from "./config.js?v=30";
+import { db, isConfigured } from "./firebase.js?v=32";
+import { DEFAULTS, DEMO } from "./config.js?v=32";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -318,9 +318,30 @@ function renderAlbums() {
 
   // Carte « Contenu YouTube » en fin de grille (vue « Tout »)
   if (activeFilter === "all") grid.insertAdjacentHTML("beforeend", youtubeCardHTML());
+
+  requestAnimationFrame(updateAlbumArrows);
 }
 
 function renderAll() { renderFilters(); renderAlbums(); }
+
+// Flèches de défilement de la rangée d'albums
+function updateAlbumArrows() {
+  const el = $("albums"), prev = $("albumsPrev"), next = $("albumsNext");
+  if (!el || !prev || !next) return;
+  const max = el.scrollWidth - el.clientWidth;
+  const overflow = max > 4;
+  prev.hidden = !overflow || el.scrollLeft <= 2;
+  next.hidden = !overflow || el.scrollLeft >= max - 2;
+}
+(function albumArrows() {
+  const el = $("albums"), prev = $("albumsPrev"), next = $("albumsNext");
+  if (!el || !prev || !next) return;
+  const step = () => el.clientWidth * 0.85;
+  prev.addEventListener("click", () => el.scrollBy({ left: -step(), behavior: "smooth" }));
+  next.addEventListener("click", () => el.scrollBy({ left: step(), behavior: "smooth" }));
+  el.addEventListener("scroll", updateAlbumArrows, { passive: true });
+  window.addEventListener("resize", updateAlbumArrows);
+})();
 
 // Filtres
 document.addEventListener("click", (e) => {

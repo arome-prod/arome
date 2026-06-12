@@ -8,14 +8,14 @@
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=30" />
+  <link rel="stylesheet" href="css/style.css?v=32" />
 </head>
 <body class="mode-home">
 
   <!-- ===== Marque : se déplace de l'écran d'accueil vers la barre du haut ===== -->
   <header class="brand">
     <a class="brand__logo" data-go="home" data-admin-trigger aria-label="arome — accueil">
-      <img class="brand__logomark" src="images/arome_logo.svg?v=30" alt="arome" />
+      <img class="brand__logomark" src="images/arome_logo.svg?v=32" alt="arome" />
     </a>
     <p class="brand__tag" id="heroTagline">…</p>
     <nav class="brand__nav">
@@ -34,12 +34,15 @@
         <!-- Vue : grille des albums -->
         <div id="albumsView">
           <header class="section__head">
-            <p class="eyebrow">Travaux</p>
             <h2 class="section__title">Portfolio</h2>
             <div class="filters" id="filters"></div>
           </header>
-          <div class="albums" id="albums">
-            <div class="gallery__loading">Chargement…</div>
+          <div class="albums-wrap">
+            <button class="albums-arrow albums-arrow--prev" id="albumsPrev" aria-label="Défiler à gauche" hidden>‹</button>
+            <div class="albums" id="albums">
+              <div class="gallery__loading">Chargement…</div>
+            </div>
+            <button class="albums-arrow albums-arrow--next" id="albumsNext" aria-label="Défiler à droite" hidden>›</button>
           </div>
         </div>
 
@@ -72,7 +75,6 @@
     <section class="panel" data-panel="about">
       <div class="section">
         <div class="about">
-          <p class="eyebrow">Le projet</p>
           <h2 class="about__big">arome</h2>
           <div id="aboutText" class="about__text"></div>
           <ul class="skills" id="aboutSkills"></ul>
@@ -83,7 +85,6 @@
     <!-- Contact -->
     <section class="panel" data-panel="contact">
       <div class="section">
-        <p class="eyebrow">Écris-moi</p>
         <h2 class="section__title section__title--xl">On travaille ensemble ?</h2>
         <p class="section__lead">Un projet, une collab, une question — la porte est ouverte.</p>
         <div class="contact-links" id="contactLinks"></div>
@@ -127,6 +128,6 @@
     <button class="lightbox__nav lightbox__next" id="lbNext" aria-label="Suivant">›</button>
   </div>
 
-  <script type="module" src="js/app.js?v=30"></script>
+  <script type="module" src="js/app.js?v=32"></script>
 </body>
 </html>

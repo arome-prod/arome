@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=33") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=35") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -191,11 +191,10 @@ a { color: var(--text); text-decoration: none; }
 }
 .tile__media img {
   width: 100%; height: 100%; object-fit: cover;
-  filter: grayscale(0.25);
-  transition: transform 0.6s ease, filter 0.6s ease;
+  transition: transform 0.6s ease;
 }
 .tile:hover .tile__media { border-color: var(--line-strong); }
-.tile:hover .tile__media img { transform: scale(1.03); filter: grayscale(0); }
+.tile:hover .tile__media img { transform: scale(1.03); }
 .tile__empty {
   color: var(--faint);
   font-family: var(--font-display);
@@ -359,24 +358,19 @@ a { color: var(--text); text-decoration: none; }
 .albums-wrap { position: relative; }
 .albums-arrow {
   position: absolute;
-  top: 50%;
+  top: 44%;
   transform: translateY(-50%);
   z-index: 5;
-  width: 44px; height: 44px;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(10, 10, 10, 0.72);
-  backdrop-filter: blur(6px);
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  color: var(--text);
-  font-size: 1.5rem; line-height: 1;
+  background: none; border: none; padding: 0;
+  color: var(--faint);
+  font-size: 2.4rem; line-height: 1;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+  transition: color 0.2s ease;
 }
-.albums-arrow:hover { background: rgba(20, 20, 20, 0.9); border-color: var(--line-strong); }
+.albums-arrow:hover { color: var(--text); }
 .albums-arrow[hidden] { display: none; }
-.albums-arrow--prev { left: -3rem; }
-.albums-arrow--next { right: -3rem; }
+.albums-arrow--prev { left: -2rem; }
+.albums-arrow--next { right: -2rem; }
 /* Sur petit écran, pas de place dans la marge → on s'appuie sur le défilement tactile */
 @media (max-width: 760px) { .albums-arrow { display: none !important; } }
 
@@ -431,8 +425,7 @@ a { color: var(--text); text-decoration: none; }
   overflow: hidden;
   display: block;
 }
-.yt-frame img { width: 100%; height: 100%; object-fit: cover; transition: filter 0.4s ease; filter: saturate(0.95) brightness(0.9); }
-.yt-frame:hover img { filter: none; }
+.yt-frame img { width: 100%; height: 100%; object-fit: cover; }
 .yt-frame__play {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;

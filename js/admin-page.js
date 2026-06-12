@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=48";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=48";
+import { db, isConfigured } from "./firebase.js?v=51";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=51";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -478,7 +478,7 @@ function musicEmbed(url) {
   if (/music\.apple\.com\//.test(s)) {
     let embed = s.replace("music.apple.com", "embed.music.apple.com");
     embed += (embed.includes("?") ? "&" : "?") + "theme=dark";
-    return { source: "apple", embed, h: 175 };
+    return { source: "apple", embed, h: 450 };
   }
   return null;
 }

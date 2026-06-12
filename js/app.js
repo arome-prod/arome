@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=48";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=48";
+import { db, isConfigured } from "./firebase.js?v=51";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=51";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -213,6 +213,7 @@ let allAlbums = [];
 let allVideos = [];
 let allInsp = [];
 let activeFilter = "all";
+let inspFilter = "all";
 
 function shownAlbums() { return allAlbums.length ? allAlbums : DEMO; }
 function isDemo() { return allAlbums.length === 0; }
@@ -431,6 +432,63 @@ function updateAlbumArrows() {
   if (!reduceMotion) requestAnimationFrame(autoTick);
 })();
 
+// Filtres Inspirations
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("#inspFilters .filter");
+  if (!btn) return;
+  inspFilter = btn.dataset.ifilter;
+  $("inspWall").scrollLeft = 0;
+  renderInspirations();
+});
+
+// Flèches + défilement auto de la rangée d'inspirations
+function updateInspArrows() {
+  const el = $("inspWall"), prev = $("inspPrev"), next = $("inspNext");
+  if (!el || !prev || !next) return;
+  const max = el.scrollWidth - el.clientWidth;
+  const overflow = max > 4;
+  prev.hidden = !overflow || el.scrollLeft <= 2;
+  next.hidden = !overflow || el.scrollLeft >= max - 2;
+}
+(function inspArrows() {
+  const el = $("inspWall"), prev = $("inspPrev"), next = $("inspNext");
+  const wrap = el ? el.closest(".albums-wrap") : null;
+  if (!el || !prev || !next) return;
+  const step = () => el.clientWidth * 0.85;
+  prev.addEventListener("click", () => el.scrollBy({ left: -step(), behavior: "smooth" }));
+  next.addEventListener("click", () => el.scrollBy({ left: step(), behavior: "smooth" }));
+  el.addEventListener("scroll", updateInspArrows, { passive: true });
+  window.addEventListener("resize", updateInspArrows);
+  if ("ResizeObserver" in window) new ResizeObserver(updateInspArrows).observe(el);
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const SPEED = 0.45;
+  let dir = 1, paused = false;
+  if (wrap) {
+    wrap.addEventListener("mouseenter", () => (paused = true));
+    wrap.addEventListener("mouseleave", () => (paused = false));
+    wrap.addEventListener("touchstart", () => (paused = true), { passive: true });
+  }
+  function eligible() {
+    if (reduceMotion || paused) return false;
+    if (inspFilter !== "all") return false;
+    if (document.body.classList.contains("mode-home")) return false;
+    const panel = document.querySelector('.panel[data-panel="inspirations"]');
+    if (!panel || !panel.classList.contains("is-active")) return false;
+    return el.scrollWidth - el.clientWidth > 4;
+  }
+  function autoTick() {
+    if (eligible()) {
+      const max = el.scrollWidth - el.clientWidth;
+      el.scrollLeft += dir * SPEED;
+      if (el.scrollLeft >= max - 0.5) dir = -1;
+      else if (el.scrollLeft <= 0.5) dir = 1;
+    }
+    requestAnimationFrame(autoTick);
+  }
+  if (!reduceMotion) requestAnimationFrame(autoTick);
+})();
+
 // Filtres
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("#filters .filter");
@@ -498,56 +556,68 @@ const KIND_LABEL = {
 
 function shownInsp() { return allInsp.length ? allInsp : DEMO_INSP; }
 
+// Ordre des onglets Inspirations
+const INSP_KIND_ORDER = ["music", "video", "film", "serie", "livre", "autre"];
+
+function renderInspFilters() {
+  const bar = $("inspFilters");
+  if (!bar) return;
+  const list = shownInsp();
+  const present = INSP_KIND_ORDER.filter((k) => list.some((it) => (it.kind || "autre") === k));
+  if (present.length <= 1) { bar.innerHTML = ""; return; }
+
+  let html = `<button class="filter${inspFilter === "all" ? " is-active" : ""}" data-ifilter="all">Tout</button>`;
+  html += present.map((k) =>
+    `<button class="filter${inspFilter === k ? " is-active" : ""}" data-ifilter="${k}">${esc(KIND_LABEL[k])}</button>`
+  ).join("");
+  bar.innerHTML = html;
+}
+
 function inspCardHTML(it) {
   const kind = it.kind || "autre";
   const title = esc(it.title || "");
   const sub = esc(it.subtitle || "");
-  const cap = (title || sub)
-    ? `<div class="insp-cap">${title ? `<span class="insp-cap__title">${title}</span>` : ""}${sub ? `<span class="insp-cap__sub">${sub}</span>` : ""}</div>`
-    : "";
-
-  // Vidéo YouTube → lecteur 16:9
-  if (kind === "video" && it.embed) {
-    return `<div class="insp-card">
-        <div class="insp-embed insp-embed--video">
-          <iframe src="${esc(it.embed)}" title="${title || "Vidéo"}" loading="lazy"
-            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen></iframe>
-        </div>${cap}
-      </div>`;
-  }
-  // Musique → lecteur Spotify / Apple Music à hauteur fixe
-  if (kind === "music" && it.embed) {
-    const h = it.h || 152;
-    return `<div class="insp-card">
-        <iframe class="insp-embed insp-embed--music" style="height:${h}px"
-          src="${esc(it.embed)}" title="${title || "Musique"}" loading="lazy"
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
-        ${cap}
-      </div>`;
-  }
-  // Poster → film / série / livre / autre
   const label = KIND_LABEL[kind] || "Autre";
-  const media = it.cover
-    ? `<img src="${esc(it.cover)}" alt="${title}" loading="lazy" />`
-    : `<span class="insp-poster__empty">${esc((it.title || label).slice(0, 1).toUpperCase())}</span>`;
-  const inner = `<span class="insp-poster">${media}<span class="insp-poster__tag">${esc(label)}</span></span>
-      <div class="insp-cap">
-        ${title ? `<span class="insp-cap__title">${title}</span>` : ""}
-        <span class="insp-cap__sub">${sub ? sub + (it.url ? " · " : "") : ""}${it.url ? "Voir ↗" : (sub ? "" : esc(label))}</span>
-      </div>`;
-  return it.url
-    ? `<a class="insp-card insp-card--poster" href="${esc(it.url)}" target="_blank" rel="noopener">${inner}</a>`
-    : `<div class="insp-card insp-card--poster">${inner}</div>`;
+  const isEmbed = (kind === "music" || kind === "video") && it.embed;
+
+  // Zone média au même format que les vignettes du portfolio (ratio 4/5)
+  let media;
+  if (isEmbed) {
+    const allow = kind === "video"
+      ? "accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      : "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+    media = `<span class="insp-media insp-media--embed">
+        <iframe src="${esc(it.embed)}" title="${title || label}" loading="lazy" allow="${allow}" allowfullscreen></iframe>
+      </span>`;
+  } else {
+    const inner = it.cover
+      ? `<img src="${esc(it.cover)}" alt="${title}" loading="lazy" />`
+      : `<span class="insp-media__empty">${esc((it.title || label).slice(0, 1).toUpperCase())}</span>`;
+    media = `<span class="insp-media insp-media--poster">${inner}<span class="insp-poster__tag">${esc(label)}</span></span>`;
+  }
+
+  const subText = sub || label;
+  const cap = `<div class="insp-cap">
+      ${title ? `<span class="insp-cap__title">${title}</span>` : ""}
+      <span class="insp-cap__sub">${subText}${!isEmbed && it.url ? " · Voir ↗" : ""}</span>
+    </div>`;
+
+  // Poster avec lien externe → carte cliquable
+  return (!isEmbed && it.url)
+    ? `<a class="insp-card" href="${esc(it.url)}" target="_blank" rel="noopener">${media}${cap}</a>`
+    : `<div class="insp-card">${media}${cap}</div>`;
 }
 
 function renderInspirations() {
   const wall = $("inspWall");
   if (!wall) return;
-  const list = shownInsp();
+  renderInspFilters();
+  const all = shownInsp();
+  const list = inspFilter === "all" ? all : all.filter((it) => (it.kind || "autre") === inspFilter);
   wall.innerHTML = list.length
     ? list.map(inspCardHTML).join("")
     : '<div class="gallery__loading">Bientôt — mes inspirations arrivent ici.</div>';
+  if (typeof updateInspArrows === "function") requestAnimationFrame(updateInspArrows);
 }
 
 function openAlbum(id) {

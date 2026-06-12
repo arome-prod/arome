@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=54";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=54";
+import { db, isConfigured } from "./firebase.js?v=55";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=55";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -336,7 +336,7 @@ function renderAlbums() {
 
 // Survol d'une carte album → mini-diaporama de ses photos (fondu enchaîné)
 const HOVER_FADE = 900;     // durée du fondu (doit suivre le CSS .tile__fade)
-const HOVER_HOLD = 1700;    // intervalle entre deux photos (pause + fondu)
+const HOVER_HOLD = 1400;    // intervalle entre deux photos (pause + fondu)
 function setupAlbumHover() {
   const grid = $("albums");
   if (!grid) return;
@@ -357,24 +357,31 @@ function setupAlbumHover() {
 
     let timer = null, i = 0, swap = null;
 
+    // Affiche `next` en fondu par-dessus l'image courante
+    const show = (next) => {
+      fade.classList.remove("is-on");   // on repart d'une opacité 0…
+      fade.src = next;
+      void fade.offsetWidth;            // …qu'on FORCE à être prise en compte (reflow)
+      fade.classList.add("is-on");      // puis on déclenche le fondu (0 → 1)
+      clearTimeout(swap);
+      swap = setTimeout(() => {
+        base.src = next;                // une fois le fondu fini, la couverture devient `next`
+        fade.classList.remove("is-on"); // et le calque redisparaît (sans saut visible)
+      }, HOVER_FADE);
+    };
+
     const step = () => {
       i = (i + 1) % srcs.length;
       const next = srcs[i];
-      const pre = new Image();
-      pre.onload = () => {
-        fade.src = next;
-        requestAnimationFrame(() => fade.classList.add("is-on"));
-        // une fois le fondu terminé, on fige la couverture et on efface le calque
-        clearTimeout(swap);
-        swap = setTimeout(() => { base.src = next; fade.classList.remove("is-on"); }, HOVER_FADE);
-      };
+      const pre = new Image();          // on précharge avant de lancer le fondu
+      pre.onload = () => show(next);
       pre.src = next;
     };
 
     tile.addEventListener("mouseenter", () => {
       i = 0;
       clearInterval(timer); clearTimeout(swap);
-      step();
+      // pas de changement immédiat : la couverture reste un instant, puis ça enchaîne en fondu
       timer = setInterval(step, HOVER_HOLD);
     });
     tile.addEventListener("mouseleave", () => {

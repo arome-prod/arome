@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=22";
-import { DEFAULTS, DEMO } from "./config.js?v=22";
+import { db, isConfigured } from "./firebase.js?v=23";
+import { DEFAULTS, DEMO } from "./config.js?v=23";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -65,7 +65,7 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
     void brand.offsetWidth; // force un reflow
     requestAnimationFrame(() => {
       flipEls.forEach((el) => {
-        el.style.transition = "transform 0.62s cubic-bezier(0.7, 0, 0.2, 1)";
+        el.style.transition = "transform 0.85s cubic-bezier(0.65, 0, 0.35, 1)";
         el.style.transform = "";
       });
     });
@@ -107,11 +107,12 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
       return;
     }
 
-    // Déjà dans une section : changement de panneau (la barre ne bouge pas)
+    // Déjà dans une section : basculement direct (pas de store, plus léger)
     if (!home) {
       const active = document.querySelector(".panel.is-active");
       if (active && active.dataset.panel === key) return;
-      goSection(key, false);
+      setActive(key);
+      window.scrollTo(0, 0);
       return;
     }
 

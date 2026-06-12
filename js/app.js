@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=40";
-import { DEFAULTS, DEMO } from "./config.js?v=40";
+import { db, isConfigured } from "./firebase.js?v=44";
+import { DEFAULTS, DEMO } from "./config.js?v=44";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -319,7 +319,34 @@ function renderAlbums() {
   // Carte « Contenu YouTube » en fin de grille (vue « Tout »)
   if (activeFilter === "all") grid.insertAdjacentHTML("beforeend", youtubeCardHTML());
 
+  setupAlbumHover();
   requestAnimationFrame(updateAlbumArrows);
+}
+
+// Survol d'une carte album → mini-diaporama de ses photos
+function setupAlbumHover() {
+  const grid = $("albums");
+  if (!grid) return;
+  grid.querySelectorAll('.tile[data-album]').forEach((tile) => {
+    const a = shownAlbums().find((x) => x.id === tile.dataset.album);
+    const img = tile.querySelector(".tile__media img");
+    if (!a || !img) return;
+    const srcs = photosOf(a).map(mediaThumb).filter(Boolean);
+    if (srcs.length < 2) return;
+
+    const cover = img.getAttribute("src");
+    let timer = null, i = 0;
+    tile.addEventListener("mouseenter", () => {
+      i = 0;
+      clearInterval(timer);
+      timer = setInterval(() => { i = (i + 1) % srcs.length; img.src = srcs[i]; }, 750);
+    });
+    tile.addEventListener("mouseleave", () => {
+      clearInterval(timer);
+      timer = null;
+      img.src = cover;
+    });
+  });
 }
 
 function renderAll() { renderFilters(); renderAlbums(); }
@@ -335,14 +362,46 @@ function updateAlbumArrows() {
 }
 (function albumArrows() {
   const el = $("albums"), prev = $("albumsPrev"), next = $("albumsNext");
+  const wrap = document.querySelector(".albums-wrap");
   if (!el || !prev || !next) return;
   const step = () => el.clientWidth * 0.85;
   prev.addEventListener("click", () => el.scrollBy({ left: -step(), behavior: "smooth" }));
   next.addEventListener("click", () => el.scrollBy({ left: step(), behavior: "smooth" }));
   el.addEventListener("scroll", updateAlbumArrows, { passive: true });
   window.addEventListener("resize", updateAlbumArrows);
-  // Recalcule quand la zone change de taille (ex. quand le panneau devient visible)
   if ("ResizeObserver" in window) new ResizeObserver(updateAlbumArrows).observe(el);
+
+  // --- Défilement automatique (onglet « Tout »), pause au survol ---
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const SPEED = 0.45;   // px par frame
+  let dir = 1, paused = false;
+
+  if (wrap) {
+    wrap.addEventListener("mouseenter", () => (paused = true));
+    wrap.addEventListener("mouseleave", () => (paused = false));
+    wrap.addEventListener("touchstart", () => (paused = true), { passive: true });
+  }
+
+  function eligible() {
+    if (reduceMotion || paused) return false;
+    if (activeFilter !== "all") return false;
+    if (document.body.classList.contains("mode-home")) return false;
+    const portfolio = document.querySelector('.panel[data-panel="portfolio"]');
+    if (!portfolio || !portfolio.classList.contains("is-active")) return false;
+    if ($("albumsView") && $("albumsView").hidden) return false; // pas dans une page album
+    return el.scrollWidth - el.clientWidth > 4;
+  }
+
+  function autoTick() {
+    if (eligible()) {
+      const max = el.scrollWidth - el.clientWidth;
+      el.scrollLeft += dir * SPEED;
+      if (el.scrollLeft >= max - 0.5) dir = -1;
+      else if (el.scrollLeft <= 0.5) dir = 1;
+    }
+    requestAnimationFrame(autoTick);
+  }
+  if (!reduceMotion) requestAnimationFrame(autoTick);
 })();
 
 // Filtres

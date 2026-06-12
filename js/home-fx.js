@@ -1,8 +1,8 @@
 // ====================================================================
-//  home-fx.js — brume sombre qui ondule derrière le mot-marque
-//  Rendu basse résolution + flou CSS (GPU) = très léger.
-//  Actif uniquement sur l'accueil (mode-home) ; coupé sinon et si
-//  l'utilisateur a demandé à réduire les animations.
+//  home-fx.js — fumée / brume qui ondule derrière le mot-marque
+//  Volutes allongées qui dérivent lentement vers le haut, ondulent,
+//  et respirent (apparition / estompage). Rendu basse résolution +
+//  flou CSS = très léger. Accueil uniquement, coupé si reduce-motion.
 // ====================================================================
 
 const canvas = document.getElementById("homeFx");
@@ -10,8 +10,8 @@ const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 if (canvas && !reduce) {
   const ctx = canvas.getContext("2d");
-  const SCALE = 0.18;            // résolution interne (très basse → fluide)
-  let W = 1, H = 1, blobs = [], raf = null, running = false;
+  const SCALE = 0.2;
+  let W = 1, H = 1, wisps = [], raf = null, running = false;
 
   function resize() {
     W = Math.max(1, Math.floor(window.innerWidth * SCALE));
@@ -20,37 +20,61 @@ if (canvas && !reduce) {
     canvas.height = H;
   }
 
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function makeWisp() {
+    return {
+      x: Math.random(),
+      y: Math.random(),
+      vx: rand(-0.012, 0.012),     // dérive horizontale lente
+      vy: rand(-0.03, -0.012),     // dérive vers le haut (fumée qui monte)
+      r: rand(0.2, 0.42),          // rayon relatif
+      elong: rand(1.5, 3),         // allongement (traînée)
+      rot: rand(0, Math.PI),
+      rotSp: rand(-0.05, 0.05),
+      ph: rand(0, Math.PI * 2),
+      pulse: rand(0.15, 0.35),     // vitesse de respiration
+      a: rand(0.08, 0.18),         // opacité max
+      sway: rand(0.04, 0.1),       // amplitude d'ondulation horizontale
+      swaySp: rand(0.15, 0.4),
+    };
+  }
+
   function init() {
-    blobs = [];
-    const n = 6;
-    for (let i = 0; i < n; i++) {
-      blobs.push({
-        x: Math.random(),
-        y: Math.random(),
-        r: 0.28 + Math.random() * 0.32,   // taille relative
-        ph: Math.random() * Math.PI * 2,  // phase
-        sp: 0.12 + Math.random() * 0.22,  // vitesse d'ondulation
-        a: 0.08 + Math.random() * 0.1,    // opacité de la volute
-      });
-    }
+    wisps = [];
+    for (let i = 0; i < 11; i++) wisps.push(makeWisp());
   }
 
   function frame(t) {
     if (!running) return;
     const time = t * 0.001;
     ctx.clearRect(0, 0, W, H);
-    ctx.globalCompositeOperation = "lighter"; // les volutes s'additionnent en lumière
-    for (const b of blobs) {
-      const cx = (b.x + Math.sin(time * b.sp + b.ph) * 0.14) * W;
-      const cy = (b.y + Math.cos(time * b.sp * 0.8 + b.ph) * 0.14) * H;
-      const rad = b.r * Math.min(W, H) * (0.9 + Math.sin(time * b.sp + b.ph) * 0.1);
-      // Gris clair / blanc (fumée)
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
-      g.addColorStop(0, `rgba(230, 231, 235, ${b.a})`);
-      g.addColorStop(1, "rgba(230, 231, 235, 0)");
+    ctx.globalCompositeOperation = "lighter";
+
+    for (const w of wisps) {
+      // déplacement (avec ré-entrée par le bas quand ça sort en haut)
+      w.x += w.vx * 0.016;
+      w.y += w.vy * 0.016;
+      if (w.y < -0.3) { w.y = 1.3; w.x = Math.random(); }
+      if (w.x < -0.3) w.x = 1.3; else if (w.x > 1.3) w.x = -0.3;
+
+      const cx = (w.x + Math.sin(time * w.swaySp + w.ph) * w.sway) * W;
+      const cy = w.y * H;
+      const rad = w.r * Math.min(W, H);
+      const alpha = w.a * (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(time * w.pulse + w.ph)));
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(w.rot + time * w.rotSp);
+      ctx.scale(w.elong, 1);
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rad);
+      g.addColorStop(0, `rgba(232, 233, 237, ${alpha})`);
+      g.addColorStop(1, "rgba(232, 233, 237, 0)");
       ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillRect(-rad, -rad, rad * 2, rad * 2);
+      ctx.restore();
     }
+
     ctx.globalCompositeOperation = "source-over";
     raf = requestAnimationFrame(frame);
   }
@@ -62,7 +86,6 @@ if (canvas && !reduce) {
   init();
   window.addEventListener("resize", resize);
 
-  // Actif seulement en mode accueil ; on suit la classe du <body>
   const sync = () => (document.body.classList.contains("mode-home") ? start() : stop());
   sync();
   new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ["class"] });

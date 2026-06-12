@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=28";
-import { DEFAULTS, DEMO } from "./config.js?v=28";
+import { db, isConfigured } from "./firebase.js?v=29";
+import { DEFAULTS, DEMO } from "./config.js?v=29";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -48,35 +48,49 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
   }
   setActive("portfolio");
 
-  // Durées selon le sens (le retour à l'accueil est plus lent pour
-  // que le zoom du logo reste en phase avec son déplacement).
+  // Accueil → section : déplacement + zoom ensemble (rapide, fluide).
   const TRANS_TO_SECTION = "transform 0.62s cubic-bezier(0.7, 0, 0.2, 1)";
-  const TRANS_TO_HOME = "transform 0.95s cubic-bezier(0.6, 0, 0.25, 1)";
+  // Section → accueil : on SÉPARE déplacement et zoom.
+  //  - le déplacement est court ;
+  //  - le grossissement dure plus longtemps (il continue après l'arrivée au centre).
+  const MOVE_TO_HOME = "transform 0.6s cubic-bezier(0.5, 0, 0.2, 1)";
+  const ZOOM_TO_HOME = "transform 1.05s cubic-bezier(0.22, 0.7, 0.25, 1)";
 
   // Anime les éléments de la marque entre deux mises en page.
-  function flip(change, trans) {
+  // Si `zoom` est fourni, le grossissement (sur l'enfant) est désynchronisé
+  // du déplacement (sur l'élément) pour un effet « zoom après / progressif ».
+  function flip(change, move, zoom) {
     if (reduce) { change(); return; }
+    move = move || TRANS_TO_SECTION;
     const first = flipEls.map((el) => el.getBoundingClientRect());
     change();
     const last = flipEls.map((el) => el.getBoundingClientRect());
     flipEls.forEach((el, i) => {
-      // On anime le CENTRE de l'élément : il grandit et se déplace ensemble
       const fcx = first[i].left + first[i].width / 2;
       const fcy = first[i].top + first[i].height / 2;
       const lcx = last[i].left + last[i].width / 2;
       const lcy = last[i].top + last[i].height / 2;
-      const dx = fcx - lcx;
-      const dy = fcy - lcy;
+      const dx = fcx - lcx, dy = fcy - lcy;
       const s = last[i].height ? first[i].height / last[i].height : 1;
+      const child = zoom ? el.firstElementChild : null;
       el.style.transition = "none";
       el.style.transformOrigin = "center center";
-      el.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
+      if (child) {
+        el.style.transform = `translate(${dx}px, ${dy}px)`;       // déplacement
+        child.style.transition = "none";
+        child.style.transformOrigin = "center center";
+        child.style.transform = `scale(${s})`;                    // zoom (séparé)
+      } else {
+        el.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
+      }
     });
     void brand.offsetWidth; // force un reflow
     requestAnimationFrame(() => {
       flipEls.forEach((el) => {
-        el.style.transition = trans || TRANS_TO_SECTION;
+        el.style.transition = move;
         el.style.transform = "";
+        const child = zoom ? el.firstElementChild : null;
+        if (child) { child.style.transition = zoom; child.style.transform = ""; }
       });
     });
   }
@@ -113,7 +127,7 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
 
     if (key === "home") {
       if (home) return;
-      flip(() => body.classList.add("mode-home"), TRANS_TO_HOME);
+      flip(() => body.classList.add("mode-home"), MOVE_TO_HOME, ZOOM_TO_HOME);
       return;
     }
 

@@ -8,14 +8,17 @@
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=36" />
+  <link rel="stylesheet" href="css/style.css?v=38" />
 </head>
 <body class="mode-home">
+
+  <!-- ===== Brume animée (accueil uniquement) ===== -->
+  <canvas class="home-fx" id="homeFx" aria-hidden="true"></canvas>
 
   <!-- ===== Marque : se déplace de l'écran d'accueil vers la barre du haut ===== -->
   <header class="brand">
     <a class="brand__logo" data-go="home" data-admin-trigger aria-label="arome — accueil">
-      <img class="brand__logomark" src="images/arome_logo.svg?v=36" alt="arome" />
+      <img class="brand__logomark" src="images/arome_logo.svg?v=38" alt="arome" />
     </a>
     <p class="brand__tag" id="heroTagline">…</p>
     <nav class="brand__nav">
@@ -132,6 +135,7 @@
     <button class="lightbox__nav lightbox__next" id="lbNext" aria-label="Suivant">›</button>
   </div>
 
-  <script type="module" src="js/app.js?v=36"></script>
+  <script type="module" src="js/app.js?v=38"></script>
+  <script type="module" src="js/home-fx.js?v=38"></script>
 </body>
 </html>

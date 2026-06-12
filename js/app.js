@@ -9,8 +9,8 @@ import {
   onValue,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=73";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=73";
+import { db, isConfigured } from "./firebase.js?v=76";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=76";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -485,9 +485,10 @@ function renderAlbums() {
       </button>`;
   }).join("");
 
-  // Cartes récap (Textes + YouTube) en fin de grille (vue « Tout »)
+  // Carte « Contenu YouTube » en fin de grille (vue « Tout »)
+  // (les Textes ne sont accessibles que via leur onglet, pour ne pas
+  //  casser l'harmonie de la rangée d'images)
   if (activeFilter === "all") {
-    grid.insertAdjacentHTML("beforeend", textesSummaryHTML());
     grid.insertAdjacentHTML("beforeend", youtubeCardHTML());
   }
 
@@ -910,6 +911,10 @@ function showLb(i) {
   const multi = lbList.length > 1;
   $("lbPrev").style.display = multi ? "" : "none";
   $("lbNext").style.display = multi ? "" : "none";
+  // Zones cliquables : seulement pour les images (laisse l'iframe vidéo interactive)
+  const zones = multi && item.type !== "video";
+  $("lbZonePrev").hidden = !zones;
+  $("lbZoneNext").hidden = !zones;
 }
 function openLb(i) {
   showLb(i);
@@ -930,7 +935,22 @@ document.addEventListener("click", (e) => {
 if ($("lbClose")) $("lbClose").addEventListener("click", closeLb);
 if ($("lbPrev")) $("lbPrev").addEventListener("click", (e) => { e.stopPropagation(); showLb(lbIndex - 1); });
 if ($("lbNext")) $("lbNext").addEventListener("click", (e) => { e.stopPropagation(); showLb(lbIndex + 1); });
+if ($("lbZonePrev")) $("lbZonePrev").addEventListener("click", (e) => { e.stopPropagation(); showLb(lbIndex - 1); });
+if ($("lbZoneNext")) $("lbZoneNext").addEventListener("click", (e) => { e.stopPropagation(); showLb(lbIndex + 1); });
 if (lb) lb.addEventListener("click", (e) => { if (e.target === lb) closeLb(); });
+
+// Glissé (swipe) pour changer de photo sur mobile
+if (lb) {
+  let sx = 0, sy = 0;
+  lb.addEventListener("touchstart", (e) => {
+    const t = e.changedTouches[0]; sx = t.clientX; sy = t.clientY;
+  }, { passive: true });
+  lb.addEventListener("touchend", (e) => {
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) showLb(lbIndex + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+}
 document.addEventListener("keydown", (e) => {
   if (!lb.classList.contains("is-open")) return;
   if (e.key === "Escape") closeLb();

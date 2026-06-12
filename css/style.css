@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=73") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=76") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -76,7 +76,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=73") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=76") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -441,6 +441,7 @@ html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau 
   position: absolute; top: 1.4rem; right: 1.6rem;
   background: none; border: none; color: var(--muted);
   font-size: 1.4rem; cursor: pointer;
+  z-index: 10;
 }
 .lightbox__close:hover { color: var(--text); }
 .lightbox__nav {
@@ -450,8 +451,18 @@ html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau 
   transition: color 0.2s;
 }
 .lightbox__nav:hover { color: var(--text); }
+.lightbox__nav { z-index: 10; }
 .lightbox__prev { left: 0.5rem; }
 .lightbox__next { right: 0.5rem; }
+/* Zones cliquables invisibles gauche/droite (au-dessus de l'image, sous les flèches) */
+.lightbox__zone {
+  position: absolute; top: 0; bottom: 0; width: 28%;
+  background: none; border: 0; padding: 0; margin: 0;
+  cursor: pointer; z-index: 6;
+}
+.lightbox__zone--prev { left: 0; }
+.lightbox__zone--next { right: 0; }
+@media (pointer: coarse) { .lightbox__zone { width: 22%; } }
 
 /* ===== Albums : défilement horizontal + flèches ===== */
 .albums-wrap { position: relative; }
@@ -808,6 +819,38 @@ body.mode-home .stage { display: none; }
 }
 .store.is-cover { transform: translateY(0); }   /* couvre le contenu */
 .store.no-anim { transition: none; }
+
+/* ===== Mobile (≤ 640px) : fond dédié + ergonomie ===== */
+@media (max-width: 640px) {
+  /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
+  html {
+    background:
+      url("../images/fond_page_tel.jpg?v=76") center center / cover no-repeat fixed,
+      radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
+      no-repeat fixed,
+      #060607;
+  }
+
+  /* Barre du haut plus compacte, sans débordement */
+  body:not(.mode-home) .brand { padding: 0.8rem 1rem; }
+  body:not(.mode-home) .brand__logomark { width: 80px; }
+  body:not(.mode-home) .brand__nav { gap: 0.85rem; }
+  body:not(.mode-home) .brand__nav button { font-size: 0.6rem; letter-spacing: 0.1em; }
+  .stage { padding-top: 52px; }
+
+  /* Accueil : un peu plus d'air, accroche resserrée */
+  body.mode-home .brand__nav { gap: 1.1rem 1.4rem; }
+  .brand__tag { letter-spacing: 0.3em; }
+
+  /* Sections : marges latérales réduites pour gagner de la largeur */
+  .section { padding-left: 1.1rem; padding-right: 1.1rem; }
+  .prose { font-size: 1rem; line-height: 1.85; }
+
+  /* Lightbox : moins de marges, flèches plus discrètes (zones tactiles gèrent le reste) */
+  .lightbox { padding: 3vh 3vw; }
+  .lightbox__nav { font-size: 2rem; padding: 0 0.4rem; }
+  .lightbox__close { top: 0.9rem; right: 1rem; }
+}
 
 /* ===== Accessibilité ===== */
 @media (prefers-reduced-motion: reduce) {

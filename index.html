@@ -8,9 +8,12 @@
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=56" />
+  <link rel="stylesheet" href="css/style.css?v=57" />
 </head>
 <body class="mode-home">
+
+  <!-- ===== Voile noir du mode ambiance ===== -->
+  <div class="ambient-veil" aria-hidden="true"></div>
 
   <!-- ===== Brume animée (accueil uniquement) ===== -->
   <canvas class="home-fx" id="homeFx" aria-hidden="true"></canvas>
@@ -18,7 +21,7 @@
   <!-- ===== Marque : se déplace de l'écran d'accueil vers la barre du haut ===== -->
   <header class="brand">
     <a class="brand__logo" data-go="home" data-admin-trigger aria-label="arome — accueil">
-      <img class="brand__logomark" src="images/arome_logo.svg?v=56" alt="arome" />
+      <img class="brand__logomark" src="images/arome_logo.svg?v=57" alt="arome" />
     </a>
     <p class="brand__tag" id="heroTagline">…</p>
     <nav class="brand__nav">
@@ -118,7 +121,7 @@
     </section>
 
     <footer class="foot">
-      <img class="foot__logo" src="images/arome_logo.svg?v=56" alt="arome" />
+      <img class="foot__logo" src="images/arome_logo.svg?v=57" alt="arome" />
       <span class="foot__meta">Paris · © <span id="year"></span> arome</span>
     </footer>
   </main>
@@ -140,11 +143,14 @@
     <button class="lightbox__nav lightbox__next" id="lbNext" aria-label="Suivant">›</button>
   </div>
 
+  <!-- ===== Lecteur du mode ambiance ===== -->
+  <div class="ambient-player" id="ambientPlayer" aria-hidden="true"></div>
+
   <!-- ===== Curseur personnalisé ===== -->
   <div class="cursor" id="cursor" aria-hidden="true"></div>
 
-  <script type="module" src="js/app.js?v=56"></script>
-  <script type="module" src="js/home-fx.js?v=56"></script>
-  <script type="module" src="js/cursor.js?v=56"></script>
+  <script type="module" src="js/app.js?v=57"></script>
+  <script type="module" src="js/home-fx.js?v=57"></script>
+  <script type="module" src="js/cursor.js?v=57"></script>
 </body>
 </html>

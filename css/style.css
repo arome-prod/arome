@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=56") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=57") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -573,6 +573,34 @@ body.mode-home { overflow: hidden; height: 100vh; }
 }
 body:not(.mode-home) .home-fx { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .home-fx { display: none; } }
+
+/* ===== Mode ambiance (inactivité prolongée sur l'accueil) ===== */
+.ambient-veil {
+  position: fixed; inset: 0; z-index: 0;
+  background: #000; opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.3s ease;
+}
+body.ambient .ambient-veil { opacity: 0.74; }
+body.ambient .home-fx { opacity: 1; transition: opacity 1.3s ease; }
+body.ambient .brand { opacity: 0 !important; pointer-events: none; }
+.brand { transition: opacity 1s ease; }
+
+.ambient-player {
+  position: fixed; left: 50%; bottom: 2.2rem;
+  transform: translateX(-50%) translateY(24px);
+  z-index: 60;
+  width: min(440px, 92vw);
+  opacity: 0; pointer-events: none;
+  transition: opacity 1s ease, transform 1s ease;
+}
+body.ambient .ambient-player { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+.ambient-player iframe { width: 100%; border: 0; border-radius: 12px; display: block; background: #000; }
+.ambient-hint {
+  text-align: center; color: var(--faint);
+  font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.26em;
+  margin-bottom: 0.9rem;
+}
 
 .brand {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;

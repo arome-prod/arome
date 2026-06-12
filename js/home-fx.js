@@ -12,6 +12,7 @@ if (canvas && !reduce) {
   const ctx = canvas.getContext("2d");
   const SCALE = 0.2;
   let W = 1, H = 1, wisps = [], raf = null, running = false;
+  let intensity = 1;   // 1 = normal ; monte en mode ambiance (brume plus dense)
 
   function resize() {
     W = Math.max(1, Math.floor(window.innerWidth * SCALE));
@@ -48,6 +49,9 @@ if (canvas && !reduce) {
   function frame(t) {
     if (!running) return;
     const time = t * 0.001;
+    // brume plus dense quand le mode ambiance est actif (easing doux)
+    const targetI = document.body.classList.contains("ambient") ? 2.3 : 1;
+    intensity += (targetI - intensity) * 0.03;
     ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = "lighter";
 
@@ -61,7 +65,7 @@ if (canvas && !reduce) {
       const cx = (w.x + Math.sin(time * w.swaySp + w.ph) * w.sway) * W;
       const cy = w.y * H;
       const rad = w.r * Math.min(W, H);
-      const alpha = w.a * (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(time * w.pulse + w.ph)));
+      const alpha = w.a * intensity * (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(time * w.pulse + w.ph)));
 
       ctx.save();
       ctx.translate(cx, cy);

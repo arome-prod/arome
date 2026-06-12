@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=56";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=56";
+import { db, isConfigured } from "./firebase.js?v=57";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=57";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -171,6 +171,78 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
       if (clicks >= 3) { location.href = "admin.html"; }
     });
   });
+})();
+
+// ====================================================================
+//  Mode ambiance : si on reste sur l'accueil sans rien faire, la marque
+//  s'efface, la brume s'intensifie sur fond noir, et un lecteur lance
+//  une musique au hasard parmi les inspirations. Un clic = retour.
+// ====================================================================
+(function ambientMode() {
+  const IDLE_MS = 12000;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const body = document.body;
+  const player = $("ambientPlayer");
+  if (!player || reduceMotion) return;
+
+  let idleTimer = null;
+  const isHome = () => body.classList.contains("mode-home");
+  const isAmbient = () => body.classList.contains("ambient");
+
+  function pickMusic() {
+    const list = allInsp.filter((it) => it.kind === "music" && it.embed);
+    return list.length ? list[Math.floor(Math.random() * list.length)] : null;
+  }
+
+  function buildPlayer() {
+    const m = pickMusic();
+    let html = '<p class="ambient-hint">Cliquez n’importe où pour revenir</p>';
+    if (m) {
+      const h = m.source === "apple" ? 175 : 152;   // lecteur compact
+      html += `<iframe src="${esc(m.embed)}" height="${h}" loading="lazy"
+        allow="autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture"></iframe>`;
+    }
+    player.innerHTML = html;
+  }
+
+  function enter() {
+    if (!isHome() || isAmbient()) return;
+    clearTimeout(idleTimer); idleTimer = null;
+    buildPlayer();
+    body.classList.add("ambient");
+  }
+  function exit() {
+    if (!isAmbient()) return;
+    body.classList.remove("ambient");
+    player.innerHTML = "";   // retire l'iframe → coupe la musique
+    arm();
+  }
+  function arm() {
+    clearTimeout(idleTimer); idleTimer = null;
+    if (!isHome() || isAmbient()) return;
+    idleTimer = setTimeout(enter, IDLE_MS);
+  }
+
+  // Toute activité réarme le minuteur (sauf pendant l'ambiance)
+  ["mousemove", "mousedown", "keydown", "wheel", "touchstart"].forEach((ev) =>
+    window.addEventListener(ev, () => { if (!isAmbient()) arm(); }, { passive: true })
+  );
+
+  // Sortie de l'ambiance : clic dans la page (hors lecteur) ou touche
+  document.addEventListener("click", (e) => {
+    if (!isAmbient()) return;
+    if (e.target.closest("#ambientPlayer")) return;   // on n'interrompt pas le lecteur
+    exit();
+  });
+  document.addEventListener("keydown", () => { if (isAmbient()) exit(); });
+
+  // Si on quitte l'accueil (navigation), on coupe tout
+  new MutationObserver(() => {
+    if (!isHome()) { exit(); clearTimeout(idleTimer); idleTimer = null; }
+    else if (!isAmbient()) arm();
+  }).observe(body, { attributes: true, attributeFilter: ["class"] });
+
+  arm();
 })();
 
 // ====================================================================

@@ -9,8 +9,8 @@ import {
   onValue,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=61";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=61";
+import { db, isConfigured } from "./firebase.js?v=62";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=62";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -192,7 +192,8 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
     const m = pickMusic();
     let html = '<p class="ambient-hint">Cliquez n’importe où pour revenir</p>';
     if (m) {
-      const h = m.source === "apple" ? 175 : 152;   // lecteur compact
+      // lecteur "plein" : grande pochette + bouton lecture central bien visible
+      const h = m.source === "apple" ? 450 : 352;
       html += `<iframe src="${esc(m.embed)}" height="${h}" loading="lazy"
         allow="autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture"></iframe>`;
     }

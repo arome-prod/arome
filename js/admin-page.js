@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=10";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=10";
+import { db, isConfigured } from "./firebase.js?v=11";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=11";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -163,12 +163,18 @@ async function createAlbum() {
   const description = $("na-desc").value.trim();
   if (!title) { toast("Donne un titre à l'album."); return; }
   const order = albums.length ? Math.max(...albums.map((a) => a.order || 0)) + 1 : 0;
+  const btn = $("createAlbum");
+  btn.disabled = true;
   try {
-    const r = await push(ref(db, "albums"), { title, category, description, order, createdAt: Date.now() });
+    await push(ref(db, "albums"), { title, category, description, order, createdAt: Date.now() });
     $("na-title").value = ""; $("na-cat").value = ""; $("na-desc").value = "";
-    toast("Album créé ✦");
-    openManager(r.key); // on enchaîne sur l'ajout de photos
-  } catch (e) { console.error(e); toast("Échec : " + (e.message || "écriture refusée")); }
+    toast("Album créé ✦ — clique « Gérer » pour y ajouter des photos.");
+  } catch (e) {
+    console.error(e);
+    toast("Échec : " + (e.message || "écriture refusée"));
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function delAlbum(id) {
@@ -195,16 +201,15 @@ async function moveAlbum(id, dir) {
 // ====================================================================
 function openManager(id) {
   managingId = id;
-  const a = albumById(id);
+  const a = albumById(id) || {};
   $("albumsSection").hidden = true;
   $("albumManager").hidden = false;
-  if (a) {
-    $("mgrTitle").textContent = a.title || "Album";
-    $("m-title").value = a.title || "";
-    $("m-cat").value = a.category || "";
-    $("m-desc").value = a.description || "";
-    $("m-link").value = a.link || "";
-  }
+  // Toujours repartir des valeurs de CET album (jamais de résidu du précédent)
+  $("mgrTitle").textContent = a.title || "Album";
+  $("m-title").value = a.title || "";
+  $("m-cat").value = a.category || "";
+  $("m-desc").value = a.description || "";
+  $("m-link").value = a.link || "";
   renderManagerPhotos();
   window.scrollTo(0, 0);
 }

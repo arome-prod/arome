@@ -30,13 +30,13 @@ export const DEFAULTS = {
   },
 };
 
-// Projets fictifs affichés tant qu'aucun vrai projet n'est dans la base.
-// Ils disparaissent dès que tu ajoutes un projet via l'admin.
+// Albums fictifs affichés tant qu'aucun vrai album n'est dans la base.
+// Ils disparaissent dès que tu crées un album via l'admin.
+// Structure : { id, title, category, description, order, photos:[{id,src}] }
 export const DEMO = [
-  { title: "Lumière liquide", category: "Photo", order: 0 },
-  { title: "Nocturne", category: "Photo", order: 1 },
-  { title: "Échos — clip", category: "Vidéo", link: "#", order: 2 },
-  { title: "Affiche festival", category: "Design", order: 3 },
-  { title: "Identité — studio K", category: "Design", order: 4 },
-  { title: "Brume — EP", category: "Musique", link: "#", order: 5 },
+  { id: "demo-aquarium", title: "Aquarium", category: "Photo", order: 0,
+    description: "Exemple d'album. Crée le tien via l'admin.", photos: [] },
+  { id: "demo-portraits", title: "Portraits", category: "Photo", order: 1, photos: [] },
+  { id: "demo-affiches", title: "Affiches", category: "Design", order: 2, photos: [] },
+  { id: "demo-echos", title: "Échos — clip", category: "Vidéo", order: 3, link: "#", photos: [] },
 ];

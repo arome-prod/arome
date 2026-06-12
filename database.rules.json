@@ -23,18 +23,27 @@
       }
     },
 
-    "portfolio": {
+    "albums": {
       ".read": true,
       ".write": true,
-      "$item": {
-        ".validate": "!newData.exists() || newData.hasChild('order')",
-        "title":     { ".validate": "newData.isString() && newData.val().length <= 160" },
-        "category":  { ".validate": "newData.isString() && newData.val().length <= 60" },
-        "image":     { ".validate": "newData.isString() && newData.val().length <= 3000000" },
-        "link":      { ".validate": "newData.isString() && newData.val().length <= 600" },
-        "order":     { ".validate": "newData.isNumber()" },
-        "createdAt": { ".validate": "newData.isNumber()" },
-        "$other":    { ".validate": false }
+      "$album": {
+        "title":       { ".validate": "newData.isString() && newData.val().length <= 160" },
+        "category":    { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "description": { ".validate": "newData.isString() && newData.val().length <= 2000" },
+        "link":        { ".validate": "newData.isString() && newData.val().length <= 600" },
+        "cover":       { ".validate": "newData.isString() && newData.val().length <= 3000000" },
+        "coverId":     { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "order":       { ".validate": "newData.isNumber()" },
+        "createdAt":   { ".validate": "newData.isNumber()" },
+        "photos": {
+          "$photo": {
+            "src":       { ".validate": "newData.isString() && newData.val().length <= 3000000" },
+            "order":     { ".validate": "newData.isNumber()" },
+            "createdAt": { ".validate": "newData.isNumber()" },
+            "$other":    { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
       }
     },
 

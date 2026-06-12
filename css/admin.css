@@ -5,6 +5,9 @@
 
 .adm { background: var(--bg); color: var(--text); min-height: 100vh; }
 
+/* L'attribut HTML [hidden] doit TOUJOURS l'emporter sur display:flex/grid */
+[hidden] { display: none !important; }
+
 /* ===== Connexion ===== */
 .adm-gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
 .adm-gate__box { width: min(360px, 100%); display: grid; gap: 0.9rem; }
@@ -97,6 +100,50 @@
 /* ===== Boutons ===== */
 .adm .btn--ghost { border-bottom: 1px solid var(--line); }
 .adm .btn--ghost:hover { border-color: var(--muted); }
+
+/* ===== Créer un album ===== */
+.adm-create {
+  background: #0e0e0e; border: 1px solid var(--line); border-radius: 4px;
+  padding: 1.2rem; margin-bottom: 1.8rem; display: grid; gap: 0.7rem;
+}
+.adm-create .adm-h3 { font-family: var(--font-display); font-size: 1.15rem; }
+.adm-create__row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+.adm-create button { justify-self: start; }
+
+/* ===== Grille des albums (admin) ===== */
+.adm-albumgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1rem; }
+.adm-acard { background: #0e0e0e; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; }
+.adm-acard__img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #0a0a0a; display: block; }
+.adm-acard__img--empty { display: flex; align-items: center; justify-content: center; color: var(--faint); font-family: var(--font-display); font-style: italic; }
+.adm-acard__body { padding: 0.7rem 0.8rem 0.4rem; display: flex; flex-direction: column; gap: 0.15rem; }
+.adm-acard__title { font-size: 0.92rem; }
+.adm-acard__meta { font-size: 0.72rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; }
+.adm-acard__actions { display: flex; flex-wrap: wrap; gap: 0.3rem; padding: 0.4rem 0.8rem 0.8rem; }
+.adm-acard__actions button { background: none; border: 1px solid var(--line); color: var(--muted); font: inherit; font-size: 0.74rem; padding: 0.3rem 0.6rem; cursor: pointer; }
+.adm-acard__actions button:hover:not(:disabled) { color: var(--text); border-color: var(--text); }
+.adm-acard__actions button:disabled { opacity: 0.35; cursor: default; }
+.adm-acard__actions .adm-danger:hover { color: #e08a6a; border-color: #e08a6a; }
+
+/* ===== Ajout de photos ===== */
+.adm-addphotos {
+  display: block; border: 1px dashed var(--line-strong); border-radius: 4px;
+  padding: 1rem; margin: 0.6rem 0 1rem; cursor: pointer; color: var(--muted); font-size: 0.84rem;
+}
+.adm-addphotos span { display: block; margin-bottom: 0.5rem; }
+.adm-addphotos input { font-size: 0.8rem; }
+
+/* ===== Grille des photos d'un album ===== */
+.adm-photogrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.7rem; }
+.adm-photo { position: relative; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #0a0a0a; }
+.adm-photo.is-cover { border-color: var(--text); }
+.adm-photo img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
+.adm-photo__badge { position: absolute; top: 4px; left: 4px; background: rgba(10,10,10,0.85); color: var(--text); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; padding: 2px 6px; border-radius: 3px; }
+.adm-photo__bar { display: flex; }
+.adm-photo__bar button { flex: 1; background: #0e0e0e; border: none; border-top: 1px solid var(--line); color: var(--muted); cursor: pointer; padding: 0.35rem 0; font-size: 0.78rem; }
+.adm-photo__bar button + button { border-left: 1px solid var(--line); }
+.adm-photo__bar button:hover:not(:disabled) { color: var(--text); background: #161616; }
+.adm-photo__bar button:disabled { opacity: 0.3; cursor: default; }
+.adm-photo__bar .adm-danger:hover { color: #e08a6a; }
 
 /* ===== Toast ===== */
 .adm-toast {

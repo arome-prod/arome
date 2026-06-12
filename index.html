@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=8" />
+  <link rel="stylesheet" href="css/style.css?v=10" />
 </head>
 <body class="mode-home">
 
@@ -28,14 +28,31 @@
     <!-- Portfolio -->
     <section class="panel" data-panel="portfolio">
       <div class="section">
-        <header class="section__head">
-          <p class="eyebrow">Travaux</p>
-          <h2 class="section__title">Portfolio</h2>
-          <div class="filters" id="filters"></div>
-        </header>
-        <div class="gallery" id="gallery">
-          <div class="gallery__loading">Chargement…</div>
+
+        <!-- Vue : grille des albums -->
+        <div id="albumsView">
+          <header class="section__head">
+            <p class="eyebrow">Travaux</p>
+            <h2 class="section__title">Portfolio</h2>
+            <div class="filters" id="filters"></div>
+          </header>
+          <div class="albums" id="albums">
+            <div class="gallery__loading">Chargement…</div>
+          </div>
         </div>
+
+        <!-- Vue : album ouvert (page dédiée) -->
+        <div id="albumView" hidden>
+          <button class="album-back" id="albumBack">← Tous les projets</button>
+          <header class="album-head">
+            <p class="eyebrow" id="albumCat"></p>
+            <h2 class="section__title section__title--xl" id="albumTitle"></h2>
+            <p class="section__lead" id="albumDesc"></p>
+            <div id="albumLinkWrap"></div>
+          </header>
+          <div class="gallery" id="albumPhotos"></div>
+        </div>
+
       </div>
     </section>
 
@@ -81,12 +98,14 @@
     </footer>
   </main>
 
-  <!-- ===== Lightbox ===== -->
+  <!-- ===== Lightbox (avec navigation) ===== -->
   <div id="lightbox" class="lightbox" aria-hidden="true">
     <button class="lightbox__close" id="lbClose" aria-label="Fermer">✕</button>
+    <button class="lightbox__nav lightbox__prev" id="lbPrev" aria-label="Précédent">‹</button>
     <img class="lightbox__img" id="lbImg" alt="" />
+    <button class="lightbox__nav lightbox__next" id="lbNext" aria-label="Suivant">›</button>
   </div>
 
-  <script type="module" src="js/app.js?v=8"></script>
+  <script type="module" src="js/app.js?v=10"></script>
 </body>
 </html>

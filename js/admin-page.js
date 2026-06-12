@@ -1,7 +1,8 @@
 // ====================================================================
-//  admin-page.js — page d'administration dédiée (admin.html)
-//  CRUD complet des projets (ajouter / MODIFIER / supprimer / réordonner)
-//  + édition des textes. Stockage dans la Realtime Database.
+//  admin-page.js — page d'administration (admin.html)
+//  Modèle ALBUMS : catégorie → album → photos.
+//  Crée des albums, gère leurs photos visuellement (ajout multiple,
+//  couverture, réorganisation), édite les textes du site.
 //  ⚠️ Mot de passe côté navigateur : pas une vraie sécurité (voir README).
 // ====================================================================
 
@@ -9,66 +10,51 @@ import {
   ref, onValue, set, update, push, remove,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=8";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=8";
+import { db, isConfigured } from "./firebase.js?v=10";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=10";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
 const $ = (id) => document.getElementById(id);
-
-// Indicateur visible : prouve que le script s'exécute bien.
-if (document.getElementById("gateHint")) {
-  document.getElementById("gateHint").textContent = isConfigured
-    ? "Accès réservé."
-    : "⚠️ Firebase non configuré (vérifie js/firebase-config.js).";
-}
 const esc = (s = "") =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
+if ($("gateHint")) {
+  $("gateHint").textContent = isConfigured
+    ? "Accès réservé."
+    : "⚠️ Firebase non configuré (vérifie js/firebase-config.js).";
+}
+
 let content = JSON.parse(JSON.stringify(DEFAULTS));
-let items = [];
-let editingId = null;     // null = mode "ajout"
-let pendingImage = null;  // nouvelle image (data URL) choisie dans l'éditeur
+let albums = [];
+let managingId = null;
 
 // ====================================================================
-//  CONNEXION — attachée tout de suite, sans condition
+//  Connexion
 // ====================================================================
 function unlock() {
   $("gate").hidden = true;
   $("app").hidden = false;
   try { fillContentForms(); } catch (e) { console.error(e); }
-  if (!isConfigured) {
-    toast("⚠️ Firebase non configuré : l'enregistrement ne marchera pas.");
-  }
+  if (!isConfigured) toast("⚠️ Firebase non configuré : l'enregistrement ne marchera pas.");
 }
-
 const gateForm = $("gateForm");
 if (gateForm) {
   gateForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const val = ($("gatePass").value || "").trim();
-    if (val === ADMIN_PASSWORD) {
-      $("gateErr").textContent = "";
-      unlock();
-    } else {
-      $("gateErr").textContent = "Mot de passe incorrect.";
-    }
+    if (($("gatePass").value || "").trim() === ADMIN_PASSWORD) { $("gateErr").textContent = ""; unlock(); }
+    else $("gateErr").textContent = "Mot de passe incorrect.";
   });
-} else {
-  console.error("Formulaire de connexion introuvable (#gateForm).");
 }
-
 if ($("logout")) $("logout").addEventListener("click", () => { location.href = "index.html"; });
 
 // ====================================================================
 //  Helpers
 // ====================================================================
 function toast(msg) {
-  const t = $("toast");
-  if (!t) return;
-  t.textContent = msg;
-  t.classList.add("is-on");
+  const t = $("toast"); if (!t) return;
+  t.textContent = msg; t.classList.add("is-on");
   setTimeout(() => t.classList.remove("is-on"), 2200);
 }
 
@@ -81,8 +67,7 @@ function fileToDataURL(file) {
       img.onload = () => {
         let { width, height } = img;
         const scale = Math.min(1, IMAGE_MAX_DIM / Math.max(width, height));
-        width = Math.round(width * scale);
-        height = Math.round(height * scale);
+        width = Math.round(width * scale); height = Math.round(height * scale);
         const canvas = document.createElement("canvas");
         canvas.width = width; canvas.height = height;
         canvas.getContext("2d").drawImage(img, 0, 0, width, height);
@@ -95,7 +80,19 @@ function fileToDataURL(file) {
     reader.readAsDataURL(file);
   });
 }
-const kb = (d) => Math.round((d.length * 0.75) / 1024);
+
+function photosOf(a) {
+  if (!a || !a.photos) return [];
+  return Object.entries(a.photos)
+    .map(([id, p]) => ({ id, ...p }))
+    .sort((x, y) => (x.order || 0) - (y.order || 0));
+}
+function coverSrc(a) {
+  const ph = photosOf(a);
+  if (a.coverId) { const c = ph.find((p) => p.id === a.coverId); if (c) return c.src; }
+  return ph.length ? ph[0].src : (a.cover || "");
+}
+const albumById = (id) => albums.find((a) => a.id === id);
 
 // ====================================================================
 //  Textes
@@ -111,158 +108,221 @@ function fillContentForms() {
 }
 
 // ====================================================================
-//  Projets
+//  Catégories (datalist)
 // ====================================================================
 function refreshCatList() {
-  const dl = $("catlist");
-  if (!dl) return;
-  const cats = [...new Set(items.map((i) => (i.category || "").trim()).filter(Boolean))];
+  const dl = $("catlist"); if (!dl) return;
+  const cats = [...new Set(albums.map((a) => (a.category || "").trim()).filter(Boolean))];
   dl.innerHTML = cats.map((c) => `<option value="${esc(c)}">`).join("");
 }
 
-function renderList() {
-  const box = $("projList");
-  if (!box) return;
-  $("projCount").textContent = items.length;
-  if (!items.length) { box.innerHTML = '<p class="adm-empty">Aucun projet pour l\'instant.</p>'; return; }
-  box.innerHTML = items.map((it, i) => {
-    const thumb = it.image
-      ? `<img class="adm-card__img" src="${esc(it.image)}" alt="" />`
-      : `<span class="adm-card__img adm-card__img--empty">${it.link ? "↗" : "—"}</span>`;
-    return `<div class="adm-card${editingId === it.id ? " is-editing" : ""}">
+// ====================================================================
+//  Liste des albums
+// ====================================================================
+function renderAdminAlbums() {
+  const box = $("adminAlbums"); if (!box) return;
+  $("albumCount").textContent = albums.length;
+  if (!albums.length) { box.innerHTML = '<p class="adm-empty">Aucun album. Crée le premier ci-dessus.</p>'; return; }
+
+  box.innerHTML = albums.map((a, i) => {
+    const cover = coverSrc(a);
+    const n = photosOf(a).length;
+    const thumb = cover
+      ? `<img class="adm-acard__img" src="${esc(cover)}" alt="" />`
+      : `<span class="adm-acard__img adm-acard__img--empty">arome</span>`;
+    return `<div class="adm-acard">
         ${thumb}
-        <div class="adm-card__body">
-          <span class="adm-card__title">${esc(it.title || "(sans titre)")}</span>
-          <span class="adm-card__cat">${esc(it.category || "—")}</span>
+        <div class="adm-acard__body">
+          <span class="adm-acard__title">${esc(a.title || "(sans titre)")}</span>
+          <span class="adm-acard__meta">${esc(a.category || "—")} · ${n} photo${n > 1 ? "s" : ""}</span>
         </div>
-        <div class="adm-card__actions">
-          <button data-act="edit" data-id="${it.id}">Modifier</button>
-          <button data-act="up" data-id="${it.id}" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button>
-          <button data-act="down" data-id="${it.id}" ${i === items.length - 1 ? "disabled" : ""} aria-label="Descendre">↓</button>
-          <button data-act="del" data-id="${it.id}" class="adm-danger" aria-label="Supprimer">Supprimer</button>
+        <div class="adm-acard__actions">
+          <button data-aact="manage" data-id="${a.id}" class="btn btn--sm">Gérer</button>
+          <button data-aact="up" data-id="${a.id}" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button>
+          <button data-aact="down" data-id="${a.id}" ${i === albums.length - 1 ? "disabled" : ""} aria-label="Descendre">↓</button>
+          <button data-aact="del" data-id="${a.id}" class="adm-danger" aria-label="Supprimer">Supprimer</button>
         </div>
       </div>`;
   }).join("");
 
-  box.querySelectorAll("[data-act]").forEach((b) => {
-    const id = b.dataset.id, act = b.dataset.act;
+  box.querySelectorAll("[data-aact]").forEach((b) => {
+    const id = b.dataset.id, act = b.dataset.aact;
     b.addEventListener("click", () => {
-      if (act === "edit") startEdit(id);
-      else if (act === "del") delProject(id);
-      else if (act === "up") moveProject(id, -1);
-      else if (act === "down") moveProject(id, 1);
+      if (act === "manage") openManager(id);
+      else if (act === "del") delAlbum(id);
+      else if (act === "up") moveAlbum(id, -1);
+      else if (act === "down") moveAlbum(id, 1);
     });
   });
 }
 
-function startEdit(id) {
-  const it = items.find((x) => x.id === id);
-  if (!it) return;
-  editingId = id;
-  pendingImage = null;
-  $("editorTitle").textContent = "Modifier le projet";
-  $("f-title").value = it.title || "";
-  $("f-cat").value = it.category || "";
-  $("f-link").value = it.link || "";
-  $("f-imgurl").value = "";
-  $("f-file").value = "";
-  $("newPreview").innerHTML = "";
-  const cur = $("curImage");
-  if (it.image) { cur.hidden = false; $("curImageImg").src = it.image; }
-  else { cur.hidden = true; $("curImageImg").src = ""; }
-  $("resetEditor").hidden = false;
-  $("saveProject").textContent = "Enregistrer les modifications";
-  renderList();
-  document.querySelector(".adm-editor").scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function resetEditor() {
-  editingId = null;
-  pendingImage = null;
-  $("editorTitle").textContent = "Ajouter un projet";
-  ["f-title", "f-cat", "f-link", "f-imgurl", "f-file"].forEach((id) => ($(id).value = ""));
-  $("newPreview").innerHTML = "";
-  $("curImage").hidden = true;
-  $("resetEditor").hidden = true;
-  $("saveProject").textContent = "Enregistrer";
-  renderList();
-}
-
-async function saveProject() {
+async function createAlbum() {
   if (!isConfigured) { toast("Firebase non configuré."); return; }
-  const title = $("f-title").value.trim();
-  const category = $("f-cat").value.trim();
-  const link = $("f-link").value.trim();
-  const imgUrl = $("f-imgurl").value.trim();
-  const newImage = pendingImage || imgUrl || "";
-  const existingImage = editingId && items.find((i) => i.id === editingId)?.image;
-
-  if (!title && !newImage && !link && !existingImage) {
-    toast("Ajoute au moins un titre, une image ou un lien.");
-    return;
-  }
-
-  const btn = $("saveProject");
-  btn.disabled = true;
+  const title = $("na-title").value.trim();
+  const category = $("na-cat").value.trim();
+  const description = $("na-desc").value.trim();
+  if (!title) { toast("Donne un titre à l'album."); return; }
+  const order = albums.length ? Math.max(...albums.map((a) => a.order || 0)) + 1 : 0;
   try {
-    if (editingId) {
-      const patch = { title, category };
-      patch.link = link || null;            // null = supprime le champ
-      if (newImage) patch.image = newImage; // sinon on garde l'image existante
-      await update(ref(db, "portfolio/" + editingId), patch);
-      toast("Projet modifié ✦");
-    } else {
-      const order = items.length ? Math.max(...items.map((i) => i.order || 0)) + 1 : 0;
-      const data = { title, category, order, createdAt: Date.now() };
-      if (newImage) data.image = newImage;
-      if (link) data.link = link;
-      await push(ref(db, "portfolio"), data);
-      toast("Projet ajouté ✦");
-    }
-    resetEditor();
-  } catch (e) {
-    console.error("Enregistrement échoué :", e);
-    toast("Échec : " + (e && e.message ? e.message : "écriture refusée"));
-  } finally {
-    btn.disabled = false;
-  }
+    const r = await push(ref(db, "albums"), { title, category, description, order, createdAt: Date.now() });
+    $("na-title").value = ""; $("na-cat").value = ""; $("na-desc").value = "";
+    toast("Album créé ✦");
+    openManager(r.key); // on enchaîne sur l'ajout de photos
+  } catch (e) { console.error(e); toast("Échec : " + (e.message || "écriture refusée")); }
 }
 
-async function delProject(id) {
-  if (!confirm("Supprimer définitivement ce projet ?")) return;
-  await remove(ref(db, "portfolio/" + id));
-  if (editingId === id) resetEditor();
-  toast("Projet supprimé");
+async function delAlbum(id) {
+  const a = albumById(id);
+  if (!confirm(`Supprimer l'album « ${a ? a.title : ""} » et ses photos ?`)) return;
+  await remove(ref(db, "albums/" + id));
+  if (managingId === id) closeManager();
+  toast("Album supprimé");
 }
 
-async function moveProject(id, dir) {
-  const idx = items.findIndex((i) => i.id === id);
+async function moveAlbum(id, dir) {
+  const idx = albums.findIndex((a) => a.id === id);
   const swap = idx + dir;
-  if (idx < 0 || swap < 0 || swap >= items.length) return;
-  const a = items[idx], b = items[swap];
-  await update(ref(db, "portfolio"), {
+  if (idx < 0 || swap < 0 || swap >= albums.length) return;
+  const a = albums[idx], b = albums[swap];
+  await update(ref(db, "albums"), {
     [`${a.id}/order`]: b.order ?? swap,
     [`${b.id}/order`]: a.order ?? idx,
   });
 }
 
 // ====================================================================
-//  Boutons « enregistrer » des textes + champ image
+//  Gestionnaire d'un album
+// ====================================================================
+function openManager(id) {
+  managingId = id;
+  const a = albumById(id);
+  $("albumsSection").hidden = true;
+  $("albumManager").hidden = false;
+  if (a) {
+    $("mgrTitle").textContent = a.title || "Album";
+    $("m-title").value = a.title || "";
+    $("m-cat").value = a.category || "";
+    $("m-desc").value = a.description || "";
+    $("m-link").value = a.link || "";
+  }
+  renderManagerPhotos();
+  window.scrollTo(0, 0);
+}
+function closeManager() {
+  managingId = null;
+  $("albumManager").hidden = true;
+  $("albumsSection").hidden = false;
+}
+
+async function saveAlbumMeta() {
+  if (!managingId) return;
+  const patch = {
+    title: $("m-title").value.trim(),
+    category: $("m-cat").value.trim(),
+    description: $("m-desc").value.trim(),
+    link: $("m-link").value.trim() || null,
+  };
+  await update(ref(db, "albums/" + managingId), patch);
+  $("mgrTitle").textContent = patch.title || "Album";
+  toast("Infos enregistrées ✦");
+}
+
+function renderManagerPhotos() {
+  const a = albumById(managingId);
+  const grid = $("mgrPhotos");
+  if (!grid) return;
+  const ph = photosOf(a);
+  $("mgrPhotoCount").textContent = ph.length;
+  if (!ph.length) { grid.innerHTML = '<p class="adm-empty">Aucune photo. Ajoute-en ci-dessus.</p>'; return; }
+
+  grid.innerHTML = ph.map((p, i) => {
+    const isCover = (a.coverId && a.coverId === p.id) || (!a.coverId && i === 0);
+    return `<div class="adm-photo${isCover ? " is-cover" : ""}">
+        <img src="${esc(p.src)}" alt="" />
+        ${isCover ? '<span class="adm-photo__badge">Couverture</span>' : ""}
+        <div class="adm-photo__bar">
+          <button data-pact="cover" data-id="${p.id}" title="Définir comme couverture">★</button>
+          <button data-pact="up" data-id="${p.id}" ${i === 0 ? "disabled" : ""} title="Avancer">↑</button>
+          <button data-pact="down" data-id="${p.id}" ${i === ph.length - 1 ? "disabled" : ""} title="Reculer">↓</button>
+          <button data-pact="del" data-id="${p.id}" class="adm-danger" title="Supprimer">✕</button>
+        </div>
+      </div>`;
+  }).join("");
+
+  grid.querySelectorAll("[data-pact]").forEach((b) => {
+    const pid = b.dataset.id, act = b.dataset.pact;
+    b.addEventListener("click", () => {
+      if (act === "cover") setCover(pid);
+      else if (act === "del") delPhoto(pid);
+      else if (act === "up") movePhoto(pid, -1);
+      else if (act === "down") movePhoto(pid, 1);
+    });
+  });
+}
+
+async function addPhotos(files) {
+  if (!managingId) return;
+  const a = albumById(managingId);
+  let order = photosOf(a).length ? Math.max(...photosOf(a).map((p) => p.order || 0)) + 1 : 0;
+  const list = [...files];
+  let done = 0;
+  $("m-progress").textContent = `Traitement de ${list.length} photo(s)…`;
+  for (const f of list) {
+    try {
+      const src = await fileToDataURL(f);
+      await push(ref(db, `albums/${managingId}/photos`), { src, order: order++, createdAt: Date.now() });
+      done++;
+      $("m-progress").textContent = `${done}/${list.length} ajoutée(s)…`;
+    } catch (e) {
+      console.error("Photo ignorée :", e);
+      toast("Une image n'a pas pu être ajoutée.");
+    }
+  }
+  $("m-files").value = "";
+  $("m-progress").textContent = "";
+  toast(`${done} photo(s) ajoutée(s) ✦`);
+}
+
+async function setCover(pid) {
+  if (!managingId) return;
+  await update(ref(db, "albums/" + managingId), { coverId: pid });
+  toast("Couverture définie ✦");
+}
+async function delPhoto(pid) {
+  if (!managingId) return;
+  if (!confirm("Supprimer cette photo ?")) return;
+  await remove(ref(db, `albums/${managingId}/photos/${pid}`));
+}
+async function movePhoto(pid, dir) {
+  const a = albumById(managingId);
+  const ph = photosOf(a);
+  const idx = ph.findIndex((p) => p.id === pid);
+  const swap = idx + dir;
+  if (idx < 0 || swap < 0 || swap >= ph.length) return;
+  const x = ph[idx], y = ph[swap];
+  await update(ref(db, `albums/${managingId}/photos`), {
+    [`${x.id}/order`]: y.order ?? swap,
+    [`${y.id}/order`]: x.order ?? idx,
+  });
+}
+
+// ====================================================================
+//  Branchements UI
 // ====================================================================
 function wire() {
   $("saveHero").addEventListener("click", async () => {
-    if (!isConfigured) { toast("Firebase non configuré."); return; }
+    if (!isConfigured) return toast("Firebase non configuré.");
     await update(ref(db, "content/hero"), { tagline: $("c-tagline").value.trim() });
     toast("Accueil enregistré ✦");
   });
   $("saveAbout").addEventListener("click", async () => {
-    if (!isConfigured) { toast("Firebase non configuré."); return; }
+    if (!isConfigured) return toast("Firebase non configuré.");
     const skills = $("c-skills").value.split(",").map((s) => s.trim()).filter(Boolean);
     await set(ref(db, "content/about"), { text: $("c-about").value, skills });
     toast("À propos enregistré ✦");
   });
   $("saveContact").addEventListener("click", async () => {
-    if (!isConfigured) { toast("Firebase non configuré."); return; }
+    if (!isConfigured) return toast("Firebase non configuré.");
     await set(ref(db, "content/contact"), {
       email: $("c-email").value.trim(),
       instagram: $("c-insta").value.trim(),
@@ -271,23 +331,16 @@ function wire() {
     toast("Contact enregistré ✦");
   });
 
-  $("saveProject").addEventListener("click", saveProject);
-  $("resetEditor").addEventListener("click", resetEditor);
-
-  $("f-file").addEventListener("change", async () => {
-    const f = $("f-file").files[0];
-    const prev = $("newPreview");
-    if (!f) { pendingImage = null; prev.innerHTML = ""; return; }
-    prev.textContent = "Compression…";
-    try {
-      pendingImage = await fileToDataURL(f);
-      prev.innerHTML = `<img src="${pendingImage}" alt="" /><span>${kb(pendingImage)} Ko</span>`;
-    } catch (e) { prev.textContent = "Image illisible."; pendingImage = null; }
+  $("createAlbum").addEventListener("click", createAlbum);
+  $("mgrBack").addEventListener("click", closeManager);
+  $("saveAlbumMeta").addEventListener("click", saveAlbumMeta);
+  $("m-files").addEventListener("change", (e) => {
+    if (e.target.files && e.target.files.length) addPhotos(e.target.files);
   });
 }
 
 // ====================================================================
-//  Données en direct (seulement si configuré)
+//  Données en direct
 // ====================================================================
 if (isConfigured) {
   onValue(ref(db, "content"), (snap) => {
@@ -298,15 +351,15 @@ if (isConfigured) {
       contact: { ...DEFAULTS.contact, ...(v.contact || {}) },
     };
   });
-  onValue(ref(db, "portfolio"), (snap) => {
+  onValue(ref(db, "albums"), (snap) => {
     const arr = [];
     snap.forEach((c) => arr.push({ id: c.key, ...c.val() }));
     arr.sort((a, b) => (a.order || 0) - (b.order || 0));
-    items = arr;
-    renderList();
+    albums = arr;
+    renderAdminAlbums();
     refreshCatList();
+    if (managingId && !$("albumManager").hidden) renderManagerPhotos();
   });
 }
 
-// Branche les boutons de l'interface (sans dépendre de Firebase)
 wire();

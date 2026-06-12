@@ -15,8 +15,8 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=8";
-import { DEFAULTS, DEMO } from "./config.js?v=8";
+import { db, isConfigured } from "./firebase.js?v=10";
+import { DEFAULTS, DEMO } from "./config.js?v=10";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -156,19 +156,36 @@ function renderContent(c) {
 }
 
 // ====================================================================
-//  Portfolio : projets + filtres par catégorie
+//  Portfolio : albums par catégorie → page album → photos
 // ====================================================================
-let allItems = [];
+let allAlbums = [];
 let activeFilter = "all";
 
-// Tant qu'aucun vrai projet n'existe, on montre les exemples.
-function shownItems() { return allItems.length ? allItems : DEMO; }
-function isDemo() { return allItems.length === 0; }
+function shownAlbums() { return allAlbums.length ? allAlbums : DEMO; }
+function isDemo() { return allAlbums.length === 0; }
 
-function categoriesOf(items) {
+// Photos d'un album sous forme de tableau trié
+function photosOf(a) {
+  if (!a.photos) return [];
+  if (Array.isArray(a.photos)) return a.photos.slice().sort((x, y) => (x.order || 0) - (y.order || 0));
+  return Object.entries(a.photos)
+    .map(([id, p]) => ({ id, ...p }))
+    .sort((x, y) => (x.order || 0) - (y.order || 0));
+}
+function coverSrc(a) {
+  const ph = photosOf(a);
+  if (a.coverId && ph.length) {
+    const c = ph.find((p) => p.id === a.coverId);
+    if (c) return c.src;
+  }
+  if (ph.length) return ph[0].src;
+  return a.cover || "";
+}
+
+function categoriesOf(list) {
   const set = [];
-  items.forEach((it) => {
-    const cat = (it.category || "").trim();
+  list.forEach((a) => {
+    const cat = (a.category || "").trim();
     if (cat && !set.includes(cat)) set.push(cat);
   });
   return set;
@@ -177,7 +194,7 @@ function categoriesOf(items) {
 function renderFilters() {
   const bar = $("filters");
   if (!bar) return;
-  const cats = categoriesOf(shownItems());
+  const cats = categoriesOf(shownAlbums());
   if (cats.length <= 1) { bar.innerHTML = ""; return; }
   bar.innerHTML =
     `<button class="filter${activeFilter === "all" ? " is-active" : ""}" data-filter="all">Tout</button>` +
@@ -186,43 +203,40 @@ function renderFilters() {
     ).join("");
 }
 
-function renderPortfolio() {
-  const gallery = $("gallery");
-  if (!gallery) return;
-
-  const list = shownItems().filter((it) => activeFilter === "all" || it.category === activeFilter);
+function renderAlbums() {
+  const grid = $("albums");
+  if (!grid) return;
+  const list = shownAlbums().filter((a) => activeFilter === "all" || a.category === activeFilter);
 
   if (list.length === 0) {
-    gallery.innerHTML =
-      `<div class="gallery__loading">Aucun projet${isConfigured ? " — ajoute-en via l’admin." : "."}</div>`;
+    grid.innerHTML = `<div class="gallery__loading">Aucun album${isConfigured ? " — crée-en un via l’admin." : "."}</div>`;
     return;
   }
 
   const demoNote = isDemo()
-    ? '<p class="gallery__demo">Exemples — remplace-les par tes vrais projets via l’admin (#admin).</p>'
+    ? '<p class="gallery__demo">Exemples — crée tes vrais albums via l’admin.</p>'
     : "";
 
-  gallery.innerHTML = demoNote + list.map((it) => {
-    const media = it.image
-      ? `<span class="tile__media"><img src="${esc(it.image)}" alt="${esc(it.title || "")}" loading="lazy" /></span>`
+  grid.innerHTML = demoNote + list.map((a) => {
+    const cover = coverSrc(a);
+    const n = photosOf(a).length;
+    const media = cover
+      ? `<span class="tile__media"><img src="${esc(cover)}" alt="${esc(a.title || "")}" loading="lazy" /></span>`
       : `<span class="tile__media"><span class="tile__empty">arome</span></span>`;
-    const cap = `<span class="tile__cap">
-        <span class="tile__name">${esc(it.title || "Sans titre")}</span>
-        ${it.category ? `<span class="tile__cat">${esc(it.category)}</span>` : ""}
-      </span>`;
-
-    // Lien externe → ouvre dans un onglet ; sinon image cliquable (lightbox)
-    if (it.link) {
-      return `<a class="tile" href="${esc(it.link)}" target="_blank" rel="noopener">${media}${cap}</a>`;
-    }
-    return `<button class="tile" data-full="${esc(it.image || "")}" aria-label="${esc(it.title || "Projet")}">${media}${cap}</button>`;
+    const meta = n ? `${n} photo${n > 1 ? "s" : ""}` : (a.category || "");
+    return `<button class="tile" data-album="${esc(a.id)}" aria-label="${esc(a.title || "Album")}">
+        ${media}
+        <span class="tile__cap">
+          <span class="tile__name">${esc(a.title || "Sans titre")}</span>
+          <span class="tile__cat">${esc(meta)}</span>
+        </span>
+      </button>`;
   }).join("");
-
-  observeReveals();
 }
 
-function renderAll() { renderFilters(); renderPortfolio(); }
+function renderAll() { renderFilters(); renderAlbums(); }
 
+// Filtres
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("#filters .filter");
   if (!btn) return;
@@ -230,27 +244,83 @@ document.addEventListener("click", (e) => {
   renderAll();
 });
 
+// Ouvrir un album (page dédiée)
+document.addEventListener("click", (e) => {
+  const card = e.target.closest(".tile[data-album]");
+  if (card) openAlbum(card.dataset.album);
+});
+
+function openAlbum(id) {
+  const a = shownAlbums().find((x) => x.id === id);
+  if (!a) return;
+  const ph = photosOf(a);
+
+  $("albumCat").textContent = a.category || "";
+  $("albumTitle").textContent = a.title || "";
+  $("albumDesc").textContent = a.description || "";
+  $("albumLinkWrap").innerHTML = a.link
+    ? `<a class="btn" href="${esc(a.link)}" target="_blank" rel="noopener">Voir ↗</a>`
+    : "";
+
+  const grid = $("albumPhotos");
+  grid.innerHTML = ph.length
+    ? ph.map((p, i) =>
+        `<button class="tile" data-lb="${i}"><span class="tile__media"><img src="${esc(p.src)}" alt="" loading="lazy" /></span></button>`
+      ).join("")
+    : '<div class="gallery__loading">Album vide pour l’instant.</div>';
+
+  // Liste pour la lightbox
+  lbList = ph.map((p) => p.src);
+
+  $("albumsView").hidden = true;
+  $("albumView").hidden = false;
+  window.scrollTo(0, 0);
+}
+
+function closeAlbum() {
+  $("albumView").hidden = true;
+  $("albumsView").hidden = false;
+}
+if ($("albumBack")) $("albumBack").addEventListener("click", closeAlbum);
+
 // ====================================================================
-//  Lightbox
+//  Lightbox avec navigation (préc / suiv) dans l'album
 // ====================================================================
-const lb = $("lightbox"), lbImg = $("lbImg"), lbClose = $("lbClose");
-function closeLightbox() {
-  if (!lb) return;
+let lbList = [];
+let lbIndex = 0;
+const lb = $("lightbox"), lbImg = $("lbImg");
+function showLb(i) {
+  if (!lbList.length) return;
+  lbIndex = (i + lbList.length) % lbList.length;
+  lbImg.src = lbList[lbIndex];
+  const multi = lbList.length > 1;
+  $("lbPrev").style.display = multi ? "" : "none";
+  $("lbNext").style.display = multi ? "" : "none";
+}
+function openLb(i) {
+  showLb(i);
+  lb.classList.add("is-open");
+  lb.setAttribute("aria-hidden", "false");
+}
+function closeLb() {
   lb.classList.remove("is-open");
   lb.setAttribute("aria-hidden", "true");
   lbImg.src = "";
 }
 document.addEventListener("click", (e) => {
-  const tile = e.target.closest(".tile[data-full]");
-  if (tile && tile.dataset.full) {
-    lbImg.src = tile.dataset.full;
-    lb.classList.add("is-open");
-    lb.setAttribute("aria-hidden", "false");
-  }
+  const t = e.target.closest("#albumPhotos .tile[data-lb]");
+  if (t) openLb(parseInt(t.dataset.lb, 10));
 });
-if (lbClose) lbClose.addEventListener("click", closeLightbox);
-if (lb) lb.addEventListener("click", (e) => { if (e.target === lb) closeLightbox(); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLightbox(); });
+if ($("lbClose")) $("lbClose").addEventListener("click", closeLb);
+if ($("lbPrev")) $("lbPrev").addEventListener("click", (e) => { e.stopPropagation(); showLb(lbIndex - 1); });
+if ($("lbNext")) $("lbNext").addEventListener("click", (e) => { e.stopPropagation(); showLb(lbIndex + 1); });
+if (lb) lb.addEventListener("click", (e) => { if (e.target === lb) closeLb(); });
+document.addEventListener("keydown", (e) => {
+  if (!lb.classList.contains("is-open")) return;
+  if (e.key === "Escape") closeLb();
+  else if (e.key === "ArrowLeft") showLb(lbIndex - 1);
+  else if (e.key === "ArrowRight") showLb(lbIndex + 1);
+});
 
 // ====================================================================
 //  Apparitions au scroll
@@ -347,10 +417,12 @@ function renderMessage(it) {
 // ====================================================================
 if (isConfigured) {
   onValue(ref(db, "content"), (snap) => renderContent(snap.val() || {}));
-  onValue(query(ref(db, "portfolio"), orderByChild("order")), (snap) => {
-    const items = [];
-    snap.forEach((c) => items.push({ id: c.key, ...c.val() }));
-    allItems = items;
+  onValue(ref(db, "albums"), (snap) => {
+    const arr = [];
+    snap.forEach((c) => arr.push({ id: c.key, ...c.val() }));
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    allAlbums = arr;
+    // Si l'album ouvert a changé, on reste cohérent : on re-render la grille
     renderAll();
   });
   initVisitCounter();

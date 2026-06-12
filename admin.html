@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=8" />
-  <link rel="stylesheet" href="css/admin.css?v=8" />
+  <link rel="stylesheet" href="css/style.css?v=10" />
+  <link rel="stylesheet" href="css/admin.css?v=10" />
 </head>
 <body class="adm">
 
@@ -36,48 +36,48 @@
 
     <main class="adm-wrap">
 
-      <!-- ===== PROJETS ===== -->
-      <section class="adm-block">
-        <h2 class="adm-h2">Projets <span id="projCount" class="adm-count">0</span></h2>
+      <datalist id="catlist"></datalist>
 
-        <!-- Éditeur (ajout / modification) -->
-        <div class="adm-editor">
-          <h3 id="editorTitle" class="adm-h3">Ajouter un projet</h3>
-          <div class="adm-form">
-            <label>Titre
-              <input id="f-title" placeholder="Titre du projet" />
-            </label>
-            <label>Catégorie
-              <input id="f-cat" list="catlist" placeholder="Photo, Vidéo, Design, Musique…" />
-              <datalist id="catlist"></datalist>
-            </label>
-            <label>Lien externe (optionnel — vidéo, site…)
-              <input id="f-link" placeholder="https://…" />
-            </label>
+      <!-- ===== ALBUMS (liste) ===== -->
+      <section class="adm-block" id="albumsSection">
+        <h2 class="adm-h2">Albums <span id="albumCount" class="adm-count">0</span></h2>
+        <p class="adm-hint">Un album = un projet (ex. « Aquarium ») qui contient plusieurs photos. Crée l'album, puis clique « Gérer » pour y déposer tes photos.</p>
 
-            <div class="adm-imgrow">
-              <div class="adm-imgcur" id="curImage" hidden>
-                <span class="adm-imglabel">Image actuelle</span>
-                <img id="curImageImg" alt="" />
-              </div>
-              <label>Image (fichier — compressé auto)
-                <input id="f-file" type="file" accept="image/*" />
-              </label>
-              <label>…ou URL d'image
-                <input id="f-imgurl" placeholder="https://… ou images/photo.jpg" />
-              </label>
-              <div id="newPreview" class="adm-preview"></div>
-            </div>
-
-            <div class="adm-actions">
-              <button type="button" class="btn" id="saveProject">Enregistrer</button>
-              <button type="button" class="btn btn--ghost" id="resetEditor" hidden>Annuler</button>
-            </div>
+        <div class="adm-create">
+          <h3 class="adm-h3">Créer un album</h3>
+          <div class="adm-create__row">
+            <input id="na-title" placeholder="Titre (ex. Aquarium)" />
+            <input id="na-cat" list="catlist" placeholder="Catégorie (Photo, Vidéo, Design…)" />
           </div>
+          <input id="na-desc" placeholder="Description (optionnel)" />
+          <button type="button" class="btn" id="createAlbum">+ Créer l'album</button>
         </div>
 
-        <!-- Liste des projets -->
-        <div class="adm-list" id="projList"></div>
+        <div class="adm-albumgrid" id="adminAlbums"></div>
+      </section>
+
+      <!-- ===== GESTIONNAIRE D'UN ALBUM ===== -->
+      <section class="adm-block" id="albumManager" hidden>
+        <button type="button" class="album-back" id="mgrBack">← Tous les albums</button>
+        <h2 class="adm-h2" id="mgrTitle">Album</h2>
+
+        <div class="adm-form">
+          <div class="adm-create__row">
+            <label>Titre <input id="m-title" /></label>
+            <label>Catégorie <input id="m-cat" list="catlist" /></label>
+          </div>
+          <label>Description <textarea id="m-desc" rows="3"></textarea></label>
+          <label>Lien externe (optionnel — vidéo, site…) <input id="m-link" placeholder="https://…" /></label>
+          <button type="button" class="btn btn--sm" id="saveAlbumMeta">Enregistrer les infos</button>
+        </div>
+
+        <h3 class="adm-h3" style="margin-top:1.5rem">Photos <span id="mgrPhotoCount" class="adm-count">0</span></h3>
+        <label class="adm-addphotos">
+          <span>+ Ajouter des photos (plusieurs à la fois — compressées auto)</span>
+          <input id="m-files" type="file" accept="image/*" multiple />
+        </label>
+        <p id="m-progress" class="adm-hint"></p>
+        <div class="adm-photogrid" id="mgrPhotos"></div>
       </section>
 
       <!-- ===== TEXTES ===== -->
@@ -118,6 +118,6 @@
 
   <div id="toast" class="adm-toast"></div>
 
-  <script type="module" src="js/admin-page.js?v=8"></script>
+  <script type="module" src="js/admin-page.js?v=10"></script>
 </body>
 </html>

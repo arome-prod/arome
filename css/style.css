@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=76") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=77") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -76,7 +76,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=76") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=77") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -760,8 +760,9 @@ body:not(.mode-home) .brand__nav button { font-size: 0.7rem; }
   font-size: clamp(0.7rem, 2vw, 0.82rem);
   text-transform: uppercase;
   letter-spacing: 0.42em;
-  padding-left: 0.42em;
+  padding-left: 0.42em;   /* compense le letter-spacing pour un centrage optique */
   margin-top: 1.2rem;
+  text-align: center;
 }
 .brand__nav { display: flex; }
 .brand__nav button {
@@ -825,18 +826,32 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=76") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=77") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;
   }
 
-  /* Barre du haut plus compacte, sans débordement */
-  body:not(.mode-home) .brand { padding: 0.8rem 1rem; }
-  body:not(.mode-home) .brand__logomark { width: 80px; }
-  body:not(.mode-home) .brand__nav { gap: 0.85rem; }
-  body:not(.mode-home) .brand__nav button { font-size: 0.6rem; letter-spacing: 0.1em; }
-  .stage { padding-top: 52px; }
+  /* Barre du haut compacte : logo réduit + onglets sur une seule ligne */
+  body:not(.mode-home) .brand { padding: 0.65rem 0.8rem; align-items: center; gap: 0.6rem; }
+  body:not(.mode-home) .brand__logo { flex: none; }
+  body:not(.mode-home) .brand__logomark { width: 58px; }
+  body:not(.mode-home) .brand__nav {
+    flex: 1; min-width: 0;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 0.7rem;
+    overflow-x: auto;                 /* filet de sécurité sur très petits écrans */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  body:not(.mode-home) .brand__nav::-webkit-scrollbar { display: none; }
+  body:not(.mode-home) .brand__nav button {
+    font-size: 0.56rem; letter-spacing: 0.06em;
+    white-space: nowrap;              /* « À PROPOS » ne se coupe plus en deux */
+    padding: 0.2rem 0;
+  }
+  .stage { padding-top: 50px; }
 
   /* Accueil : un peu plus d'air, accroche resserrée */
   body.mode-home .brand__nav { gap: 1.1rem 1.4rem; }

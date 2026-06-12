@@ -51,7 +51,7 @@ if (canvas && !reduce) {
     const time = t * 0.001;
     // brume plus dense quand le mode ambiance est actif (easing doux)
     const targetI = document.body.classList.contains("ambient") ? 2.3 : 1;
-    intensity += (targetI - intensity) * 0.03;
+    intensity += (targetI - intensity) * 0.012;   // montée/descente très progressive
     ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = "lighter";
 

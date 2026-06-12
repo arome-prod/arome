@@ -1,22 +1,16 @@
 // ====================================================================
 //  app.js — site public arome (one-page)
-//  Rend textes + projets depuis la Realtime Database, filtres par
-//  catégorie, lightbox, apparitions au scroll, livre d'or, compteur.
+//  Rend textes, albums, inspirations depuis la Realtime Database,
+//  filtres, lightbox, mode ambiance, transitions entre onglets.
 // ====================================================================
 
 import {
   ref,
-  push,
   onValue,
-  runTransaction,
-  query,
-  orderByChild,
-  limitToLast,
-  serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=57";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=57";
+import { db, isConfigured } from "./firebase.js?v=61";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=61";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -179,7 +173,7 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
 //  une musique au hasard parmi les inspirations. Un clic = retour.
 // ====================================================================
 (function ambientMode() {
-  const IDLE_MS = 12000;
+  const IDLE_MS = 300000;   // 5 minutes d'inactivité
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const body = document.body;
   const player = $("ambientPlayer");
@@ -489,8 +483,8 @@ function updateAlbumArrows() {
 
   // --- Défilement automatique (onglet « Tout »), pause au survol ---
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const SPEED = 0.45;   // px par frame
-  let dir = 1, paused = false;
+  const SPEED = 0.5;    // px par frame (lent)
+  let dir = 1, paused = false, pos = 0;
 
   if (wrap) {
     wrap.addEventListener("mouseenter", () => (paused = true));
@@ -511,9 +505,12 @@ function updateAlbumArrows() {
   function autoTick() {
     if (eligible()) {
       const max = el.scrollWidth - el.clientWidth;
-      el.scrollLeft += dir * SPEED;
-      if (el.scrollLeft >= max - 0.5) dir = -1;
-      else if (el.scrollLeft <= 0.5) dir = 1;
+      pos += dir * SPEED;                 // accumulateur flottant (sinon la fraction est perdue)
+      if (pos >= max) { pos = max; dir = -1; }
+      else if (pos <= 0) { pos = 0; dir = 1; }
+      el.scrollLeft = pos;
+    } else {
+      pos = el.scrollLeft;                // resync quand en pause / défilement manuel
     }
     requestAnimationFrame(autoTick);
   }
@@ -550,8 +547,8 @@ function updateInspArrows() {
   if ("ResizeObserver" in window) new ResizeObserver(updateInspArrows).observe(el);
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const SPEED = 0.45;
-  let dir = 1, paused = false;
+  const SPEED = 0.5;
+  let dir = 1, paused = false, pos = 0;
   if (wrap) {
     wrap.addEventListener("mouseenter", () => (paused = true));
     wrap.addEventListener("mouseleave", () => (paused = false));
@@ -568,9 +565,12 @@ function updateInspArrows() {
   function autoTick() {
     if (eligible()) {
       const max = el.scrollWidth - el.clientWidth;
-      el.scrollLeft += dir * SPEED;
-      if (el.scrollLeft >= max - 0.5) dir = -1;
-      else if (el.scrollLeft <= 0.5) dir = 1;
+      pos += dir * SPEED;
+      if (pos >= max) { pos = max; dir = -1; }
+      else if (pos <= 0) { pos = 0; dir = 1; }
+      el.scrollLeft = pos;
+    } else {
+      pos = el.scrollLeft;
     }
     requestAnimationFrame(autoTick);
   }

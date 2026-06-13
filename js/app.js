@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=146";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=146";
+import { db, isConfigured } from "./firebase.js?v=148";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=148";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -20,6 +20,25 @@ const esc = (s = "") =>
 
 const yearEl = $("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+// Petit message éphémère en bas de l'écran
+function showToast(msg) {
+  let t = document.querySelector(".toast");
+  if (!t) { t = document.createElement("div"); t.className = "toast"; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add("is-on");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("is-on"), 2400);
+}
+// Bouton Email : copie l'adresse dans le presse-papier (en plus du mailto)
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("a[data-copy]");
+  if (!a) return;
+  const val = a.dataset.copy;
+  if (navigator.clipboard && val) {
+    navigator.clipboard.writeText(val).then(() => showToast("Adresse copiée ✦")).catch(() => {});
+  }
+});
 
 // Rejoue une apparition douce (fondu + léger glissé) sur un conteneur qui change.
 function playIn(el) {
@@ -275,7 +294,7 @@ window.addEventListener("resize", () => {
 
   function buildPlayer() {
     const m = pickMusic();
-    let html = '<p class="ambient-hint">Cliquez n’importe où pour revenir</p>';
+    let html = '<p class="ambient-hint">Cliquer n’importe où pour revenir</p>';
     if (m) {
       // lecteur "plein" : grande pochette + bouton lecture central bien visible
       const h = m.source === "apple" ? 450 : 352;
@@ -364,7 +383,7 @@ function renderContent(c) {
   if (links) {
     const out = [];
     if (data.contact.email)
-      out.push(`<a class="btn" href="mailto:${esc(data.contact.email)}">Email</a>`);
+      out.push(`<a class="btn" href="mailto:${esc(data.contact.email)}" data-copy="${esc(data.contact.email)}">Email</a>`);
     if (data.contact.instagram)
       out.push(`<a class="btn" href="${esc(data.contact.instagram)}" target="_blank" rel="noopener">Instagram</a>`);
     if (data.contact.vinted)

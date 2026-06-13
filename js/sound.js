@@ -236,12 +236,13 @@
     m.innerHTML =
       '<div class="info-card" role="dialog" aria-label="À propos du site">' +
         '<button type="button" class="info-close" aria-label="Fermer">✕</button>' +
-        '<h3 class="info-title">arome</h3>' +
+        '<img class="info-logo" src="images/arome_logo.svg?v=148" alt="arome" />' +
         '<p class="info-lead">Portfolio photo · vidéo · design. Une promenade calme à travers mes projets et mes coups de cœur.</p>' +
         '<ul class="info-list">' +
-          '<li><strong>Curseur</strong> — pose-le sur un bouton et garde-le immobile : l\'anneau se remplit puis valide tout seul. Tu peux aussi cliquer normalement.</li>' +
-          '<li><strong>Roue crantée</strong> (en bas à gauche) — active des sons doux et planants, ou passe le site en plein écran.</li>' +
-          '<li><strong>Astuce</strong> — laisse la page d\'accueil tranquille quelques instants pour voir la brume s\'épaissir.</li>' +
+          '<li><strong>Curseur</strong> — en le posant sur un bouton et en le gardant immobile, l\'anneau se remplit puis valide tout seul. Le clic classique fonctionne aussi.</li>' +
+          '<li><strong>Plein écran</strong> — le bouton ' + ICON_FS + ' de ce menu passe le site en plein écran (et en ressort d\'un nouveau clic) pour une navigation plus immersive.</li>' +
+          '<li><strong>Astuce</strong> — laisser la page d\'accueil au repos quelques instants fait épaissir la brume.</li>' +
+          '<li><strong>Bon à savoir</strong> — si la réduction des animations est activée sur l\'appareil, l\'expérience sera allégée (intro, brume et certains effets ne s\'afficheront pas).</li>' +
         '</ul>' +
       '</div>';
     document.body.appendChild(m);

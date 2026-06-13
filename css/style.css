@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=146") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=148") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -55,6 +55,22 @@ a { color: var(--text); text-decoration: none; }
 img { -webkit-user-drag: none; -khtml-user-drag: none; }
 
 ::selection { background: rgba(255, 255, 255, 0.16); }
+
+/* Petit message éphémère (ex. « Adresse copiée ») */
+.toast {
+  position: fixed; left: 50%; bottom: 2rem;
+  transform: translateX(-50%) translateY(14px);
+  z-index: 10070;
+  background: rgba(20, 20, 22, 0.92);
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+  font-size: 0.8rem; letter-spacing: 0.04em;
+  padding: 0.65rem 1.2rem; border-radius: 999px;
+  backdrop-filter: blur(8px);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.toast.is-on { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ===== Intro de chargement (grand nuage gris qui se dissipe) ===== */
 .intro {
@@ -119,12 +135,18 @@ html { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparen
   display: flex; flex-direction: column-reverse; gap: 0.5rem;
 }
 .settings__menu .set-btn {
-  opacity: 0; transform: translateY(8px) scale(0.85);
+  opacity: 0; transform: translateY(18px) scale(0.9);
   pointer-events: none;
+  transition: opacity 0.32s ease, color 0.3s ease, border-color 0.3s ease,
+              background 0.3s ease, transform 0.42s cubic-bezier(0.22, 0.8, 0.28, 1);
 }
 .settings.is-open .settings__menu .set-btn {
   opacity: 0.9; transform: none; pointer-events: auto;
 }
+/* Cascade à l'ouverture : le bouton le plus proche de la roue apparaît en premier */
+.settings.is-open .settings__menu .set-btn:nth-child(3) { transition-delay: 0s; }
+.settings.is-open .settings__menu .set-btn:nth-child(2) { transition-delay: 0.05s; }
+.settings.is-open .settings__menu .set-btn:nth-child(1) { transition-delay: 0.1s; }
 .settings.is-open .settings__menu .set-btn:hover { opacity: 1; }
 @media (max-width: 640px) {
   .settings { left: 0.8rem; bottom: 0.8rem; }
@@ -161,12 +183,13 @@ html { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparen
   font-size: 1.1rem; cursor: pointer; line-height: 1;
 }
 .info-close:hover { color: var(--text); }
-.info-title { font-family: var(--font-display); font-weight: 400; font-size: 1.9rem; margin-bottom: 0.6rem; }
+.info-logo { display: block; height: 2.1rem; width: auto; margin-bottom: 0.7rem; }
 .info-lead { color: var(--muted); font-size: 0.94rem; line-height: 1.6; margin-bottom: 1.2rem; }
 .info-list { list-style: none; display: flex; flex-direction: column; gap: 0.85rem; }
 .info-list li { color: var(--muted); font-size: 0.88rem; line-height: 1.55; padding-left: 1rem; position: relative; }
 .info-list li::before { content: "·"; position: absolute; left: 0; color: var(--faint); }
 .info-list strong { color: var(--text); font-weight: 500; }
+.info-list li svg { width: 1em; height: 1em; vertical-align: -0.15em; margin: 0 0.1em; }
 
 /* ===== Curseur personnalisé ===== */
 .cursor {
@@ -224,7 +247,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=146") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=148") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -1119,7 +1142,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=146") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=148") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

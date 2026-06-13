@@ -24,7 +24,7 @@ export const DEFAULTS = {
     skills: ["Photographie", "Vidéo", "Design", "Direction artistique"],
   },
   contact: {
-    email: "mathys.lemarie@gmail.com",
+    email: "prod.arome@gmail.com",
     instagram: "",
     vinted: "",
   },

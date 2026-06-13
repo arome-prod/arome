@@ -44,18 +44,22 @@ if (fine && cur) {
       fill.style.transform = "scale(1)";
     }, DWELL_DELAY);
   }
-  // Quand le remplissage atteint sa taille pleine → clic automatique
+  // Quand le remplissage atteint sa taille pleine → petit « pop » + clic automatique
   fill.addEventListener("transitionend", (e) => {
     if (e.propertyName !== "transform" || !dwellTarget) return;
     const el = dwellTarget;
     cancelDwell();
+    cur.classList.remove("is-bump"); void cur.offsetWidth;   // relance l'animation
+    cur.classList.add("is-bump");
+    setTimeout(() => cur.classList.remove("is-bump"), 320);
     el.click();
   });
 
   document.addEventListener("mousemove", (e) => {
     tx = e.clientX; ty = e.clientY;
     cur.classList.add("is-on");
-    const el = e.target.closest(DWELL_SEL);
+    let el = e.target.closest(DWELL_SEL);
+    if (el && el.closest(".tile[data-album]")) el = null;   // pas de dwell sur les albums (conflit diaporama)
     if (el !== dwellTarget) { if (el) startDwell(el); else cancelDwell(); }
   });
   document.addEventListener("mouseleave", () => { cur.classList.remove("is-on"); cancelDwell(); });

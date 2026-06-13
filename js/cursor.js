@@ -76,6 +76,7 @@ if (fine && cur) {
     armIdle();                       // toute activité réarme la respiration
     let el = e.target.closest(DWELL_SEL);
     if (el && el.closest(".tile[data-album]")) el = null;   // pas de dwell sur les albums (conflit diaporama)
+    if (el && el.closest("#albumPhotos")) el = null;        // ni sur les photos d'un album ouvert
     if (el && el.closest(".tile[data-ytlb]")) el = null;    // ni sur les vidéos YouTube
     if (el && el.closest(".tile--text")) el = null;         // ni sur les Écrits
     if (el && el.closest("#inspWall")) el = null;           // ni sur les Coups de cœur

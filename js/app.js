@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=127";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=127";
+import { db, isConfigured } from "./firebase.js?v=129";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=129";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -65,6 +65,11 @@ window.addEventListener("resize", () => {
     panels.forEach((p) => p.classList.toggle("is-active", p.dataset.panel === key));
     document.querySelectorAll("[data-go]").forEach((b) =>
       b.classList.toggle("is-active", b.dataset.go === key));
+    // Recale le trait des filtres une fois la section visible (sinon largeur 0)
+    if (key === "portfolio" || key === "inspirations") {
+      const id = key === "portfolio" ? "filters" : "inspFilters";
+      requestAnimationFrame(() => syncFilterUnderline(document.getElementById(id)));
+    }
   }
   setActive("portfolio");
 
@@ -150,6 +155,10 @@ window.addEventListener("resize", () => {
       flip(() => body.classList.add("mode-home"), MOVE_TO_HOME, ZOOM_TO_HOME);
       return;
     }
+
+    // On revient sur une section → la remettre à zéro (« Tout »)
+    if (key === "portfolio") resetPortfolioView();
+    else if (key === "inspirations") resetInspView();
 
     // Déjà dans une section : transition douce (fondu sortant → entrant)
     if (!home) {
@@ -662,6 +671,25 @@ function setupAlbumHover() {
 }
 
 function renderAll() { renderFilters(); renderAlbums(); playIn($("albums")); }
+
+// Réinitialise le Portfolio sur « Tout » (referme album / texte / YouTube).
+function resetPortfolioView() {
+  activeFilter = "all";
+  if ($("albumView")) $("albumView").hidden = true;
+  if ($("youtubeView")) $("youtubeView").hidden = true;
+  if ($("textView")) $("textView").hidden = true;
+  if ($("albumsView")) $("albumsView").hidden = false;
+  document.body.classList.remove("reading");
+  const bar = $("readProgress");
+  if (bar) { bar.classList.remove("is-on"); bar.style.width = "0%"; }
+  window.removeEventListener("scroll", updateReadProgress);
+  renderAll();
+}
+// Réinitialise les Coups de cœur sur « Tout ».
+function resetInspView() {
+  inspFilter = "all";
+  renderInspirations();
+}
 
 // Glisser-déposer à la souris pour faire défiler une rangée horizontale (avec inertie).
 function attachDragScroll(el) {

@@ -127,7 +127,7 @@
       ".read": true,
       ".write": false,
       "$msg": {
-        ".write": "!data.exists() && newData.exists()",
+        ".write": true,
         ".validate": "newData.hasChildren(['name','message','createdAt'])",
         "name":      { ".validate": "newData.isString() && newData.val().length <= 40" },
         "message":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 280" },

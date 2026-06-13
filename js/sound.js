@@ -120,6 +120,34 @@
     if (e.target.closest(CLICKABLE)) drop();
   });
 
+  // ---- Easter egg : touches 1…0 → notes planantes (grave → aigu) ----
+  // Gamme pentatonique (intervalles doux) pour rester harmonieux et « fondu ».
+  const NOTE_ROOT = 196; // G3
+  const NOTE_RATIOS = [1, 1.125, 1.25, 1.5, 1.6667, 2, 2.25, 2.5, 3, 3.3333];
+  const NOTE_FREQS = NOTE_RATIOS.map((r) => NOTE_ROOT * r);
+  function playNote(freq) {
+    const c = ensureCtx(); if (!c) return;
+    const t = c.currentTime;
+    const o1 = c.createOscillator(); o1.type = "sine"; o1.frequency.value = freq;
+    const o2 = c.createOscillator(); o2.type = "sine"; o2.frequency.value = freq; o2.detune.value = 6;
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.08, t + 0.06);       // attaque douce
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4); // longue queue planante (+ réverbe maître)
+    o1.connect(g); o2.connect(g); g.connect(master);
+    o1.start(t); o2.start(t);
+    o1.stop(t + 1.5); o2.stop(t + 1.5);
+  }
+  document.addEventListener("keydown", (e) => {
+    const tg = e.target;
+    if (tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA" || tg.isContentEditable)) return;
+    const k = e.key;
+    if (k && k.length === 1 && k >= "0" && k <= "9") {
+      const idx = k === "0" ? 9 : (k.charCodeAt(0) - 49); // '1'→0 … '9'→8, '0'→9
+      if (idx >= 0 && idx < NOTE_FREQS.length) playNote(NOTE_FREQS[idx]);
+    }
+  });
+
   // ---- Plein écran ----
   const fsEl = () => document.documentElement;
   function isFs() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }

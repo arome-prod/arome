@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=118";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=118";
+import { db, isConfigured } from "./firebase.js?v=119";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=119";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -637,6 +637,44 @@ function setupAlbumHover() {
 
 function renderAll() { renderFilters(); renderAlbums(); }
 
+// Glisser-déposer à la souris pour faire défiler une rangée horizontale (avec inertie).
+function attachDragScroll(el) {
+  if (!el) return;
+  let down = false, startX = 0, startScroll = 0, lastX = 0, vel = 0, moved = false, raf = null;
+
+  el.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return;
+    down = true; moved = false;
+    startX = e.pageX; lastX = e.pageX; startScroll = el.scrollLeft; vel = 0;
+    if (raf) cancelAnimationFrame(raf);
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (!down) return;
+    const dx = e.pageX - startX;
+    if (Math.abs(dx) > 4) moved = true;
+    el.scrollLeft = startScroll - dx;
+    vel = e.pageX - lastX; lastX = e.pageX;
+    el.style.userSelect = "none";
+  });
+  window.addEventListener("mouseup", () => {
+    if (!down) return;
+    down = false; el.style.userSelect = "";
+    if (moved && Math.abs(vel) > 0.5) {
+      const glide = () => {
+        el.scrollLeft -= vel; vel *= 0.92;          // inertie qui s'amortit
+        if (Math.abs(vel) > 0.4) raf = requestAnimationFrame(glide);
+      };
+      glide();
+    }
+  });
+  // Empêche le clic « fantôme » d'ouvrir un projet après un glissé
+  el.addEventListener("click", (e) => {
+    if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
+  }, true);
+}
+attachDragScroll($("albums"));
+attachDragScroll($("inspWall"));
+
 // Flèches de défilement de la rangée d'albums
 function updateAlbumArrows() {
   const el = $("albums"), prev = $("albumsPrev"), next = $("albumsNext");
@@ -1009,12 +1047,14 @@ function showLb(i) {
   const img = $("lbImg"), vWrap = $("lbVideoWrap"), vFrame = $("lbVideo"), title = $("lbTitle");
 
   if (item.type === "video") {
-    img.hidden = true; img.src = "";
+    img.hidden = true; img.src = ""; img.classList.remove("kb");
     vWrap.hidden = false;
     vFrame.src = `https://www.youtube.com/embed/${item.id}?rel=0&autoplay=1`;
   } else {
     vWrap.hidden = true; vFrame.src = "";
     img.hidden = false; img.src = item.src;
+    img.classList.remove("kb"); void img.offsetWidth;  // relance l'animation Ken Burns
+    img.classList.add("kb");
   }
   title.textContent = item.title || "";
 

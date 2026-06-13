@@ -113,32 +113,75 @@
     else dwellStop();
   });
 
-  // Clic (manuel ou automatique via dwell), hors bouton son
+  // Clic (manuel ou automatique via dwell), hors menu réglages
   const CLICKABLE = "a, button, .tile, .filter, .albums-arrow, [role='button'], summary, label";
   document.addEventListener("click", (e) => {
-    if (e.target.closest(".sound-toggle")) return;
+    if (e.target.closest(".settings")) return;
     if (e.target.closest(CLICKABLE)) drop();
   });
 
-  // Bouton bascule
-  function mount() {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "sound-toggle" + (enabled ? " is-on" : "");
-    btn.setAttribute("aria-pressed", enabled ? "true" : "false");
-    btn.setAttribute("aria-label", enabled ? "Couper le son" : "Activer le son");
-    btn.innerHTML = iconFor(enabled);
-    document.body.appendChild(btn);
+  // ---- Plein écran ----
+  const fsEl = () => document.documentElement;
+  function isFs() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function toggleFs() {
+    if (isFs()) {
+      (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document);
+    } else {
+      const el = fsEl();
+      (el.requestFullscreen || el.webkitRequestFullscreen || function(){}).call(el);
+    }
+  }
+  const ICON_FS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+  const ICON_FS_EXIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+  const ICON_GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>';
 
-    btn.addEventListener("click", () => {
+  // ---- Menu réglages (roue crantée → son + plein écran) ----
+  function mount() {
+    const wrap = document.createElement("div");
+    wrap.className = "settings";
+    wrap.innerHTML =
+      '<div class="settings__menu">' +
+        '<button type="button" class="set-btn set-sound' + (enabled ? " is-on" : "") +
+          '" aria-pressed="' + (enabled ? "true" : "false") + '" aria-label="' +
+          (enabled ? "Couper le son" : "Activer le son") + '">' + iconFor(enabled) + '</button>' +
+        '<button type="button" class="set-btn set-fs" aria-pressed="false" aria-label="Plein écran">' + ICON_FS + '</button>' +
+      '</div>' +
+      '<button type="button" class="set-btn settings__gear" aria-expanded="false" aria-label="Réglages">' + ICON_GEAR + '</button>';
+    document.body.appendChild(wrap);
+
+    const gear = wrap.querySelector(".settings__gear");
+    const sound = wrap.querySelector(".set-sound");
+    const fs = wrap.querySelector(".set-fs");
+
+    gear.addEventListener("click", () => {
+      const open = wrap.classList.toggle("is-open");
+      gear.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    // fermer le menu si on clique ailleurs
+    document.addEventListener("click", (e) => {
+      if (!wrap.contains(e.target)) { wrap.classList.remove("is-open"); gear.setAttribute("aria-expanded", "false"); }
+    });
+
+    sound.addEventListener("click", () => {
       enabled = !enabled;
       try { localStorage.setItem(KEY, enabled ? "on" : "off"); } catch (e) {}
-      btn.classList.toggle("is-on", enabled);
-      btn.setAttribute("aria-pressed", enabled ? "true" : "false");
-      btn.setAttribute("aria-label", enabled ? "Couper le son" : "Activer le son");
-      btn.innerHTML = iconFor(enabled);
-      if (enabled) { ensureCtx(); drop(); }   // petit retour sonore
+      sound.classList.toggle("is-on", enabled);
+      sound.setAttribute("aria-pressed", enabled ? "true" : "false");
+      sound.setAttribute("aria-label", enabled ? "Couper le son" : "Activer le son");
+      sound.innerHTML = iconFor(enabled);
+      if (enabled) { ensureCtx(); drop(); }
     });
+
+    fs.addEventListener("click", toggleFs);
+    function syncFs() {
+      const on = isFs();
+      fs.innerHTML = on ? ICON_FS_EXIT : ICON_FS;
+      fs.classList.toggle("is-on", on);
+      fs.setAttribute("aria-pressed", on ? "true" : "false");
+      fs.setAttribute("aria-label", on ? "Quitter le plein écran" : "Plein écran");
+    }
+    document.addEventListener("fullscreenchange", syncFs);
+    document.addEventListener("webkitfullscreenchange", syncFs);
   }
   if (document.body) mount();
   else document.addEventListener("DOMContentLoaded", mount);

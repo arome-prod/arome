@@ -68,6 +68,7 @@ if (fine && cur) {
     let el = e.target.closest(DWELL_SEL);
     if (el && el.closest(".tile[data-album]")) el = null;   // pas de dwell sur les albums (conflit diaporama)
     if (el && el.closest("#inspWall")) el = null;           // ni sur les Coups de cœur
+    if (el && el.closest(".settings")) el = null;           // ni sur le menu réglages
     if (el !== dwellTarget) { if (el) startDwell(el); else cancelDwell(); }
   });
   document.addEventListener("mouseleave", () => { cur.classList.remove("is-on"); cancelDwell(); });

@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=140";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=140";
+import { db, isConfigured } from "./firebase.js?v=141";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=141";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -86,6 +86,9 @@ window.addEventListener("resize", () => {
     if (key === "portfolio" || key === "inspirations") {
       const id = key === "portfolio" ? "filters" : "inspFilters";
       requestAnimationFrame(() => syncFilterUnderline(document.getElementById(id)));
+    }
+    if (key === "inspirations" && typeof fitInspEmbeds === "function") {
+      requestAnimationFrame(fitInspEmbeds);
     }
   }
   setActive("portfolio");
@@ -1119,7 +1122,9 @@ function inspCardHTML(it) {
     inner = `<iframe src="${esc(it.embed)}" title="${title || label}" loading="lazy"
         allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
   } else if (kind === "music" && it.embed) {
-    inner = `<iframe src="${esc(it.embed)}" title="${title || label}" loading="lazy"
+    // Hauteur "native" du lecteur (Apple plein = 450, Spotify = 352) pour le mettre à l'échelle
+    const nh = /music\.apple\./.test(it.embed) ? 450 : 352;
+    inner = `<iframe class="insp-embed" data-nh="${nh}" src="${esc(it.embed)}" title="${title || label}" loading="lazy"
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
   } else {
     inner = (it.cover
@@ -1127,7 +1132,7 @@ function inspCardHTML(it) {
       : `<span class="insp-media__empty">${esc((it.title || label).slice(0, 1).toUpperCase())}</span>`)
       + `<span class="insp-poster__tag">${esc(label)}</span>`;
   }
-  const media = `<span class="insp-media insp-media--${isEmbed ? "embed" : "poster"}">${inner}</span>`;
+  const media = `<span class="insp-media insp-media--${isEmbed ? "embed" : "poster"} insp-media--${kind}">${inner}</span>`;
 
   const subText = sub || label;
   const cap = `<div class="insp-cap">
@@ -1154,8 +1159,26 @@ function renderInspWall() {
     ? list.map(inspCardHTML).join("")
     : '<div class="gallery__loading">Bientôt — mes inspirations arrivent ici.</div>';
   playIn(wall);
+  requestAnimationFrame(fitInspEmbeds);
   if (typeof updateInspArrows === "function") requestAnimationFrame(updateInspArrows);
 }
+
+// Met les lecteurs musique à l'échelle pour qu'ils tiennent ENTIERS (bouton « Lire »
+// compris) dans la même taille que les tuiles portfolio.
+function fitInspEmbeds() {
+  document.querySelectorAll("#inspWall .insp-media--embed .insp-embed").forEach((f) => {
+    const box = f.parentElement;
+    const bw = box.clientWidth, bh = box.clientHeight;
+    if (!bw || !bh) return;
+    const nh = parseFloat(f.dataset.nh) || 450;
+    const scale = bh / nh;
+    f.style.height = nh + "px";
+    f.style.width = (bw / scale) + "px";
+    f.style.transformOrigin = "top left";
+    f.style.transform = `scale(${scale})`;
+  });
+}
+window.addEventListener("resize", fitInspEmbeds);
 
 async function openAlbum(id) {
   const a = shownAlbums().find((x) => x.id === id);

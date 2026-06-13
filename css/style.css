@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=140") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=141") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -224,7 +224,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=140") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=141") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -834,11 +834,15 @@ body.reading #textView .album-head { text-align: center; }
   overflow: hidden;
   transition: border-color 0.3s;
 }
+/* La musique (Apple/Spotify) garde une hauteur suffisante pour le bouton « Lire » */
+.insp-media--music { aspect-ratio: auto; height: 450px; }
 .insp-card:hover .insp-media { border-color: var(--line-strong); }
 .insp-media iframe {
   position: absolute; inset: 0;
   width: 100%; height: 100%; border: 0;
 }
+/* Lecteur musique mis à l'échelle (JS) : ancré en haut à gauche, dimensions gérées en ligne */
+.insp-media .insp-embed { inset: auto; top: 0; left: 0; }
 .insp-media--poster img {
   width: 100%; height: 100%; object-fit: cover;
   transition: transform 0.6s ease;
@@ -1117,7 +1121,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=140") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=141") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

@@ -67,6 +67,8 @@ if (fine && cur) {
     cur.classList.add("is-on");
     let el = e.target.closest(DWELL_SEL);
     if (el && el.closest(".tile[data-album]")) el = null;   // pas de dwell sur les albums (conflit diaporama)
+    if (el && el.closest(".tile[data-ytlb]")) el = null;    // ni sur les vidéos YouTube
+    if (el && el.closest(".tile--text")) el = null;         // ni sur les Écrits
     if (el && el.closest("#inspWall")) el = null;           // ni sur les Coups de cœur
     if (el && el.closest(".settings")) el = null;           // ni sur le menu réglages
     if (el !== dwellTarget) { if (el) startDwell(el); else cancelDwell(); }

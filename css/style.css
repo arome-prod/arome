@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=85") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=86") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -76,7 +76,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=85") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=86") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -324,6 +324,31 @@ html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau 
 .prose strong { color: var(--text); font-weight: 500; }
 .prose em { font-style: italic; }
 .prose u { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ===== Frise « Mon parcours » ===== */
+.timeline-wrap { margin-top: clamp(2.4rem, 5vw, 3.6rem); max-width: 64ch; }
+.timeline-title {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(1.5rem, 4vw, 2rem); margin-bottom: 1.6rem;
+}
+.timeline { list-style: none; position: relative; padding-left: 1.6rem; }
+.timeline::before {
+  content: ""; position: absolute; left: 0.32rem; top: 0.3rem; bottom: 0.3rem;
+  width: 1px; background: var(--line);
+}
+.timeline__item { position: relative; padding-bottom: 1.8rem; }
+.timeline__item:last-child { padding-bottom: 0; }
+.timeline__item::before {
+  content: ""; position: absolute; left: -1.45rem; top: 0.45rem;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text); box-shadow: 0 0 0 3px var(--bg);
+}
+.timeline__year {
+  display: block; font-size: 0.7rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--faint); margin-bottom: 0.25rem;
+}
+.timeline__title { color: var(--text); font-size: 1.02rem; }
+.timeline__text { color: var(--muted); margin-top: 0.4rem; line-height: 1.7; }
 
 /* ===== À propos ===== */
 .about { max-width: 64ch; }
@@ -828,7 +853,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=85") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=86") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

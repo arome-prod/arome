@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=85" />
-  <link rel="stylesheet" href="css/admin.css?v=85" />
+  <link rel="stylesheet" href="css/style.css?v=86" />
+  <link rel="stylesheet" href="css/admin.css?v=86" />
 </head>
 <body class="adm">
 
@@ -171,6 +171,28 @@
         </div>
       </details>
 
+      <!-- ===== MON PARCOURS (frise À propos) ===== -->
+      <details class="adm-acc" id="timelineSection">
+        <summary class="adm-acc__sum"><span class="adm-h2">Mon parcours <span id="tlCount" class="adm-count">0</span></span></summary>
+        <div class="adm-acc__body">
+          <p class="adm-hint">Étapes affichées en frise chronologique dans « À propos » (de la plus ancienne à la plus récente, selon l'ordre ci-dessous).</p>
+
+          <div class="adm-create">
+            <div class="adm-create__row">
+              <input id="tl-year" placeholder="Année (ex. 2024 ou 2020–2023)" />
+              <input id="tl-title" placeholder="Titre (ex. Diplôme, premier projet…)" />
+            </div>
+            <textarea id="tl-text" rows="2" placeholder="Description (optionnel)"></textarea>
+            <div class="adm-actions">
+              <button type="button" class="btn" id="tlSave">+ Ajouter l'étape</button>
+              <button type="button" class="btn btn--sm" id="tlCancel" style="display:none">Annuler la modification</button>
+            </div>
+          </div>
+
+          <div class="adm-albumgrid" id="tlList"></div>
+        </div>
+      </details>
+
       <!-- ===== TEXTES DU SITE ===== -->
       <details class="adm-acc">
         <summary class="adm-acc__sum"><span class="adm-h2">Textes du site</span></summary>
@@ -210,6 +232,6 @@
 
   <div id="toast" class="adm-toast"></div>
 
-  <script type="module" src="js/admin-page.js?v=85"></script>
+  <script type="module" src="js/admin-page.js?v=86"></script>
 </body>
 </html>

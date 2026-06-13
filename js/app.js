@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=85";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=85";
+import { db, isConfigured } from "./firebase.js?v=86";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=86";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -320,8 +320,25 @@ let allAlbums = [];
 let allVideos = [];
 let allInsp = [];
 let allTextes = [];
+let allTimeline = [];
 let activeFilter = "all";
 let inspFilter = "all";
+
+// Frise « Mon parcours » dans À propos
+function renderTimeline() {
+  const wrap = $("timelineWrap"), list = $("aboutTimeline");
+  if (!wrap || !list) return;
+  if (!allTimeline.length) { wrap.hidden = true; list.innerHTML = ""; return; }
+  wrap.hidden = false;
+  list.innerHTML = allTimeline.map((e) => `
+    <li class="timeline__item">
+      <span class="timeline__year">${esc(e.year || "")}</span>
+      <div class="timeline__body">
+        <span class="timeline__title">${esc(e.title || "")}</span>
+        ${e.text ? `<p class="timeline__text">${esc(e.text)}</p>` : ""}
+      </div>
+    </li>`).join("");
+}
 
 // Nettoie un HTML riche en ne gardant que gras/italique/souligné + sauts/paragraphes.
 // IMPORTANT : appelé aussi à l'affichage public (les règles d'écriture sont ouvertes,
@@ -1033,6 +1050,13 @@ if (isConfigured) {
     arr.sort((a, b) => (a.order || 0) - (b.order || 0));
     allTextes = arr;
     renderAll();
+  });
+  onValue(ref(db, "timeline"), (snap) => {
+    const arr = [];
+    snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    allTimeline = arr;
+    renderTimeline();
   });
 } else {
   renderContent({});

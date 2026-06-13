@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove, get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=85";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=85";
+import { db, isConfigured } from "./firebase.js?v=86";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=86";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -33,6 +33,8 @@ let insp = [];
 let inspCover = "";
 let writings = [];
 let editingWr = null;
+let tl = [];
+let editingTl = null;
 let managingId = null;
 let mgrPhotos = [];          // photos de l'album en cours de gestion (depuis albumPhotos/<id>)
 let mgrUnsub = null;
@@ -516,6 +518,10 @@ function wire() {
   $("wrSave").addEventListener("click", saveWriting);
   $("wrCancel").addEventListener("click", resetWritingForm);
 
+  // Mon parcours
+  $("tlSave").addEventListener("click", saveTl);
+  $("tlCancel").addEventListener("click", resetTlForm);
+
   // Inspirations
   $("inspAdd").addEventListener("click", addInspiration);
   $("insp-kind").addEventListener("change", toggleInspCover);
@@ -808,6 +814,93 @@ async function moveWriting(id, dir) {
 }
 
 // ====================================================================
+//  Mon parcours (frise À propos)
+// ====================================================================
+function resetTlForm() {
+  editingTl = null;
+  $("tl-year").value = ""; $("tl-title").value = ""; $("tl-text").value = "";
+  $("tlSave").textContent = "+ Ajouter l'étape";
+  $("tlCancel").style.display = "none";
+}
+function renderTl() {
+  const box = $("tlList"); if (!box) return;
+  $("tlCount").textContent = tl.length;
+  if (!tl.length) { box.innerHTML = '<p class="adm-empty">Aucune étape. Ajoute-en ci-dessus.</p>'; return; }
+  box.innerHTML = tl.map((e, i) => `
+    <div class="adm-arow">
+      <span class="adm-arow__img adm-arow__img--empty">${esc((e.year || "•").slice(0, 4))}</span>
+      <div class="adm-arow__body">
+        <span class="adm-arow__title">${esc(e.title || "(sans titre)")}</span>
+        <span class="adm-arow__meta">${esc(e.year || "")}</span>
+      </div>
+      <div class="adm-arow__actions">
+        <button data-tact="edit" data-id="${e.id}" class="btn btn--sm">Modifier</button>
+        <button data-tact="up" data-id="${e.id}" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button>
+        <button data-tact="down" data-id="${e.id}" ${i === tl.length - 1 ? "disabled" : ""} aria-label="Descendre">↓</button>
+        <button data-tact="del" data-id="${e.id}" class="adm-danger" aria-label="Supprimer">Suppr.</button>
+      </div>
+    </div>`).join("");
+  box.querySelectorAll("[data-tact]").forEach((b) => {
+    const id = b.dataset.id, act = b.dataset.tact;
+    b.addEventListener("click", () => {
+      if (act === "edit") editTl(id);
+      else if (act === "del") delTl(id);
+      else if (act === "up") moveTl(id, -1);
+      else if (act === "down") moveTl(id, 1);
+    });
+  });
+}
+function editTl(id) {
+  const e = tl.find((x) => x.id === id);
+  if (!e) return;
+  editingTl = id;
+  $("tl-year").value = e.year || "";
+  $("tl-title").value = e.title || "";
+  $("tl-text").value = e.text || "";
+  $("tlSave").textContent = "Enregistrer les modifications";
+  $("tlCancel").style.display = "";
+  $("timelineSection").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+async function saveTl() {
+  if (!isConfigured) { toast("Firebase non configuré."); return; }
+  const year = $("tl-year").value.trim();
+  const title = $("tl-title").value.trim();
+  const text = $("tl-text").value.trim();
+  if (!title) { toast("Donne un titre à l'étape."); return; }
+  const btn = $("tlSave"); btn.disabled = true;
+  try {
+    if (editingTl) {
+      await update(ref(db, "timeline/" + editingTl), { year, title, text });
+      toast("Étape mise à jour ✦");
+    } else {
+      const order = tl.length ? Math.max(...tl.map((e) => e.order || 0)) + 1 : 0;
+      await push(ref(db, "timeline"), { year, title, text, order, createdAt: Date.now() });
+      toast("Étape ajoutée ✦");
+    }
+    resetTlForm();
+  } catch (e) {
+    console.error(e);
+    toast("Échec : " + (e.message || "écriture refusée"));
+  } finally { btn.disabled = false; }
+}
+async function delTl(id) {
+  if (!confirm("Supprimer cette étape ?")) return;
+  await remove(ref(db, "timeline/" + id));
+  if (editingTl === id) resetTlForm();
+  toast("Étape supprimée");
+}
+async function moveTl(id, dir) {
+  const idx = tl.findIndex((e) => e.id === id);
+  const swap = idx + dir;
+  if (idx < 0 || swap < 0 || swap >= tl.length) return;
+  const a = tl[idx], b = tl[swap];
+  await update(ref(db, "timeline"), {
+    [`${a.id}/order`]: b.order ?? swap,
+    [`${b.id}/order`]: a.order ?? idx,
+  });
+}
+
+// ====================================================================
 //  Données en direct
 // ====================================================================
 if (isConfigured) {
@@ -848,6 +941,13 @@ if (isConfigured) {
     arr.sort((a, b) => (a.order || 0) - (b.order || 0));
     writings = arr;
     renderWritings();
+  });
+  onValue(ref(db, "timeline"), (snap) => {
+    const arr = [];
+    snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    tl = arr;
+    renderTl();
   });
 }
 

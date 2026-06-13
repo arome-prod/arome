@@ -79,6 +79,19 @@
       }
     },
 
+    "timeline": {
+      ".read": true,
+      ".write": true,
+      "$e": {
+        "year":      { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "title":     { ".validate": "newData.isString() && newData.val().length <= 160" },
+        "text":      { ".validate": "newData.isString() && newData.val().length <= 2000" },
+        "order":     { ".validate": "newData.isNumber()" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "$other":    { ".validate": false }
+      }
+    },
+
     "textes": {
       ".read": true,
       ".write": true,

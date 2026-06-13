@@ -9,8 +9,8 @@ import {
   onValue,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=77";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=77";
+import { db, isConfigured } from "./firebase.js?v=80";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=80";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -799,21 +799,21 @@ function inspCardHTML(it) {
   const label = KIND_LABEL[kind] || "Autre";
   const isEmbed = (kind === "music" || kind === "video") && it.embed;
 
-  // Zone média au même format que les vignettes du portfolio (ratio 4/5)
-  let media;
-  if (isEmbed) {
-    const allow = kind === "video"
-      ? "accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      : "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
-    media = `<span class="insp-media insp-media--embed">
-        <iframe src="${esc(it.embed)}" title="${title || label}" loading="lazy" allow="${allow}" allowfullscreen></iframe>
-      </span>`;
+  // Toutes les cartes : même zone média, hauteur fixe (calée sur Apple Music)
+  let inner;
+  if (kind === "video" && it.embed) {
+    inner = `<iframe src="${esc(it.embed)}" title="${title || label}" loading="lazy"
+        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+  } else if (kind === "music" && it.embed) {
+    inner = `<iframe src="${esc(it.embed)}" title="${title || label}" loading="lazy"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
   } else {
-    const inner = it.cover
+    inner = (it.cover
       ? `<img src="${esc(it.cover)}" alt="${title}" loading="lazy" />`
-      : `<span class="insp-media__empty">${esc((it.title || label).slice(0, 1).toUpperCase())}</span>`;
-    media = `<span class="insp-media insp-media--poster">${inner}<span class="insp-poster__tag">${esc(label)}</span></span>`;
+      : `<span class="insp-media__empty">${esc((it.title || label).slice(0, 1).toUpperCase())}</span>`)
+      + `<span class="insp-poster__tag">${esc(label)}</span>`;
   }
+  const media = `<span class="insp-media insp-media--${isEmbed ? "embed" : "poster"}">${inner}</span>`;
 
   const subText = sub || label;
   const cap = `<div class="insp-cap">

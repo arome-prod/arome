@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=107") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=109") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -55,6 +55,34 @@ a { color: var(--text); text-decoration: none; }
 img { -webkit-user-drag: none; -khtml-user-drag: none; }
 
 ::selection { background: rgba(255, 255, 255, 0.16); }
+
+/* ===== Intro de chargement (logo qui se révèle) ===== */
+.intro {
+  position: fixed; inset: 0;
+  z-index: 10050;
+  display: grid; place-items: center;
+  background: #0a0a0a;
+}
+.intro__logo {
+  width: clamp(140px, 34vw, 230px);
+  opacity: 0;
+  transform: translateY(10px) scale(0.97);
+}
+.intro.is-playing .intro__logo {
+  animation: introLogo 1.4s cubic-bezier(0.22, 0.7, 0.25, 1) forwards;
+}
+.intro.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+@keyframes introLogo {
+  0%   { opacity: 0; transform: translateY(10px) scale(0.97); }
+  55%  { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+html.intro-on { overflow: hidden; }    /* on fige le scroll pendant l'intro */
+@media (prefers-reduced-motion: reduce) { .intro { display: none; } }
 
 /* ===== Scrollbar assortie à la DA ===== */
 html { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparent; }
@@ -129,7 +157,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=107") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=109") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -960,7 +988,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=107") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=109") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

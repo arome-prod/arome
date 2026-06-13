@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=106") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=107") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -129,7 +129,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=106") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=107") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -368,16 +368,32 @@ html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau 
 
 /* ===== Lecture d'un texte (vue dédiée) ===== */
 .prose {
-  max-width: 68ch;
+  max-width: 60ch;
   color: var(--muted);
-  font-size: 1.04rem;
-  line-height: 1.9;
+  font-size: 1.08rem;
+  line-height: 1.95;
+  letter-spacing: 0.005em;
 }
-.prose p { margin-bottom: 1.15rem; }
+.prose p { margin-bottom: 1.3rem; }
 .prose p:last-child { margin-bottom: 0; }
 .prose strong { color: var(--text); font-weight: 500; }
 .prose em { font-style: italic; }
 .prose u { text-decoration: underline; text-underline-offset: 3px; }
+/* Mode lecture : on centre la colonne de texte et son en-tête pour le confort */
+body.reading #textView { max-width: 60ch; margin: 0 auto; }
+body.reading #textView .album-head { text-align: center; }
+
+/* Fil de progression de lecture (en haut de l'écran) */
+.read-progress {
+  position: fixed; top: 0; left: 0;
+  height: 2px; width: 0;
+  background: var(--text);
+  z-index: 10002;
+  opacity: 0;
+  transition: opacity 0.4s ease, width 0.12s linear;
+  pointer-events: none;
+}
+.read-progress.is-on { opacity: 0.75; }
 
 /* ===== Frise « Mon parcours » (horizontale, défilante) ===== */
 .timeline-wrap { margin-top: clamp(2.4rem, 5vw, 3.6rem); }
@@ -944,7 +960,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=106") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=107") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

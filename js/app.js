@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=106";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=106";
+import { db, isConfigured } from "./firebase.js?v=107";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=107";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -485,9 +485,24 @@ function renderAlbums() {
   const grid = $("albums");
   if (!grid) return;
 
-  // Onglet YouTube : on n'affiche que la carte vidéo
+  // Onglet YouTube : on affiche directement les vidéos (chaque vignette ouvre le lecteur)
   if (activeFilter === "__yt") {
-    grid.innerHTML = youtubeCardHTML() || '<div class="gallery__loading">Aucune vidéo.</div>';
+    if (!allVideos.length) {
+      grid.innerHTML = '<div class="gallery__loading">Aucune vidéo.</div>';
+      return;
+    }
+    grid.innerHTML = allVideos.map((v, i) => {
+      const thumb = `https://img.youtube.com/vi/${esc(v.vid)}/hqdefault.jpg`;
+      return `<button class="tile" data-ytlb="${i}" aria-label="${esc(v.title || "Vidéo")}">
+          <span class="tile__media">
+            <img src="${thumb}" alt="${esc(v.title || "")}" loading="lazy" />
+            <span class="tile__play" aria-hidden="true">▶</span>
+          </span>
+          ${v.title ? `<span class="tile__cap"><span class="tile__name">${esc(v.title)}</span></span>` : ""}
+        </button>`;
+    }).join("");
+    lbList = allVideos.map((v) => ({ type: "video", id: v.vid, title: v.title || "" }));
+    requestAnimationFrame(updateAlbumArrows);
     return;
   }
 
@@ -762,9 +777,15 @@ document.addEventListener("click", (e) => {
   if (card) openAlbum(card.dataset.album);
 });
 
-// Ouvrir le contenu YouTube
+// Carte récap « Contenu YouTube » (vue « Tout ») → bascule sur l'onglet YouTube
 document.addEventListener("click", (e) => {
-  if (e.target.closest(".tile[data-youtube]")) openYoutube();
+  if (e.target.closest(".tile[data-youtube]")) { activeFilter = "__yt"; renderAll(); }
+});
+
+// Vignette vidéo de l'onglet YouTube → ouvre le lecteur en lightbox
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("#albums .tile[data-ytlb]");
+  if (t) openLb(parseInt(t.dataset.ytlb, 10));
 });
 
 // Textes : ouvrir un écrit, ou la carte récap (→ onglet Textes)
@@ -773,6 +794,17 @@ document.addEventListener("click", (e) => {
   if (card) { openTexte(card.dataset.texte); return; }
   if (e.target.closest(".tile[data-go-txt]")) { activeFilter = "__txt"; renderAll(); }
 });
+
+// Fil de progression de lecture (mode lecture des Écrits)
+function updateReadProgress() {
+  const bar = $("readProgress"), body = $("txtBody");
+  if (!bar || !body) return;
+  const r = body.getBoundingClientRect();
+  const len = r.height - window.innerHeight + 120;
+  if (len <= 40) { bar.style.width = "0%"; return; }      // texte court → pas de barre
+  const p = Math.min(1, Math.max(0, (-r.top + 80) / len));
+  bar.style.width = (p * 100).toFixed(1) + "%";
+}
 
 function openTexte(id) {
   const t = allTextes.find((x) => x.id === id);
@@ -784,11 +816,20 @@ function openTexte(id) {
   $("albumView").hidden = true;
   $("youtubeView").hidden = true;
   $("textView").hidden = false;
+  document.body.classList.add("reading");
   window.scrollTo(0, 0);
+  const bar = $("readProgress");
+  if (bar) { bar.classList.add("is-on"); }
+  window.addEventListener("scroll", updateReadProgress, { passive: true });
+  requestAnimationFrame(updateReadProgress);
 }
 function closeTexte() {
   $("textView").hidden = true;
   $("albumsView").hidden = false;
+  document.body.classList.remove("reading");
+  const bar = $("readProgress");
+  if (bar) { bar.classList.remove("is-on"); bar.style.width = "0%"; }
+  window.removeEventListener("scroll", updateReadProgress);
 }
 if ($("txtBack")) $("txtBack").addEventListener("click", closeTexte);
 

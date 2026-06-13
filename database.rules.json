@@ -80,6 +80,19 @@
       }
     },
 
+    "sites": {
+      ".read": true,
+      ".write": true,
+      "$s": {
+        "url":       { ".validate": "newData.isString() && newData.val().length <= 600" },
+        "title":     { ".validate": "newData.isString() && newData.val().length <= 200" },
+        "desc":      { ".validate": "newData.isString() && newData.val().length <= 2000" },
+        "order":     { ".validate": "newData.isNumber()" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "$other":    { ".validate": false }
+      }
+    },
+
     "timeline": {
       ".read": true,
       ".write": true,

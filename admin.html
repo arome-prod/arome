@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>arome — admin</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" type="image/svg+xml" href="images/favicon.svg?v=129" />
-  <link rel="apple-touch-icon" href="images/apple-touch-icon.png?v=129" />
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg?v=131" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png?v=131" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=129" />
-  <link rel="stylesheet" href="css/admin.css?v=129" />
+  <link rel="stylesheet" href="css/style.css?v=131" />
+  <link rel="stylesheet" href="css/admin.css?v=131" />
 </head>
 <body class="adm">
 
@@ -100,6 +100,25 @@
           </div>
 
           <div class="adm-albumgrid" id="ytList"></div>
+        </div>
+      </details>
+
+      <!-- ===== SITES WEB ===== -->
+      <details class="adm-acc" id="sitesSection">
+        <summary class="adm-acc__sum"><span class="adm-h2">Sites web <span id="siteCount" class="adm-count">0</span></span></summary>
+        <div class="adm-acc__body">
+          <p class="adm-hint">Projets web : le site s'affiche en aperçu intégré (iframe) avec une courte description. Certains sites refusent l'intégration — un bouton « Visiter » reste toujours disponible.</p>
+
+          <div class="adm-create">
+            <div class="adm-create__row">
+              <input id="site-url" placeholder="Lien du site (https://…)" />
+              <input id="site-title" placeholder="Titre (ex. Boutique X)" />
+            </div>
+            <input id="site-desc" placeholder="Courte description (optionnel)" />
+            <button type="button" class="btn" id="siteAdd">+ Ajouter le site</button>
+          </div>
+
+          <div class="adm-albumgrid" id="siteList"></div>
         </div>
       </details>
 
@@ -234,6 +253,6 @@
 
   <div id="toast" class="adm-toast"></div>
 
-  <script type="module" src="js/admin-page.js?v=129"></script>
+  <script type="module" src="js/admin-page.js?v=131"></script>
 </body>
 </html>

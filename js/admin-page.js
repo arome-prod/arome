@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove, get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=129";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=129";
+import { db, isConfigured } from "./firebase.js?v=131";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=131";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -29,6 +29,7 @@ if ($("gateHint")) {
 let content = JSON.parse(JSON.stringify(DEFAULTS));
 let albums = [];
 let videos = [];
+let sites = [];
 let insp = [];
 let inspCover = "";
 let writings = [];
@@ -513,6 +514,9 @@ function wire() {
     if (e.target.files && e.target.files.length) addPhotos(e.target.files);
   });
 
+  // Sites web
+  if ($("siteAdd")) $("siteAdd").addEventListener("click", addSite);
+
   // Contenu YouTube (indépendant)
   $("ytAdd").addEventListener("click", addYoutube);
   $("yt-url").addEventListener("blur", async () => {
@@ -602,6 +606,68 @@ async function delVideo(id) {
   if (!confirm("Supprimer cette vidéo ?")) return;
   await remove(ref(db, "youtube/" + id));
   toast("Vidéo supprimée");
+}
+
+// ====================================================================
+//  Sites web
+// ====================================================================
+function renderSites() {
+  const box = $("siteList"); if (!box) return;
+  $("siteCount").textContent = sites.length;
+  if (!sites.length) { box.innerHTML = '<p class="adm-empty">Aucun site. Ajoute-en un ci-dessus.</p>'; return; }
+  box.innerHTML = sites.map((s, i) => `
+    <div class="adm-arow">
+      <div class="adm-arow__body">
+        <span class="adm-arow__title">${esc(s.title || "(sans titre)")}</span>
+        <span class="adm-arow__meta">${esc(s.url || "")}</span>
+      </div>
+      <div class="adm-arow__actions">
+        <button data-sact="up" data-id="${s.id}" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button>
+        <button data-sact="down" data-id="${s.id}" ${i === sites.length - 1 ? "disabled" : ""} aria-label="Descendre">↓</button>
+        <button data-sact="del" data-id="${s.id}" class="adm-danger" aria-label="Supprimer">Suppr.</button>
+      </div>
+    </div>`).join("");
+  box.querySelectorAll("[data-sact]").forEach((b) => {
+    const id = b.dataset.id, act = b.dataset.sact;
+    b.addEventListener("click", () => {
+      if (act === "del") delSite(id);
+      else if (act === "up") moveSite(id, -1);
+      else if (act === "down") moveSite(id, 1);
+    });
+  });
+}
+async function addSite() {
+  if (!isConfigured) { toast("Firebase non configuré."); return; }
+  let url = ($("site-url").value || "").trim();
+  if (!url) { toast("Indique un lien."); return; }
+  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+  const title = ($("site-title").value || "").trim();
+  const desc = ($("site-desc").value || "").trim();
+  const order = sites.length ? Math.max(...sites.map((s) => s.order || 0)) + 1 : 0;
+  const btn = $("siteAdd"); btn.disabled = true;
+  try {
+    await push(ref(db, "sites"), { url, title: title || url, desc, order, createdAt: Date.now() });
+    $("site-url").value = ""; $("site-title").value = ""; $("site-desc").value = "";
+    toast("Site ajouté ✦");
+  } catch (e) {
+    console.error(e);
+    toast("Échec : " + (e.message || "écriture refusée"));
+  } finally { btn.disabled = false; }
+}
+async function delSite(id) {
+  if (!confirm("Supprimer ce site ?")) return;
+  await remove(ref(db, "sites/" + id));
+  toast("Site supprimé");
+}
+async function moveSite(id, dir) {
+  const idx = sites.findIndex((s) => s.id === id);
+  const swap = idx + dir;
+  if (idx < 0 || swap < 0 || swap >= sites.length) return;
+  const a = sites[idx], b = sites[swap];
+  await update(ref(db, "sites"), {
+    [`${a.id}/order`]: b.order ?? swap,
+    [`${b.id}/order`]: a.order ?? idx,
+  });
 }
 async function moveVideo(id, dir) {
   const idx = videos.findIndex((v) => v.id === id);
@@ -943,6 +1009,13 @@ if (isConfigured) {
     arr.sort((a, b) => (a.order || 0) - (b.order || 0));
     videos = arr;
     renderVideos();
+  });
+  onValue(ref(db, "sites"), (snap) => {
+    const arr = [];
+    snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    sites = arr;
+    renderSites();
   });
   onValue(ref(db, "inspirations"), (snap) => {
     const arr = [];

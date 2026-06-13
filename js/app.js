@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=129";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=129";
+import { db, isConfigured } from "./firebase.js?v=131";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=131";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -61,10 +61,27 @@ window.addEventListener("resize", () => {
     ...brand.querySelectorAll(".brand__nav button"),
   ];
 
+  // Trait actif glissant dans la barre du haut
+  const navEl = brand.querySelector(".brand__nav");
+  const navUnderline = document.createElement("span");
+  navUnderline.className = "brand__nav__underline";
+  navEl.appendChild(navUnderline);
+  function syncNavUnderline() {
+    if (body.classList.contains("mode-home")) { navUnderline.style.opacity = "0"; return; }
+    const act = navEl.querySelector("button.is-active");
+    if (!act) { navUnderline.style.opacity = "0"; return; }
+    navUnderline.style.opacity = "1";
+    navUnderline.style.width = act.offsetWidth + "px";
+    navUnderline.style.top = (act.offsetTop + act.offsetHeight - 1) + "px";
+    navUnderline.style.transform = `translateX(${act.offsetLeft}px)`;
+  }
+  window.addEventListener("resize", syncNavUnderline);
+
   function setActive(key) {
     panels.forEach((p) => p.classList.toggle("is-active", p.dataset.panel === key));
     document.querySelectorAll("[data-go]").forEach((b) =>
       b.classList.toggle("is-active", b.dataset.go === key));
+    requestAnimationFrame(syncNavUnderline);
     // Recale le trait des filtres une fois la section visible (sinon largeur 0)
     if (key === "portfolio" || key === "inspirations") {
       const id = key === "portfolio" ? "filters" : "inspFilters";
@@ -355,6 +372,7 @@ let allVideos = [];
 let allInsp = [];
 let allTextes = [];
 let allTimeline = [];
+let allSites = [];
 let activeFilter = "all";
 let inspFilter = "all";
 
@@ -463,7 +481,8 @@ function renderFilters() {
   const cats = categoriesOf(shownAlbums());
   const hasYt = allVideos.length > 0;
   const hasTxt = allTextes.length > 0;
-  if (cats.length + (hasYt ? 1 : 0) + (hasTxt ? 1 : 0) <= 1) { bar.innerHTML = ""; return; }
+  const hasSite = allSites.length > 0;
+  if (cats.length + (hasYt ? 1 : 0) + (hasTxt ? 1 : 0) + (hasSite ? 1 : 0) <= 1) { bar.innerHTML = ""; return; }
 
   let html = `<button class="filter${activeFilter === "all" ? " is-active" : ""}" data-filter="all">Tout</button>`;
   html += cats.map((c) =>
@@ -471,6 +490,9 @@ function renderFilters() {
   ).join("");
   if (hasTxt) {
     html += `<button class="filter${activeFilter === "__txt" ? " is-active" : ""}" data-filter="__txt">Textes</button>`;
+  }
+  if (hasSite) {
+    html += `<button class="filter${activeFilter === "__site" ? " is-active" : ""}" data-filter="__site">Sites web</button>`;
   }
   if (hasYt) {
     html += `<button class="filter${activeFilter === "__yt" ? " is-active" : ""}" data-filter="__yt">YouTube</button>`;
@@ -497,6 +519,29 @@ function textesSummaryHTML() {
         <span class="txtcard__type">Écrits</span>
         <span class="txtcard__title">Textes</span>
         <span class="txtcard__more">${allTextes.length} texte${allTextes.length > 1 ? "s" : ""} →</span>
+      </span>
+    </button>`;
+}
+
+// Carte « site web » compacte (titre + courte description)
+function siteCardHTML(s) {
+  const sub = s.desc ? esc(s.desc) : "Ouvrir";
+  return `<button class="tile tile--text" data-site="${esc(s.id)}" aria-label="${esc(s.title || "Site")}">
+      <span class="txtcard">
+        <span class="txtcard__type">Site web</span>
+        <span class="txtcard__title">${esc(s.title || "Site")}</span>
+        <span class="txtcard__more">${sub} →</span>
+      </span>
+    </button>`;
+}
+// Carte récapitulative « Sites web » dans l'onglet « Tout »
+function sitesSummaryHTML() {
+  if (!allSites.length) return "";
+  return `<button class="tile tile--text" data-go-site="1" aria-label="Sites web">
+      <span class="txtcard">
+        <span class="txtcard__type">Web</span>
+        <span class="txtcard__title">Sites web</span>
+        <span class="txtcard__more">${allSites.length} site${allSites.length > 1 ? "s" : ""} →</span>
       </span>
     </button>`;
 }
@@ -550,6 +595,15 @@ function renderAlbums() {
     return;
   }
 
+  // Onglet Sites web : petits blocs (titre + description)
+  if (activeFilter === "__site") {
+    grid.innerHTML = allSites.length
+      ? allSites.map(siteCardHTML).join("")
+      : '<div class="gallery__loading">Aucun site.</div>';
+    requestAnimationFrame(updateAlbumArrows);
+    return;
+  }
+
   const list = shownAlbums().filter((a) => activeFilter === "all" || a.category === activeFilter);
 
   if (list.length === 0) {
@@ -581,6 +635,7 @@ function renderAlbums() {
   // (les Textes ne sont accessibles que via leur onglet, pour ne pas
   //  casser l'harmonie de la rangée d'images)
   if (activeFilter === "all") {
+    grid.insertAdjacentHTML("beforeend", sitesSummaryHTML());
     grid.insertAdjacentHTML("beforeend", youtubeCardHTML());
   }
 
@@ -678,6 +733,7 @@ function resetPortfolioView() {
   if ($("albumView")) $("albumView").hidden = true;
   if ($("youtubeView")) $("youtubeView").hidden = true;
   if ($("textView")) $("textView").hidden = true;
+  if ($("siteView")) { $("siteView").hidden = true; if ($("siteFrame")) $("siteFrame").src = "about:blank"; }
   if ($("albumsView")) $("albumsView").hidden = false;
   document.body.classList.remove("reading");
   const bar = $("readProgress");
@@ -935,6 +991,39 @@ function closeTexte() {
   window.removeEventListener("scroll", updateReadProgress);
 }
 if ($("txtBack")) $("txtBack").addEventListener("click", closeTexte);
+
+// Sites web : aperçu intégré (iframe) + description
+function openSite(id) {
+  const s = allSites.find((x) => x.id === id);
+  if (!s) return;
+  $("siteTitle").textContent = s.title || "Site";
+  $("siteDesc").textContent = s.desc || "";
+  $("siteLinkWrap").innerHTML = s.url
+    ? `<a class="btn" href="${esc(s.url)}" target="_blank" rel="noopener">Visiter le site ↗</a>`
+    : "";
+  $("siteFrame").src = s.url || "about:blank";
+  $("albumsView").hidden = true;
+  $("albumView").hidden = true;
+  $("youtubeView").hidden = true;
+  $("textView").hidden = true;
+  $("siteView").hidden = false;
+  playIn($("siteView"));
+  window.scrollTo(0, 0);
+}
+function closeSite() {
+  $("siteFrame").src = "about:blank";   // stoppe le chargement
+  $("siteView").hidden = true;
+  $("albumsView").hidden = false;
+  playIn($("albumsView"));
+}
+if ($("siteBack")) $("siteBack").addEventListener("click", closeSite);
+
+// Clics : ouvrir un site, ou la carte récap (→ onglet Sites web)
+document.addEventListener("click", (e) => {
+  const card = e.target.closest(".tile[data-site]");
+  if (card) { openSite(card.dataset.site); return; }
+  if (e.target.closest(".tile[data-go-site]")) { activeFilter = "__site"; renderAll(); }
+});
 
 function openYoutube() {
   const listEl = $("youtubeList");
@@ -1233,6 +1322,13 @@ if (isConfigured) {
     snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
     arr.sort((a, b) => (a.order || 0) - (b.order || 0));
     allTextes = arr;
+    renderAll();
+  });
+  onValue(ref(db, "sites"), (snap) => {
+    const arr = [];
+    snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    allSites = arr;
     renderAll();
   });
   onValue(ref(db, "timeline"), (snap) => {

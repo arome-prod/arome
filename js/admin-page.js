@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove, get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=89";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=89";
+import { db, isConfigured } from "./firebase.js?v=93";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=93";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -39,9 +39,11 @@ let managingId = null;
 let mgrPhotos = [];          // photos de l'album en cours de gestion (depuis albumPhotos/<id>)
 let mgrUnsub = null;
 const migrating = new Set();  // évite les migrations en double
+const refreshingCov = new Set();
+const COVER_VER = 2;          // version des couvertures (incrémenter = régénération auto)
 
-// Génère une mini-couverture (≈440px) pour alléger la grille du portfolio.
-function makeThumb(dataURL, max = 440, q = 0.7) {
+// Génère une couverture allégée mais nette (assez grande pour les écrans Retina).
+function makeThumb(dataURL, max = 1000, q = 0.86) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -74,7 +76,18 @@ async function refreshAlbumCover(id) {
       ? `https://img.youtube.com/vi/${cov.youtube}/hqdefault.jpg`
       : (cov.src ? await makeThumb(cov.src) : null);
   }
-  await update(ref(db, "albums/" + id), { coverThumb: thumb || null, count: ph.length });
+  await update(ref(db, "albums/" + id), { coverThumb: thumb || null, count: ph.length, cv: COVER_VER });
+}
+
+// Régénère les couvertures des albums qui ne sont pas à la dernière version (une seule fois).
+function maybeRefreshCovers(list) {
+  list.forEach((a) => {
+    if (a.photos) return;                 // pas encore migré → la migration s'en charge
+    if (a.cv === COVER_VER) return;       // déjà à jour
+    if (refreshingCov.has(a.id)) return;
+    refreshingCov.add(a.id);
+    refreshAlbumCover(a.id).finally(() => refreshingCov.delete(a.id));
+  });
 }
 
 // Migre un album de l'ancien format (photos inline) vers albumPhotos/<id>.
@@ -919,7 +932,8 @@ if (isConfigured) {
     albums = arr;
     renderAdminAlbums();
     refreshCatList();
-    maybeMigrate(arr);   // bascule en douceur les albums encore en ancien format
+    maybeMigrate(arr);        // bascule les albums encore en ancien format
+    maybeRefreshCovers(arr);  // régénère les couvertures basse qualité une fois
   });
   onValue(ref(db, "youtube"), (snap) => {
     const arr = [];

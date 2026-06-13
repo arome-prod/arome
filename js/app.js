@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=89";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=89";
+import { db, isConfigured } from "./firebase.js?v=93";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=93";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -324,21 +324,26 @@ let allTimeline = [];
 let activeFilter = "all";
 let inspFilter = "all";
 
-// Frise « Mon parcours » dans À propos
+// Frise « Mon parcours » dans À propos (description repliée → clic sur le titre)
 function renderTimeline() {
   const wrap = $("timelineWrap"), list = $("aboutTimeline");
   if (!wrap || !list) return;
   if (!allTimeline.length) { wrap.hidden = true; list.innerHTML = ""; return; }
   wrap.hidden = false;
-  list.innerHTML = allTimeline.map((e) => `
-    <li class="timeline__item">
+  list.innerHTML = allTimeline.map((e) => {
+    const hasText = !!(e.text && e.text.trim());
+    return `<li class="timeline__item">
       <span class="timeline__year">${esc(e.year || "")}</span>
-      <div class="timeline__body">
-        <span class="timeline__title">${esc(e.title || "")}</span>
-        ${e.text ? `<p class="timeline__text">${esc(e.text)}</p>` : ""}
-      </div>
-    </li>`).join("");
+      <button type="button" class="timeline__title"${hasText ? "" : " disabled"}>${esc(e.title || "")}</button>
+      ${hasText ? `<p class="timeline__text">${esc(e.text)}</p>` : ""}
+    </li>`;
+  }).join("");
 }
+// Clic sur un titre → déplie / replie sa description
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("#aboutTimeline .timeline__title");
+  if (b) b.closest(".timeline__item").classList.toggle("is-open");
+});
 
 // Nettoie un HTML riche en ne gardant que gras/italique/souligné + sauts/paragraphes.
 // IMPORTANT : appelé aussi à l'affichage public (les règles d'écriture sont ouvertes,

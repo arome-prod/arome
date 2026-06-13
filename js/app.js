@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=133";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=133";
+import { db, isConfigured } from "./firebase.js?v=134";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=134";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -484,18 +484,22 @@ function renderFilters() {
   const hasSite = allSites.length > 0;
   if (cats.length + (hasYt ? 1 : 0) + (hasTxt ? 1 : 0) + (hasSite ? 1 : 0) <= 1) { bar.innerHTML = ""; return; }
 
-  let html = `<button class="filter${activeFilter === "all" ? " is-active" : ""}" data-filter="all">Tout</button>`;
+  // Groupe « Création visuelle » : parent (= tous les albums) + ses sous-catégories
+  let html = `<button class="filter filter--lead${activeFilter === "all" ? " is-active" : ""}" data-filter="all">Création visuelle</button>`;
   html += cats.map((c) =>
-    `<button class="filter${activeFilter === c ? " is-active" : ""}" data-filter="${esc(c)}">${esc(c)}</button>`
+    `<button class="filter filter--sub${activeFilter === c ? " is-active" : ""}" data-filter="${esc(c)}">${esc(c)}</button>`
   ).join("");
-  if (hasTxt) {
-    html += `<button class="filter${activeFilter === "__txt" ? " is-active" : ""}" data-filter="__txt">Textes</button>`;
-  }
-  if (hasSite) {
-    html += `<button class="filter${activeFilter === "__site" ? " is-active" : ""}" data-filter="__site">Sites web</button>`;
-  }
-  if (hasYt) {
-    html += `<button class="filter${activeFilter === "__yt" ? " is-active" : ""}" data-filter="__yt">YouTube</button>`;
+
+  // Types à part : Textes / Sites web / YouTube (séparés du groupe visuel)
+  const extras = [];
+  if (hasTxt) extras.push(["__txt", "Textes"]);
+  if (hasSite) extras.push(["__site", "Sites web"]);
+  if (hasYt) extras.push(["__yt", "YouTube"]);
+  if (extras.length) {
+    html += `<span class="filters__sep" aria-hidden="true"></span>`;
+    html += extras.map(([k, label]) =>
+      `<button class="filter${activeFilter === k ? " is-active" : ""}" data-filter="${k}">${label}</button>`
+    ).join("");
   }
   bar.innerHTML = html;
   requestAnimationFrame(() => syncFilterUnderline(bar));

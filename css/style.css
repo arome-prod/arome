@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=133") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=134") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -224,7 +224,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=133") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=134") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -353,6 +353,17 @@ html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau 
 }
 .filter:hover { color: var(--muted); }
 .filter.is-active { color: var(--text); }
+/* Parent « Création visuelle » légèrement plus présent ; sous-catégories en retrait */
+.filter--lead { color: var(--muted); }
+.filter--sub { font-size: 0.66rem; }
+/* Séparateur entre le groupe visuel et les types à part (Textes/Sites/YouTube) */
+.filters__sep {
+  align-self: center;
+  width: 1px; height: 0.9em;
+  background: var(--line-strong);
+  margin: 0 0.3rem;
+  flex: 0 0 auto;
+}
 /* Trait actif qui glisse d'un filtre à l'autre */
 .filters__underline {
   position: absolute; left: 0; top: 0;
@@ -1104,7 +1115,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=133") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=134") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

@@ -154,11 +154,14 @@
       '</div>';
     document.body.appendChild(m);
     requestAnimationFrame(() => m.classList.add("is-on"));
-    const close = () => { m.classList.remove("is-on"); setTimeout(() => m.remove(), 300); };
+    function onEsc(e) { if (e.key === "Escape") close(); }
+    const close = () => {
+      m.classList.remove("is-on");
+      document.removeEventListener("keydown", onEsc);   // évite toute fuite d'écouteur
+      setTimeout(() => m.remove(), 300);
+    };
     m.addEventListener("click", (e) => { if (e.target === m || e.target.closest(".info-close")) close(); });
-    document.addEventListener("keydown", function esc(e) {
-      if (e.key === "Escape") { close(); document.removeEventListener("keydown", esc); }
-    });
+    document.addEventListener("keydown", onEsc);
   }
 
   // ---- Menu réglages (roue crantée → info + son + plein écran) ----

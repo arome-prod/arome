@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=138") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=139") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -224,7 +224,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=138") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=139") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -316,7 +316,7 @@ html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau 
 .section {
   max-width: var(--max);
   margin: 0 auto;
-  padding: clamp(1rem, 2.2vw, 1.6rem) clamp(1.4rem, 5vw, 3.5rem) clamp(4rem, 9vw, 6rem);
+  padding: clamp(1rem, 2.2vw, 1.6rem) clamp(1.4rem, 5vw, 3.5rem) clamp(2rem, 4vw, 3rem);
   border-bottom: 1px solid var(--line);
 }
 .eyebrow {
@@ -326,7 +326,7 @@ html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau 
   font-size: 0.68rem;
   margin-bottom: 1rem;
 }
-.section__head { margin-bottom: 2.6rem; }
+.section__head { margin-bottom: 1.9rem; }
 .section__title {
   font-family: var(--font-display);
   font-weight: 400;
@@ -760,7 +760,7 @@ body.reading #textView .album-head { text-align: center; }
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x proximity;
-  padding-bottom: 1rem;
+  padding-bottom: 0.6rem;
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
   -webkit-overflow-scrolling: touch;
@@ -1118,7 +1118,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=138") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=139") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

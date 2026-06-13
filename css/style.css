@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=103") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=104") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -55,6 +55,39 @@ a { color: var(--text); text-decoration: none; }
 img { -webkit-user-drag: none; -khtml-user-drag: none; }
 
 ::selection { background: rgba(255, 255, 255, 0.16); }
+
+/* ===== Scrollbar assortie à la DA ===== */
+html { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.34); background-clip: content-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* ===== Bouton son (bas gauche, discret) ===== */
+.sound-toggle {
+  position: fixed; left: 1.2rem; bottom: 1.2rem;
+  z-index: 900;
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  background: rgba(10, 10, 10, 0.4);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--faint);
+  opacity: 0.4;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: opacity 0.3s ease, color 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+}
+.sound-toggle:hover { opacity: 1; color: var(--text); border-color: var(--line-strong); }
+.sound-toggle.is-on { opacity: 0.85; color: var(--text); }
+.sound-toggle svg { width: 17px; height: 17px; display: block; }
+@media (max-width: 640px) { .sound-toggle { left: 0.8rem; bottom: 0.8rem; width: 38px; height: 38px; opacity: 0.6; } }
 
 /* ===== Curseur personnalisé ===== */
 .cursor {
@@ -96,7 +129,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=103") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=104") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -911,7 +944,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=103") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=104") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

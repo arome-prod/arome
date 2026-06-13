@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=136";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=136";
+import { db, isConfigured } from "./firebase.js?v=137";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=137";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -1233,6 +1233,8 @@ function showLb(i) {
   title.textContent = item.title || "";
 
   const multi = lbList.length > 1;
+  const count = $("lbCount");
+  if (count) count.textContent = multi ? `${lbIndex + 1} / ${lbList.length}` : "";
   $("lbPrev").style.display = multi ? "" : "none";
   $("lbNext").style.display = multi ? "" : "none";
   // Zones cliquables désactivées : un clic en dehors de la photo ferme la lightbox.

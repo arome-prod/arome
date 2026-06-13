@@ -24,7 +24,11 @@ if (fine && cur) {
   const DWELL_SEL = "a, button, .tile, .filter, .albums-arrow, [role='button']";
   const DWELL_DELAY = 1000;   // attente avant que le remplissage démarre
   const DWELL_FILL = 700;     // durée du remplissage
-  let dwellTarget = null, dwellTimer = null;
+  let dwellTarget = null, dwellTimer = null, fillActive = false;
+
+  // Signale au son (sound.js) le début / la fin du remplissage
+  const emitDwell = (phase) =>
+    window.dispatchEvent(new CustomEvent("arome:dwell", { detail: { phase, ms: DWELL_FILL } }));
 
   function resetFill() {
     fill.style.transition = "none";
@@ -33,6 +37,7 @@ if (fine && cur) {
   function cancelDwell() {
     clearTimeout(dwellTimer); dwellTimer = null;
     dwellTarget = null;
+    if (fillActive) { fillActive = false; emitDwell("end"); }
     resetFill();
   }
   function startDwell(el) {
@@ -42,6 +47,8 @@ if (fine && cur) {
       void fill.offsetWidth;                 // reflow → garantit la transition
       fill.style.transition = `transform ${DWELL_FILL}ms linear`;
       fill.style.transform = "scale(1)";
+      fillActive = true;
+      emitDwell("start");                    // → son de progression synchronisé
     }, DWELL_DELAY);
   }
   // Quand le remplissage atteint sa taille pleine → petit « pop » + clic automatique

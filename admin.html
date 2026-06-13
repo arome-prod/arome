@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=80" />
-  <link rel="stylesheet" href="css/admin.css?v=80" />
+  <link rel="stylesheet" href="css/style.css?v=83" />
+  <link rel="stylesheet" href="css/admin.css?v=83" />
 </head>
 <body class="adm">
 
@@ -37,24 +37,27 @@
     <main class="adm-wrap">
 
       <datalist id="catlist"></datalist>
+      <p class="adm-lead">Chaque bloc est repliable — clique sur un titre pour l'ouvrir ou le fermer. Tout est enregistré en direct sur le site.</p>
 
       <!-- ===== ALBUMS (liste) ===== -->
-      <section class="adm-block" id="albumsSection">
-        <h2 class="adm-h2">Albums <span id="albumCount" class="adm-count">0</span></h2>
-        <p class="adm-hint">Un album = un projet (ex. « Aquarium ») qui contient plusieurs photos. Crée l'album, puis clique « Gérer » pour y déposer tes photos.</p>
+      <details class="adm-acc" id="albumsSection" open>
+        <summary class="adm-acc__sum"><span class="adm-h2">Albums <span id="albumCount" class="adm-count">0</span></span></summary>
+        <div class="adm-acc__body">
+          <p class="adm-hint">Un album = un projet (ex. « Aquarium ») qui contient plusieurs photos. Crée l'album, puis clique « Gérer » pour y déposer tes photos.</p>
 
-        <div class="adm-create">
-          <h3 class="adm-h3">Créer un album</h3>
-          <div class="adm-create__row">
-            <input id="na-title" placeholder="Titre (ex. Aquarium)" />
-            <input id="na-cat" list="catlist" placeholder="Catégorie (Photo, Vidéo, Design…)" />
+          <div class="adm-create">
+            <h3 class="adm-h3">Créer un album</h3>
+            <div class="adm-create__row">
+              <input id="na-title" placeholder="Titre (ex. Aquarium)" />
+              <input id="na-cat" list="catlist" placeholder="Catégorie (Photo, Vidéo, Design…)" />
+            </div>
+            <input id="na-desc" placeholder="Description (optionnel)" />
+            <button type="button" class="btn" id="createAlbum">+ Créer l'album</button>
           </div>
-          <input id="na-desc" placeholder="Description (optionnel)" />
-          <button type="button" class="btn" id="createAlbum">+ Créer l'album</button>
-        </div>
 
-        <div class="adm-albumgrid" id="adminAlbums"></div>
-      </section>
+          <div class="adm-albumgrid" id="adminAlbums"></div>
+        </div>
+      </details>
 
       <!-- ===== GESTIONNAIRE D'UN ALBUM ===== -->
       <section class="adm-block" id="albumManager" hidden>
@@ -81,118 +84,125 @@
       </section>
 
       <!-- ===== CONTENU YOUTUBE (indépendant des albums) ===== -->
-      <section class="adm-block" id="ytSection">
-        <h2 class="adm-h2">Contenu YouTube <span id="ytCount" class="adm-count">0</span></h2>
-        <p class="adm-hint">Vidéos accessibles directement dans le portfolio (carte « Contenu YouTube »), hors albums.</p>
+      <details class="adm-acc" id="ytSection">
+        <summary class="adm-acc__sum"><span class="adm-h2">Contenu YouTube <span id="ytCount" class="adm-count">0</span></span></summary>
+        <div class="adm-acc__body">
+          <p class="adm-hint">Vidéos accessibles directement dans le portfolio (carte « Contenu YouTube »), hors albums.</p>
 
-        <div class="adm-create">
-          <div class="adm-create__row">
-            <input id="yt-url" placeholder="Lien YouTube (youtu.be/… ou watch?v=…)" />
-            <input id="yt-title" placeholder="Titre (récupéré auto si possible)" />
+          <div class="adm-create">
+            <div class="adm-create__row">
+              <input id="yt-url" placeholder="Lien YouTube (youtu.be/… ou watch?v=…)" />
+              <input id="yt-title" placeholder="Titre (récupéré auto si possible)" />
+            </div>
+            <button type="button" class="btn" id="ytAdd">+ Ajouter la vidéo</button>
           </div>
-          <button type="button" class="btn" id="ytAdd">+ Ajouter la vidéo</button>
-        </div>
 
-        <div class="adm-albumgrid" id="ytList"></div>
-      </section>
+          <div class="adm-albumgrid" id="ytList"></div>
+        </div>
+      </details>
 
       <!-- ===== INSPIRATIONS ===== -->
-      <section class="adm-block" id="inspSection">
-        <h2 class="adm-h2">Inspirations <span id="inspCount" class="adm-count">0</span></h2>
-        <p class="adm-hint">Films, séries, musiques, livres… Pour la <strong>musique</strong> colle un lien Spotify ou Apple Music, pour une <strong>vidéo</strong> un lien YouTube → lecteur intégré. Pour un <strong>film / série / livre</strong>, mets un titre + une couverture (et un lien externe optionnel).</p>
+      <details class="adm-acc" id="inspSection">
+        <summary class="adm-acc__sum"><span class="adm-h2">Inspirations <span id="inspCount" class="adm-count">0</span></span></summary>
+        <div class="adm-acc__body">
+          <p class="adm-hint">Films, séries, musiques, livres… Pour la <strong>musique</strong> colle un lien Spotify ou Apple Music, pour une <strong>vidéo</strong> un lien YouTube → lecteur intégré. Pour un <strong>film / série / livre</strong>, mets un titre + une couverture (et un lien externe optionnel).</p>
 
-        <div class="adm-create">
-          <div class="adm-create__row">
-            <label>Type
-              <select id="insp-kind">
-                <option value="music">Musique (Spotify / Apple Music)</option>
-                <option value="video">Vidéo YouTube</option>
-                <option value="film">Film</option>
-                <option value="serie">Série</option>
-                <option value="livre">Livre</option>
-                <option value="autre">Autre</option>
-              </select>
+          <div class="adm-create">
+            <div class="adm-create__row">
+              <label>Type
+                <select id="insp-kind">
+                  <option value="music">Musique (Spotify / Apple Music)</option>
+                  <option value="video">Vidéo YouTube</option>
+                  <option value="film">Film</option>
+                  <option value="serie">Série</option>
+                  <option value="livre">Livre</option>
+                  <option value="autre">Autre</option>
+                </select>
+              </label>
+              <label>Lien <input id="insp-url" placeholder="Lien Spotify ou Apple Music" /></label>
+            </div>
+            <div class="adm-create__row">
+              <input id="insp-title" placeholder="Titre" />
+              <input id="insp-sub" placeholder="Artiste / réalisateur / auteur (optionnel)" />
+            </div>
+            <label class="adm-addphotos" id="insp-coverLabel" style="display:none">
+              <span>Couverture (film / série / livre — compressée auto)</span>
+              <input id="insp-cover" type="file" accept="image/*" />
             </label>
-            <label>Lien <input id="insp-url" placeholder="Lien Spotify ou Apple Music" /></label>
+            <div class="adm-preview" id="insp-coverPrev"></div>
+            <button type="button" class="btn" id="inspAdd">+ Ajouter</button>
           </div>
-          <div class="adm-create__row">
-            <input id="insp-title" placeholder="Titre" />
-            <input id="insp-sub" placeholder="Artiste / réalisateur / auteur (optionnel)" />
-          </div>
-          <label class="adm-addphotos" id="insp-coverLabel" style="display:none">
-            <span>Couverture (film / série / livre — compressée auto)</span>
-            <input id="insp-cover" type="file" accept="image/*" />
-          </label>
-          <div class="adm-preview" id="insp-coverPrev"></div>
-          <button type="button" class="btn" id="inspAdd">+ Ajouter</button>
-        </div>
 
-        <div class="adm-albumgrid" id="inspList"></div>
-      </section>
+          <div class="adm-albumgrid" id="inspList"></div>
+        </div>
+      </details>
 
       <!-- ===== ÉCRITS (projets « Textes ») ===== -->
-      <section class="adm-block" id="writingsSection">
-        <h2 class="adm-h2">Écrits <span id="wrCount" class="adm-count">0</span></h2>
-        <p class="adm-hint">Poèmes, scripts, nouvelles… Mise en forme libre (gras, italique, souligné). Apparaissent dans le portfolio sous l'onglet « Textes ».</p>
+      <details class="adm-acc" id="writingsSection">
+        <summary class="adm-acc__sum"><span class="adm-h2">Écrits <span id="wrCount" class="adm-count">0</span></span></summary>
+        <div class="adm-acc__body">
+          <p class="adm-hint">Poèmes, scripts, nouvelles… Mise en forme libre (gras, italique, souligné). Apparaissent dans le portfolio sous l'onglet « Textes ».</p>
 
-        <div class="adm-create">
-          <div class="adm-create__row">
-            <input id="wr-title" placeholder="Titre" />
-            <input id="wr-type" list="wrtypes" placeholder="Type (Poème, Script, Nouvelle…)" />
+          <div class="adm-create">
+            <div class="adm-create__row">
+              <input id="wr-title" placeholder="Titre" />
+              <input id="wr-type" list="wrtypes" placeholder="Type (Poème, Script, Nouvelle…)" />
+            </div>
+            <datalist id="wrtypes">
+              <option value="Poème"></option>
+              <option value="Script"></option>
+              <option value="Nouvelle"></option>
+              <option value="Essai"></option>
+              <option value="Chanson"></option>
+            </datalist>
+            <div class="adm-rich-tools" aria-label="Mise en forme">
+              <button type="button" data-cmd="bold" title="Gras (Ctrl/Cmd+B)"><b>B</b></button>
+              <button type="button" data-cmd="italic" title="Italique (Ctrl/Cmd+I)"><i>I</i></button>
+              <button type="button" data-cmd="underline" title="Souligné (Ctrl/Cmd+U)"><u>U</u></button>
+            </div>
+            <div id="wr-body" class="adm-rich" contenteditable="true" data-ph="Écris ton texte ici… (gras / italique / souligné disponibles)"></div>
+            <div class="adm-actions">
+              <button type="button" class="btn" id="wrSave">+ Ajouter le texte</button>
+              <button type="button" class="btn btn--sm" id="wrCancel" style="display:none">Annuler la modification</button>
+            </div>
           </div>
-          <datalist id="wrtypes">
-            <option value="Poème"></option>
-            <option value="Script"></option>
-            <option value="Nouvelle"></option>
-            <option value="Essai"></option>
-            <option value="Chanson"></option>
-          </datalist>
-          <div class="adm-rich-tools" aria-label="Mise en forme">
-            <button type="button" data-cmd="bold" title="Gras (Ctrl/Cmd+B)"><b>B</b></button>
-            <button type="button" data-cmd="italic" title="Italique (Ctrl/Cmd+I)"><i>I</i></button>
-            <button type="button" data-cmd="underline" title="Souligné (Ctrl/Cmd+U)"><u>U</u></button>
+
+          <div class="adm-albumgrid" id="wrList"></div>
+        </div>
+      </details>
+
+      <!-- ===== TEXTES DU SITE ===== -->
+      <details class="adm-acc">
+        <summary class="adm-acc__sum"><span class="adm-h2">Textes du site</span></summary>
+        <div class="adm-acc__body">
+          <div class="adm-form">
+            <h3 class="adm-h3">Accueil</h3>
+            <label>Accroche (sous le nom « arome »)
+              <input id="c-tagline" />
+            </label>
+            <button type="button" class="btn btn--sm" id="saveHero">Enregistrer l'accueil</button>
           </div>
-          <div id="wr-body" class="adm-rich" contenteditable="true" data-ph="Écris ton texte ici… (gras / italique / souligné disponibles)"></div>
-          <div class="adm-actions">
-            <button type="button" class="btn" id="wrSave">+ Ajouter le texte</button>
-            <button type="button" class="btn btn--sm" id="wrCancel" style="display:none">Annuler la modification</button>
+
+          <div class="adm-form">
+            <h3 class="adm-h3">À propos</h3>
+            <label>Texte (ligne vide = nouveau paragraphe)
+              <textarea id="c-about" rows="6"></textarea>
+            </label>
+            <label>Compétences (séparées par des virgules)
+              <input id="c-skills" />
+            </label>
+            <button type="button" class="btn btn--sm" id="saveAbout">Enregistrer à propos</button>
+          </div>
+
+          <div class="adm-form">
+            <h3 class="adm-h3">Contact</h3>
+            <label>Email <input id="c-email" /></label>
+            <label>Instagram (URL) <input id="c-insta" /></label>
+            <label>Vinted (URL) <input id="c-vinted" /></label>
+            <button type="button" class="btn btn--sm" id="saveContact">Enregistrer le contact</button>
           </div>
         </div>
-
-        <div class="adm-albumgrid" id="wrList"></div>
-      </section>
-
-      <!-- ===== TEXTES ===== -->
-      <section class="adm-block">
-        <h2 class="adm-h2">Textes du site</h2>
-
-        <div class="adm-form">
-          <h3 class="adm-h3">Accueil</h3>
-          <label>Accroche (sous le nom « arome »)
-            <input id="c-tagline" />
-          </label>
-          <button type="button" class="btn btn--sm" id="saveHero">Enregistrer l'accueil</button>
-        </div>
-
-        <div class="adm-form">
-          <h3 class="adm-h3">À propos</h3>
-          <label>Texte (ligne vide = nouveau paragraphe)
-            <textarea id="c-about" rows="6"></textarea>
-          </label>
-          <label>Compétences (séparées par des virgules)
-            <input id="c-skills" />
-          </label>
-          <button type="button" class="btn btn--sm" id="saveAbout">Enregistrer à propos</button>
-        </div>
-
-        <div class="adm-form">
-          <h3 class="adm-h3">Contact</h3>
-          <label>Email <input id="c-email" /></label>
-          <label>Instagram (URL) <input id="c-insta" /></label>
-          <label>Vinted (URL) <input id="c-vinted" /></label>
-          <button type="button" class="btn btn--sm" id="saveContact">Enregistrer le contact</button>
-        </div>
-      </section>
+      </details>
 
       <p class="adm-foot">Astuce : garde des images légères. La compression vise ~150–300 Ko par image. Le contenu apparaît sur le site en direct.</p>
     </main>
@@ -200,6 +210,6 @@
 
   <div id="toast" class="adm-toast"></div>
 
-  <script type="module" src="js/admin-page.js?v=80"></script>
+  <script type="module" src="js/admin-page.js?v=83"></script>
 </body>
 </html>

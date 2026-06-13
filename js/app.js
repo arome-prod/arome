@@ -9,8 +9,8 @@ import {
   onValue,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=80";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=80";
+import { db, isConfigured } from "./firebase.js?v=83";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=83";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -864,7 +864,10 @@ function openAlbum(id) {
               ${m.title ? `<span class="tile__cap"><span class="tile__name">${esc(m.title)}</span></span>` : ""}
             </button>`;
         }
-        return `<button class="tile" data-lb="${i}"><span class="tile__media"><img src="${esc(m.src)}" alt="" loading="lazy" /></span></button>`;
+        return `<button class="tile" data-lb="${i}">
+            <span class="tile__media"><img src="${esc(m.src)}" alt="${esc(m.title || "")}" loading="lazy" /></span>
+            ${m.title ? `<span class="tile__cap"><span class="tile__name">${esc(m.title)}</span></span>` : ""}
+          </button>`;
       }).join("")
     : '<div class="gallery__loading">Album vide pour l’instant.</div>';
 
@@ -872,7 +875,7 @@ function openAlbum(id) {
   lbList = ph.map((m) =>
     m.youtube
       ? { type: "video", id: m.youtube, title: m.title || "" }
-      : { type: "image", src: m.src, title: "" }
+      : { type: "image", src: m.src, title: m.title || "" }
   );
 
   $("albumsView").hidden = true;

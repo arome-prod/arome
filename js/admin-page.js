@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=80";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=80";
+import { db, isConfigured } from "./firebase.js?v=83";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=83";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -302,6 +302,7 @@ function renderManagerPhotos() {
     return `<div class="adm-photo${isCover ? " is-cover" : ""}">
         <img src="${esc(thumb)}" alt="" />
         ${badge}
+        <input class="adm-photo__title" data-ptitle="${p.id}" value="${esc(p.title || "")}" placeholder="Titre (optionnel)" maxlength="200" />
         <div class="adm-photo__bar">
           <button data-pact="cover" data-id="${p.id}" title="Définir comme couverture">★</button>
           <button data-pact="up" data-id="${p.id}" ${i === 0 ? "disabled" : ""} title="Avancer">↑</button>
@@ -319,6 +320,19 @@ function renderManagerPhotos() {
       else if (act === "up") movePhoto(pid, -1);
       else if (act === "down") movePhoto(pid, 1);
     });
+  });
+
+  // Enregistre le titre d'une photo (à la perte de focus / Entrée)
+  grid.querySelectorAll("[data-ptitle]").forEach((inp) => {
+    const save = async () => {
+      if (!managingId) return;
+      try {
+        await update(ref(db, `albums/${managingId}/photos/${inp.dataset.ptitle}`), { title: inp.value.trim() });
+        toast("Titre enregistré ✦");
+      } catch (e) { console.error(e); toast("Échec de l'enregistrement du titre."); }
+    };
+    inp.addEventListener("blur", save);
+    inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); inp.blur(); } });
   });
 }
 

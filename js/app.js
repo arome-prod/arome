@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=93";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=93";
+import { db, isConfigured } from "./firebase.js?v=94";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=94";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -535,7 +535,31 @@ function renderAlbums() {
   }
 
   setupAlbumHover();
+  upgradeCovers();                 // remplace les mini-couvertures par les photos pleine qualité
   requestAnimationFrame(updateAlbumArrows);
+}
+
+// Affiche les couvertures en pleine qualité (photo originale), pas la mini-version.
+// La mini-couverture sert juste d'aperçu instantané, puis on charge la vraie photo.
+async function upgradeCovers() {
+  const grid = $("albums");
+  if (!grid) return;
+  const tiles = [...grid.querySelectorAll('.tile[data-album]')];
+  for (const tile of tiles) {
+    const a = shownAlbums().find((x) => x.id === tile.dataset.album);
+    const img = tile.querySelector(".tile__media img");
+    if (!a || !img) continue;
+    try {
+      const ph = await loadAlbumPhotos(a);
+      const cov = (a.coverId && ph.find((p) => p.id === a.coverId)) || ph[0];
+      const full = cov ? mediaThumb(cov) : "";
+      if (full && full !== img.getAttribute("src")) {
+        const pre = new Image();
+        pre.onload = () => { img.src = full; };
+        pre.src = full;
+      }
+    } catch (e) { /* on garde la mini-couverture en repli */ }
+  }
 }
 
 // Survol d'une carte album → mini-diaporama de ses photos (fondu enchaîné)

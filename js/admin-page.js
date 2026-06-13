@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove, get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=93";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=93";
+import { db, isConfigured } from "./firebase.js?v=94";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=94";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -40,7 +40,7 @@ let mgrPhotos = [];          // photos de l'album en cours de gestion (depuis al
 let mgrUnsub = null;
 const migrating = new Set();  // évite les migrations en double
 const refreshingCov = new Set();
-const COVER_VER = 2;          // version des couvertures (incrémenter = régénération auto)
+const COVER_VER = 3;          // version des couvertures (incrémenter = régénération auto)
 
 // Génère une couverture allégée mais nette (assez grande pour les écrans Retina).
 function makeThumb(dataURL, max = 1000, q = 0.86) {
@@ -70,11 +70,13 @@ async function refreshAlbumCover(id) {
   ph.sort((x, y) => (x.order || 0) - (y.order || 0));
   const a = albumById(id) || {};
   let cov = ph.find((p) => p.id === a.coverId) || ph[0] || null;
+  // Couverture en pleine qualité : on stocke directement l'image complète
+  // (pas de mini-vignette compressée) pour une netteté maximale dans la grille.
   let thumb = null;
   if (cov) {
     thumb = cov.youtube
       ? `https://img.youtube.com/vi/${cov.youtube}/hqdefault.jpg`
-      : (cov.src ? await makeThumb(cov.src) : null);
+      : (cov.src || null);
   }
   await update(ref(db, "albums/" + id), { coverThumb: thumb || null, count: ph.length, cv: COVER_VER });
 }

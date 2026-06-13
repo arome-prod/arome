@@ -32,7 +32,7 @@
         "description": { ".validate": "newData.isString() && newData.val().length <= 2000" },
         "link":        { ".validate": "newData.isString() && newData.val().length <= 600" },
         "cover":       { ".validate": "newData.isString() && newData.val().length <= 3000000" },
-        "coverThumb":  { ".validate": "newData.isString() && newData.val().length <= 2000000" },
+        "coverThumb":  { ".validate": "newData.isString() && newData.val().length <= 3000000" },
         "count":       { ".validate": "newData.isNumber()" },
         "cv":          { ".validate": "newData.isNumber()" },
         "coverId":     { ".validate": "newData.isString() && newData.val().length <= 60" },

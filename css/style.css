@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=94") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=95") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -71,6 +71,8 @@ img { -webkit-user-drag: none; -khtml-user-drag: none; }
 .cursor.is-on { opacity: 1; }
 .cursor.is-hover { width: 30px; height: 30px; }
 .cursor.is-down { width: 10px; height: 10px; }
+/* Aimantation : le bouton suit le curseur puis revient en douceur */
+.is-magnet { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: transform; }
 /* On masque le curseur natif quand le personnalisé est actif (sauf champs texte) */
 html.cursor-on, html.cursor-on * { cursor: none !important; }
 html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] { cursor: auto !important; }
@@ -79,7 +81,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=94") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=95") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -894,7 +896,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=94") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=95") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

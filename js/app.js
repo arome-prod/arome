@@ -281,7 +281,7 @@ window.addEventListener("resize", () => {
 //  une musique au hasard parmi les inspirations. Un clic = retour.
 // ====================================================================
 (function ambientMode() {
-  const IDLE_MS = 12000;   // 12 s (test) — repasser à 300000 (5 min) en prod
+  const IDLE_MS = 150000;   // 2 min 30 d'inactivité sur l'accueil → mode ambiance
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const body = document.body;
   const player = $("ambientPlayer");

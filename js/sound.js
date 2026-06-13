@@ -95,6 +95,43 @@
     o1.stop(t + 1.25); o2.stop(t + 1.25);
   }
 
+  // ---- Clic « onglet » : même goutte, mais plus aiguë ----
+  function dropHigh() {
+    if (!enabled) return;
+    const c = ready(); if (!c) return;
+    const t = c.currentTime;
+    const o1 = c.createOscillator(); o1.type = "sine";
+    const o2 = c.createOscillator(); o2.type = "sine";
+    o1.frequency.setValueAtTime(392, t);
+    o1.frequency.linearRampToValueAtTime(372, t + 0.16);
+    o2.frequency.setValueAtTime(587, t);
+    o2.frequency.linearRampToValueAtTime(555, t + 0.16);
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.055, t + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.95);
+    const g2 = c.createGain(); g2.gain.value = 0.4;
+    o1.connect(g); o2.connect(g2).connect(g); g.connect(master);
+    o1.start(t); o2.start(t);
+    o1.stop(t + 1.05); o2.stop(t + 1.05);
+  }
+
+  // ---- « Tic » réverbéré : ouverture d'album / d'image ----
+  function tic() {
+    if (!enabled) return;
+    const c = ready(); if (!c) return;
+    const t = c.currentTime;
+    const o = c.createOscillator(); o.type = "sine";
+    o.frequency.setValueAtTime(720, t);
+    o.frequency.exponentialRampToValueAtTime(560, t + 0.05);
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.07, t + 0.004);       // attaque très rapide → « tic »
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16); // court ; la réverbe maître fait la traîne
+    o.connect(g).connect(master);
+    o.start(t); o.stop(t + 0.2);
+  }
+
   // ---- Dwell : nappe douce qui monte/s'ouvre pendant le remplissage ----
   let dwell = null;
   function dwellStart(ms) {
@@ -142,6 +179,8 @@
   const CLICKABLE = "a, button, .tile, .filter, .albums-arrow, [role='button'], summary, label";
   document.addEventListener("click", (e) => {
     if (e.target.closest(".settings, .info-modal")) return;
+    if (e.target.closest("[data-go]")) { dropHigh(); return; }                         // onglets de navigation
+    if (e.target.closest(".tile[data-album], #albumPhotos .tile[data-lb]")) { tic(); return; } // ouverture album / image
     if (e.target.closest(CLICKABLE)) drop();
   });
 

@@ -77,8 +77,9 @@ window.addEventListener("resize", () => {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const flipEls = [
     brand.querySelector(".brand__logo"),
+    brand.querySelector(".brand__tag"),     // l'accroche glisse + se fond comme le reste
     ...brand.querySelectorAll(".brand__nav button"),
-  ];
+  ].filter(Boolean);
 
   // Trait actif glissant dans la barre du haut
   const navEl = brand.querySelector(".brand__nav");
@@ -127,6 +128,7 @@ window.addEventListener("resize", () => {
     if (reduce) { change(); return; }
     move = move || TRANS_TO_SECTION;
     const first = flipEls.map((el) => el.getBoundingClientRect());
+    const firstOp = flipEls.map((el) => getComputedStyle(el).opacity);   // opacité avant le swap
     change();
     const last = flipEls.map((el) => el.getBoundingClientRect());
     flipEls.forEach((el, i) => {
@@ -139,6 +141,7 @@ window.addEventListener("resize", () => {
       const child = zoom ? el.firstElementChild : null;
       el.style.transition = "none";
       el.style.transformOrigin = "center center";
+      el.style.opacity = firstOp[i];                              // on repart de l'opacité d'origine
       if (child) {
         el.style.transform = `translate(${dx}px, ${dy}px)`;       // déplacement
         child.style.transition = "none";
@@ -151,8 +154,9 @@ window.addEventListener("resize", () => {
     void brand.offsetWidth; // force un reflow
     requestAnimationFrame(() => {
       flipEls.forEach((el) => {
-        el.style.transition = move;
+        el.style.transition = move + ", opacity 0.3s ease";
         el.style.transform = "";
+        el.style.opacity = "";                                    // → se fond vers l'opacité cible
         const child = zoom ? el.firstElementChild : null;
         if (child) { child.style.transition = zoom; child.style.transform = ""; }
       });

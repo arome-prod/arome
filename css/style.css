@@ -1010,7 +1010,7 @@ body.mode-home .brand__nav button {
   font-size: clamp(0.82rem, 1.9vw, 0.98rem);
   color: var(--text);
   letter-spacing: 0.18em;
-  padding: 0.2rem 0;
+  padding: 0.3em 0;   /* même padding em qu'en barre du haut → hauteur ∝ font-size */
 }
 body.mode-home .brand__nav button::after {
   content: "";
@@ -1035,7 +1035,15 @@ body:not(.mode-home) .brand {
 }
 body:not(.mode-home) .brand__logo { font-size: 1.3rem; font-weight: 400; }
 body:not(.mode-home) .brand__logomark { width: 104px; }
-body:not(.mode-home) .brand__tag { display: none; }
+/* En barre du haut : invisible et hors flux (glisse + se fond via le FLIP) */
+body:not(.mode-home) .brand__tag {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  left: 0; right: 0; top: 0.9rem;
+  margin: 0;
+  text-align: center;
+}
 body:not(.mode-home) .brand__nav { gap: clamp(1rem, 3vw, 2rem); }
 body:not(.mode-home) .brand__nav button { font-size: 0.7rem; }
 
@@ -1064,7 +1072,7 @@ body:not(.mode-home) .brand__nav button { font-size: 0.7rem; }
   position: relative;
   background: none; border: none; color: var(--muted); font: inherit;
   text-transform: uppercase; letter-spacing: 0.18em;
-  cursor: pointer; padding: 0.3rem 0;
+  cursor: pointer; padding: 0.3em 0;   /* em → la hauteur suit la taille du texte (FLIP fluide) */
   border-bottom: 1px solid transparent;
   transition: color 0.25s, border-color 0.25s;
   will-change: transform;

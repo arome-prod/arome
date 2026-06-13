@@ -20,7 +20,8 @@
         "email":     { ".validate": "newData.isString() && newData.val().length <= 160" },
         "instagram": { ".validate": "newData.isString() && newData.val().length <= 400" },
         "vinted":    { ".validate": "newData.isString() && newData.val().length <= 400" }
-      }
+      },
+      "apartCats": { ".validate": "newData.isString() && newData.val().length <= 1000" }
     },
 
     "albums": {

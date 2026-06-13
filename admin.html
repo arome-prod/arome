@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>arome — admin</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" type="image/svg+xml" href="images/favicon.svg?v=134" />
-  <link rel="apple-touch-icon" href="images/apple-touch-icon.png?v=134" />
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg?v=136" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png?v=136" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=134" />
-  <link rel="stylesheet" href="css/admin.css?v=134" />
+  <link rel="stylesheet" href="css/style.css?v=136" />
+  <link rel="stylesheet" href="css/admin.css?v=136" />
 </head>
 <body class="adm">
 
@@ -84,6 +84,15 @@
         <p id="m-progress" class="adm-hint"></p>
         <div class="adm-photogrid" id="mgrPhotos"></div>
       </section>
+
+      <!-- ===== RANGEMENT DES CATÉGORIES ===== -->
+      <details class="adm-acc" id="catOrgSection">
+        <summary class="adm-acc__sum"><span class="adm-h2">Rangement des catégories</span></summary>
+        <div class="adm-acc__body">
+          <p class="adm-hint">Pour chaque catégorie d'album, choisis si elle reste un sous-filtre de « Création visuelle » ou si elle devient un onglet séparé dans le portfolio (comme Textes / Sites web / YouTube).</p>
+          <div id="catOrgList"></div>
+        </div>
+      </details>
 
       <!-- ===== CONTENU YOUTUBE (indépendant des albums) ===== -->
       <details class="adm-acc" id="ytSection">
@@ -253,6 +262,6 @@
 
   <div id="toast" class="adm-toast"></div>
 
-  <script type="module" src="js/admin-page.js?v=134"></script>
+  <script type="module" src="js/admin-page.js?v=136"></script>
 </body>
 </html>

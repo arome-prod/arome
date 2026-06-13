@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove, get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=134";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=134";
+import { db, isConfigured } from "./firebase.js?v=136";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=136";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -30,6 +30,7 @@ let content = JSON.parse(JSON.stringify(DEFAULTS));
 let albums = [];
 let videos = [];
 let sites = [];
+let apartCats = new Set();   // catégories rangées en onglet séparé
 let insp = [];
 let inspCover = "";
 let writings = [];
@@ -248,6 +249,33 @@ function refreshCatList() {
   const dl = $("catlist"); if (!dl) return;
   const cats = [...new Set(albums.map((a) => (a.category || "").trim()).filter(Boolean))];
   dl.innerHTML = cats.map((c) => `<option value="${esc(c)}">`).join("");
+}
+
+// Rangement des catégories : sous « Création visuelle » ou onglet à part
+function renderCatOrg() {
+  const box = $("catOrgList"); if (!box) return;
+  const cats = [...new Set(albums.map((a) => (a.category || "").trim()).filter(Boolean))];
+  if (!cats.length) { box.innerHTML = '<p class="adm-empty">Aucune catégorie pour le moment (crée des albums avec une catégorie).</p>'; return; }
+  box.innerHTML = cats.map((c) => `
+    <label class="adm-catrow">
+      <span>${esc(c)}</span>
+      <span class="adm-catrow__opt">
+        <input type="checkbox" data-cat="${esc(c)}" ${apartCats.has(c) ? "checked" : ""} />
+        Onglet à part
+      </span>
+    </label>`).join("");
+  box.querySelectorAll("input[data-cat]").forEach((inp) => {
+    inp.addEventListener("change", () => {
+      const cat = inp.dataset.cat;
+      if (inp.checked) apartCats.add(cat); else apartCats.delete(cat);
+      saveApartCats();
+    });
+  });
+}
+async function saveApartCats() {
+  if (!isConfigured) return;
+  try { await set(ref(db, "content/apartCats"), [...apartCats].join("|")); toast("Rangement mis à jour ✦"); }
+  catch (e) { console.error(e); toast("Échec : " + (e.message || "écriture refusée")); }
 }
 
 // ====================================================================
@@ -992,6 +1020,8 @@ if (isConfigured) {
       about: { ...DEFAULTS.about, ...(v.about || {}) },
       contact: { ...DEFAULTS.contact, ...(v.contact || {}) },
     };
+    apartCats = new Set(String(v.apartCats || "").split("|").map((s) => s.trim()).filter(Boolean));
+    renderCatOrg();
   });
   onValue(ref(db, "albums"), (snap) => {
     const arr = [];
@@ -1000,6 +1030,7 @@ if (isConfigured) {
     albums = arr;
     renderAdminAlbums();
     refreshCatList();
+    renderCatOrg();
     maybeMigrate(arr);        // bascule les albums encore en ancien format
     maybeRefreshCovers(arr);  // régénère les couvertures basse qualité une fois
   });

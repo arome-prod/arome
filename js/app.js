@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=134";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=134";
+import { db, isConfigured } from "./firebase.js?v=136";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=136";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -332,6 +332,12 @@ function renderContent(c) {
     contact: { ...DEFAULTS.contact, ...(c.contact || {}) },
   };
 
+  // Catégories rangées « à part » (onglets séparés au lieu de Création visuelle)
+  portfolioApart = new Set(
+    String((c && c.apartCats) || "").split("|").map((s) => s.trim()).filter(Boolean)
+  );
+  renderAll();
+
   const tagline = $("heroTagline");
   if (tagline) tagline.textContent = data.hero.tagline;
 
@@ -373,6 +379,7 @@ let allInsp = [];
 let allTextes = [];
 let allTimeline = [];
 let allSites = [];
+let portfolioApart = new Set();   // catégories affichées en onglet séparé
 let activeFilter = "all";
 let inspFilter = "all";
 
@@ -479,26 +486,29 @@ function renderFilters() {
   const bar = $("filters");
   if (!bar) return;
   const cats = categoriesOf(shownAlbums());
+  const subCats = cats.filter((c) => !portfolioApart.has(c));     // sous Création visuelle
+  const apartCats = cats.filter((c) => portfolioApart.has(c));    // onglets séparés
   const hasYt = allVideos.length > 0;
   const hasTxt = allTextes.length > 0;
   const hasSite = allSites.length > 0;
-  if (cats.length + (hasYt ? 1 : 0) + (hasTxt ? 1 : 0) + (hasSite ? 1 : 0) <= 1) { bar.innerHTML = ""; return; }
+  const total = cats.length + (hasYt ? 1 : 0) + (hasTxt ? 1 : 0) + (hasSite ? 1 : 0);
+  if (total <= 1) { bar.innerHTML = ""; return; }
 
-  // Groupe « Création visuelle » : parent (= tous les albums) + ses sous-catégories
-  let html = `<button class="filter filter--lead${activeFilter === "all" ? " is-active" : ""}" data-filter="all">Création visuelle</button>`;
-  html += cats.map((c) =>
+  // Groupe « Création visuelle » : parent (= albums visuels) + ses sous-catégories
+  let html = `<button class="filter filter--lead${activeFilter === "all" ? " is-active" : ""}" data-filter="all">Mes projets</button>`;
+  html += subCats.map((c) =>
     `<button class="filter filter--sub${activeFilter === c ? " is-active" : ""}" data-filter="${esc(c)}">${esc(c)}</button>`
   ).join("");
 
-  // Types à part : Textes / Sites web / YouTube (séparés du groupe visuel)
-  const extras = [];
+  // Onglets à part : catégories sorties du groupe + Textes / Sites web / YouTube
+  const extras = apartCats.map((c) => [c, c]);
   if (hasTxt) extras.push(["__txt", "Textes"]);
   if (hasSite) extras.push(["__site", "Sites web"]);
   if (hasYt) extras.push(["__yt", "YouTube"]);
   if (extras.length) {
     html += `<span class="filters__sep" aria-hidden="true"></span>`;
     html += extras.map(([k, label]) =>
-      `<button class="filter${activeFilter === k ? " is-active" : ""}" data-filter="${k}">${label}</button>`
+      `<button class="filter${activeFilter === k ? " is-active" : ""}" data-filter="${esc(k)}">${esc(label)}</button>`
     ).join("");
   }
   bar.innerHTML = html;
@@ -608,7 +618,11 @@ function renderAlbums() {
     return;
   }
 
-  const list = shownAlbums().filter((a) => activeFilter === "all" || a.category === activeFilter);
+  const list = shownAlbums().filter((a) =>
+    activeFilter === "all"
+      ? !portfolioApart.has((a.category || "").trim())   // Création visuelle : on exclut les catégories « à part »
+      : a.category === activeFilter
+  );
 
   if (list.length === 0) {
     grid.innerHTML = `<div class="gallery__loading">Aucun album${isConfigured ? " — crée-en un via l’admin." : "."}</div>`;

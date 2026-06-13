@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=137") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=138") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -224,7 +224,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=137") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=138") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -1062,10 +1062,10 @@ body:not(.mode-home) .brand__nav button.is-active { color: var(--text); }
 body.mode-home .brand__nav__underline { opacity: 0 !important; }
 
 /* Scène + panneaux */
-.stage { padding-top: 60px; min-height: 100vh; }
+.stage { padding-top: 60px; min-height: 100vh; display: flex; flex-direction: column; }
 body.mode-home .stage { display: none; }
 .panel { display: none; }
-.panel.is-active { display: block; animation: panelIn 0.55s cubic-bezier(0.22, 0.7, 0.25, 1); }
+.panel.is-active { display: block; flex: 1 0 auto; animation: panelIn 0.55s cubic-bezier(0.22, 0.7, 0.25, 1); }
 .panel.is-leaving { animation: panelOut 0.18s ease forwards; }
 .panel .section { border-bottom: none; }
 @keyframes panelIn {
@@ -1090,9 +1090,10 @@ body.mode-home .stage { display: none; }
 
 /* Pied de page */
 .foot {
-  max-width: var(--max); margin: 0 auto;
-  padding: 2rem clamp(1.4rem, 5vw, 3.5rem) 3rem;
-  display: flex; align-items: flex-end; justify-content: space-between;
+  flex: none;
+  width: 100%; max-width: var(--max); margin: 0 auto;
+  padding: 0.85rem clamp(1.4rem, 5vw, 3.5rem) 1rem;
+  display: flex; align-items: center; justify-content: space-between;
   gap: 1rem; flex-wrap: wrap; border-top: 1px solid var(--line);
 }
 .foot__sign { font-family: var(--font-display); font-size: 1.4rem; color: var(--faint); }
@@ -1117,7 +1118,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=137") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=138") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

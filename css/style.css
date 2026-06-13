@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=139") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=140") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -224,7 +224,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=139") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=140") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -820,16 +820,15 @@ body.reading #textView .album-head { text-align: center; }
 /* ===== Inspirations (rangée horizontale, comme le portfolio) ===== */
 .albums > .insp-card {
   flex: 0 0 auto;
-  width: clamp(260px, 80vw, 340px);
+  width: clamp(230px, 72vw, 300px);   /* identique aux tuiles du portfolio */
   scroll-snap-align: start;
 }
 .insp-card { display: block; color: inherit; }
-/* Toutes les cartes : même zone média, hauteur fixe calée sur le player
-   Apple Music « plein » (cover + tracklist + bouton Lire bien visible) */
+/* Même empreinte que les tuiles portfolio (ratio 4/5) */
 .insp-media {
   position: relative;
   display: block;
-  height: 450px;
+  aspect-ratio: 4 / 5;
   background: var(--panel);
   border: 1px solid var(--line);
   overflow: hidden;
@@ -1118,7 +1117,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=139") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=140") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

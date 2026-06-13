@@ -20,39 +20,54 @@
     return `<svg viewBox="0 0 24 24" aria-hidden="true">${base}${on ? waves : cross}</svg>`;
   }
 
+  // Réverbération générée (impulsion bruitée à déclin exponentiel) → côté planant
+  function makeReverb(c, seconds, decay) {
+    const rate = c.sampleRate, len = Math.floor(rate * seconds);
+    const buf = c.createBuffer(2, len, rate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
+    const conv = c.createConvolver(); conv.buffer = buf; return conv;
+  }
+
   function ensureCtx() {
     if (!ctx) {
       try { ctx = new (window.AudioContext || window.webkitAudioContext)(); }
       catch (e) { return null; }
-      // chaîne maître : un filtre passe-bas pour adoucir (côté « sous l'eau »)
+      // chaîne maître : passe-bas TRÈS doux (étouffé) + réverbe (planant)
       master = ctx.createGain();
       master.gain.value = 0.9;
       const soft = ctx.createBiquadFilter();
       soft.type = "lowpass";
-      soft.frequency.value = 2200;
-      master.connect(soft).connect(ctx.destination);
+      soft.frequency.value = 760;          // bas → son feutré, « sous une couche »
+      soft.Q.value = 0.4;
+      const dry = ctx.createGain(); dry.gain.value = 0.5;
+      const wet = ctx.createGain(); wet.gain.value = 0.65;
+      const rev = makeReverb(ctx, 2.6, 2.4);
+      master.connect(soft);
+      soft.connect(dry).connect(ctx.destination);
+      soft.connect(rev).connect(wet).connect(ctx.destination);
     }
     if (ctx.state === "suspended") ctx.resume();
     return ctx;
   }
 
-  // ---- Clic : « goutte d'eau » (glissando descendant doux, déclin moelleux) ----
+  // ---- Clic : « goutte » feutrée et planante (attaque douce, longue traîne réverbérée) ----
   function drop() {
     if (!enabled) return;
     const c = ensureCtx(); if (!c) return;
     const t = c.currentTime;
     const o = c.createOscillator();
     const g = c.createGain();
-    const f = c.createBiquadFilter();
-    f.type = "lowpass"; f.frequency.value = 1500;
     o.type = "sine";
-    o.frequency.setValueAtTime(620, t);
-    o.frequency.exponentialRampToValueAtTime(240, t + 0.16);
+    o.frequency.setValueAtTime(360, t);
+    o.frequency.exponentialRampToValueAtTime(150, t + 0.28);
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.09, t + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.34);
-    o.connect(f).connect(g).connect(master);
-    o.start(t); o.stop(t + 0.36);
+    g.gain.linearRampToValueAtTime(0.07, t + 0.035);     // attaque douce (pas de « tic »)
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.75);
+    o.connect(g).connect(master);
+    o.start(t); o.stop(t + 0.8);
   }
 
   // ---- Dwell : nappe douce qui monte/s'ouvre pendant le remplissage ----
@@ -65,16 +80,16 @@
     const g = c.createGain();
     const f = c.createBiquadFilter();
     f.type = "lowpass";
-    f.frequency.setValueAtTime(350, t);
-    f.frequency.linearRampToValueAtTime(1400, t + dur);     // le filtre s'ouvre → progression
+    f.frequency.setValueAtTime(220, t);
+    f.frequency.linearRampToValueAtTime(620, t + dur);      // s'ouvre doucement → progression feutrée
     const o1 = c.createOscillator(); o1.type = "sine";
-    const o2 = c.createOscillator(); o2.type = "sine"; o2.detune.value = 7; // léger battement organique
-    o1.frequency.setValueAtTime(174, t);
-    o1.frequency.linearRampToValueAtTime(261, t + dur);     // glisse vers le haut
-    o2.frequency.setValueAtTime(174 * 1.5, t);
-    o2.frequency.linearRampToValueAtTime(261 * 1.5, t + dur);
+    const o2 = c.createOscillator(); o2.type = "sine"; o2.detune.value = 5; // battement lent, organique
+    o1.frequency.setValueAtTime(130, t);
+    o1.frequency.linearRampToValueAtTime(174, t + dur);     // glisse doucement vers le haut (grave)
+    o2.frequency.setValueAtTime(130 * 1.5, t);
+    o2.frequency.linearRampToValueAtTime(174 * 1.5, t + dur);
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.045, t + dur * 0.92);  // gonfle en arrivant à terme
+    g.gain.linearRampToValueAtTime(0.05, t + dur * 0.95);   // gonfle en arrivant à terme
     o1.connect(f); o2.connect(f); f.connect(g).connect(master);
     o1.start(t); o2.start(t);
     dwell = { o1, o2, g };

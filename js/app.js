@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=119";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=119";
+import { db, isConfigured } from "./firebase.js?v=121";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=121";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -20,6 +20,14 @@ const esc = (s = "") =>
 
 const yearEl = $("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+// Rejoue une apparition douce (fondu + léger glissé) sur un conteneur qui change.
+function playIn(el) {
+  if (!el) return;
+  el.classList.remove("view-in");
+  void el.offsetWidth;        // reflow → relance l'animation
+  el.classList.add("view-in");
+}
 
 // ====================================================================
 //  Navigation : la marque glisse de l'accueil vers la barre du haut
@@ -635,7 +643,7 @@ function setupAlbumHover() {
   });
 }
 
-function renderAll() { renderFilters(); renderAlbums(); }
+function renderAll() { renderFilters(); renderAlbums(); playIn($("albums")); }
 
 // Glisser-déposer à la souris pour faire défiler une rangée horizontale (avec inertie).
 function attachDragScroll(el) {
@@ -854,6 +862,7 @@ function openTexte(id) {
   $("albumView").hidden = true;
   $("youtubeView").hidden = true;
   $("textView").hidden = false;
+  playIn($("textView"));
   document.body.classList.add("reading");
   window.scrollTo(0, 0);
   const bar = $("readProgress");
@@ -864,6 +873,7 @@ function openTexte(id) {
 function closeTexte() {
   $("textView").hidden = true;
   $("albumsView").hidden = false;
+  playIn($("albumsView"));
   document.body.classList.remove("reading");
   const bar = $("readProgress");
   if (bar) { bar.classList.remove("is-on"); bar.style.width = "0%"; }
@@ -980,6 +990,7 @@ function renderInspirations() {
   wall.innerHTML = list.length
     ? list.map(inspCardHTML).join("")
     : '<div class="gallery__loading">Bientôt — mes inspirations arrivent ici.</div>';
+  playIn(wall);
   if (typeof updateInspArrows === "function") requestAnimationFrame(updateInspArrows);
 }
 
@@ -998,6 +1009,7 @@ async function openAlbum(id) {
   grid.innerHTML = '<div class="gallery__loading">Chargement…</div>';
   $("albumsView").hidden = true;
   $("albumView").hidden = false;
+  playIn($("albumView"));
   window.scrollTo(0, 0);
 
   const ph = await loadAlbumPhotos(a);   // ← photos téléchargées seulement maintenant
@@ -1031,6 +1043,7 @@ async function openAlbum(id) {
 function closeAlbum() {
   $("albumView").hidden = true;
   $("albumsView").hidden = false;
+  playIn($("albumsView"));
 }
 if ($("albumBack")) $("albumBack").addEventListener("click", closeAlbum);
 
@@ -1047,14 +1060,12 @@ function showLb(i) {
   const img = $("lbImg"), vWrap = $("lbVideoWrap"), vFrame = $("lbVideo"), title = $("lbTitle");
 
   if (item.type === "video") {
-    img.hidden = true; img.src = ""; img.classList.remove("kb");
+    img.hidden = true; img.src = "";
     vWrap.hidden = false;
     vFrame.src = `https://www.youtube.com/embed/${item.id}?rel=0&autoplay=1`;
   } else {
     vWrap.hidden = true; vFrame.src = "";
     img.hidden = false; img.src = item.src;
-    img.classList.remove("kb"); void img.offsetWidth;  // relance l'animation Ken Burns
-    img.classList.add("kb");
   }
   title.textContent = item.title || "";
 

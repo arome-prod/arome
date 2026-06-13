@@ -32,9 +32,12 @@
         "description": { ".validate": "newData.isString() && newData.val().length <= 2000" },
         "link":        { ".validate": "newData.isString() && newData.val().length <= 600" },
         "cover":       { ".validate": "newData.isString() && newData.val().length <= 3000000" },
+        "coverThumb":  { ".validate": "newData.isString() && newData.val().length <= 600000" },
+        "count":       { ".validate": "newData.isNumber()" },
         "coverId":     { ".validate": "newData.isString() && newData.val().length <= 60" },
         "order":       { ".validate": "newData.isNumber()" },
         "createdAt":   { ".validate": "newData.isNumber()" },
+        "migrated":    { ".validate": "newData.isBoolean()" },
         "photos": {
           "$photo": {
             "src":       { ".validate": "newData.isString() && newData.val().length <= 3000000" },
@@ -46,6 +49,21 @@
           }
         },
         "$other": { ".validate": false }
+      }
+    },
+
+    "albumPhotos": {
+      ".read": true,
+      ".write": true,
+      "$album": {
+        "$photo": {
+          "src":       { ".validate": "newData.isString() && newData.val().length <= 3000000" },
+          "youtube":   { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "title":     { ".validate": "newData.isString() && newData.val().length <= 200" },
+          "order":     { ".validate": "newData.isNumber()" },
+          "createdAt": { ".validate": "newData.isNumber()" },
+          "$other":    { ".validate": false }
+        }
       }
     },
 

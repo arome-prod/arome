@@ -7,11 +7,11 @@
 // ====================================================================
 
 import {
-  ref, onValue, set, update, push, remove,
+  ref, onValue, set, update, push, remove, get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=83";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=83";
+import { db, isConfigured } from "./firebase.js?v=85";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=85";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -34,6 +34,67 @@ let inspCover = "";
 let writings = [];
 let editingWr = null;
 let managingId = null;
+let mgrPhotos = [];          // photos de l'album en cours de gestion (depuis albumPhotos/<id>)
+let mgrUnsub = null;
+const migrating = new Set();  // évite les migrations en double
+
+// Génère une mini-couverture (≈440px) pour alléger la grille du portfolio.
+function makeThumb(dataURL, max = 440, q = 0.7) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width: w, height: h } = img;
+      const s = Math.min(1, max / Math.max(w, h));
+      w = Math.round(w * s); h = Math.round(h * s);
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL("image/jpeg", q));
+    };
+    img.onerror = reject;
+    img.src = dataURL;
+  });
+}
+
+// Recalcule coverThumb + count d'un album à partir de ses photos (albumPhotos/<id>).
+async function refreshAlbumCover(id) {
+  let ph = [];
+  try {
+    const snap = await get(ref(db, "albumPhotos/" + id));
+    snap.forEach((c) => { ph.push({ id: c.key, ...c.val() }); });
+  } catch (e) { console.error(e); }
+  ph.sort((x, y) => (x.order || 0) - (y.order || 0));
+  const a = albumById(id) || {};
+  let cov = ph.find((p) => p.id === a.coverId) || ph[0] || null;
+  let thumb = null;
+  if (cov) {
+    thumb = cov.youtube
+      ? `https://img.youtube.com/vi/${cov.youtube}/hqdefault.jpg`
+      : (cov.src ? await makeThumb(cov.src) : null);
+  }
+  await update(ref(db, "albums/" + id), { coverThumb: thumb || null, count: ph.length });
+}
+
+// Migre un album de l'ancien format (photos inline) vers albumPhotos/<id>.
+async function migrateAlbum(a) {
+  if (!a || !a.photos || migrating.has(a.id)) return;
+  migrating.add(a.id);
+  try {
+    const updates = {};
+    Object.entries(a.photos).forEach(([pid, p]) => { updates[pid] = p; });
+    await update(ref(db, "albumPhotos/" + a.id), updates);
+    await update(ref(db, "albums/" + a.id), { migrated: true });
+    await refreshAlbumCover(a.id);
+    await remove(ref(db, "albums/" + a.id + "/photos"));  // libère le poids dans albums
+  } catch (e) {
+    console.error("Migration échouée :", e);
+  } finally {
+    migrating.delete(a.id);
+  }
+}
+function maybeMigrate(list) {
+  list.forEach((a) => { if (a.photos) migrateAlbum(a); });
+}
 
 // Nettoie le HTML de l'éditeur : on ne garde que gras / italique / souligné + paragraphes.
 const RICH_OK = { B: "strong", STRONG: "strong", I: "em", EM: "em", U: "u", P: "p", BR: "br", DIV: "p" };
@@ -124,6 +185,7 @@ function mediaThumb(m) {
   return m.youtube ? `https://img.youtube.com/vi/${m.youtube}/hqdefault.jpg` : (m.src || "");
 }
 function coverSrc(a) {
+  if (a.coverThumb) return a.coverThumb;
   const ph = photosOf(a);
   if (a.coverId) { const c = ph.find((p) => p.id === a.coverId); if (c) return mediaThumb(c); }
   return ph.length ? mediaThumb(ph[0]) : (a.cover || "");
@@ -180,7 +242,7 @@ function renderAdminAlbums() {
 
   box.innerHTML = albums.map((a, i) => {
     const cover = coverSrc(a);
-    const n = photosOf(a).length;
+    const n = a.count ?? photosOf(a).length;
     const thumb = cover
       ? `<img class="adm-arow__img" src="${esc(cover)}" alt="" />`
       : `<span class="adm-arow__img adm-arow__img--empty">○</span>`;
@@ -235,6 +297,7 @@ async function delAlbum(id) {
   const a = albumById(id);
   if (!confirm(`Supprimer l'album « ${a ? a.title : ""} » et ses photos ?`)) return;
   await remove(ref(db, "albums/" + id));
+  await remove(ref(db, "albumPhotos/" + id));   // supprime aussi les photos séparées
   if (managingId === id) closeManager();
   toast("Album supprimé");
 }
@@ -253,22 +316,38 @@ async function moveAlbum(id, dir) {
 // ====================================================================
 //  Gestionnaire d'un album
 // ====================================================================
-function openManager(id) {
+async function openManager(id) {
   managingId = id;
   const a = albumById(id) || {};
   $("albumsSection").hidden = true;
   $("albumManager").hidden = false;
-  // Toujours repartir des valeurs de CET album (jamais de résidu du précédent)
   $("mgrTitle").textContent = a.title || "Album";
   $("m-title").value = a.title || "";
   $("m-cat").value = a.category || "";
   $("m-desc").value = a.description || "";
   $("m-link").value = a.link || "";
+  mgrPhotos = [];
   renderManagerPhotos();
   window.scrollTo(0, 0);
+
+  // Sécurité : migre tout de suite si cet album est encore en ancien format
+  if (a.photos) await migrateAlbum(a);
+
+  // Abonnement en direct aux photos de CET album (séparées des albums)
+  if (mgrUnsub) mgrUnsub();
+  mgrUnsub = onValue(ref(db, "albumPhotos/" + id), (snap) => {
+    if (managingId !== id) return;
+    const arr = [];
+    snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
+    arr.sort((x, y) => (x.order || 0) - (y.order || 0));
+    mgrPhotos = arr;
+    renderManagerPhotos();
+  });
 }
 function closeManager() {
+  if (mgrUnsub) { mgrUnsub(); mgrUnsub = null; }
   managingId = null;
+  mgrPhotos = [];
   $("albumManager").hidden = true;
   $("albumsSection").hidden = false;
 }
@@ -287,10 +366,10 @@ async function saveAlbumMeta() {
 }
 
 function renderManagerPhotos() {
-  const a = albumById(managingId);
+  const a = albumById(managingId) || {};
   const grid = $("mgrPhotos");
   if (!grid) return;
-  const ph = photosOf(a);
+  const ph = mgrPhotos;
   $("mgrPhotoCount").textContent = ph.length;
   if (!ph.length) { grid.innerHTML = '<p class="adm-empty">Aucun média. Ajoute des photos ou une vidéo ci-dessus.</p>'; return; }
 
@@ -327,7 +406,7 @@ function renderManagerPhotos() {
     const save = async () => {
       if (!managingId) return;
       try {
-        await update(ref(db, `albums/${managingId}/photos/${inp.dataset.ptitle}`), { title: inp.value.trim() });
+        await update(ref(db, `albumPhotos/${managingId}/${inp.dataset.ptitle}`), { title: inp.value.trim() });
         toast("Titre enregistré ✦");
       } catch (e) { console.error(e); toast("Échec de l'enregistrement du titre."); }
     };
@@ -338,15 +417,15 @@ function renderManagerPhotos() {
 
 async function addPhotos(files) {
   if (!managingId) return;
-  const a = albumById(managingId);
-  let order = photosOf(a).length ? Math.max(...photosOf(a).map((p) => p.order || 0)) + 1 : 0;
+  const id = managingId;
+  let order = mgrPhotos.length ? Math.max(...mgrPhotos.map((p) => p.order || 0)) + 1 : 0;
   const list = [...files];
   let done = 0;
   $("m-progress").textContent = `Traitement de ${list.length} photo(s)…`;
   for (const f of list) {
     try {
       const src = await fileToDataURL(f);
-      await push(ref(db, `albums/${managingId}/photos`), { src, order: order++, createdAt: Date.now() });
+      await push(ref(db, `albumPhotos/${id}`), { src, order: order++, createdAt: Date.now() });
       done++;
       $("m-progress").textContent = `${done}/${list.length} ajoutée(s)…`;
     } catch (e) {
@@ -356,30 +435,33 @@ async function addPhotos(files) {
   }
   $("m-files").value = "";
   $("m-progress").textContent = "";
+  await refreshAlbumCover(id);
   toast(`${done} photo(s) ajoutée(s) ✦`);
 }
 
 async function setCover(pid) {
   if (!managingId) return;
   await update(ref(db, "albums/" + managingId), { coverId: pid });
+  await refreshAlbumCover(managingId);
   toast("Couverture définie ✦");
 }
 async function delPhoto(pid) {
   if (!managingId) return;
   if (!confirm("Supprimer cette photo ?")) return;
-  await remove(ref(db, `albums/${managingId}/photos/${pid}`));
+  await remove(ref(db, `albumPhotos/${managingId}/${pid}`));
+  await refreshAlbumCover(managingId);
 }
 async function movePhoto(pid, dir) {
-  const a = albumById(managingId);
-  const ph = photosOf(a);
+  const ph = mgrPhotos;
   const idx = ph.findIndex((p) => p.id === pid);
   const swap = idx + dir;
   if (idx < 0 || swap < 0 || swap >= ph.length) return;
   const x = ph[idx], y = ph[swap];
-  await update(ref(db, `albums/${managingId}/photos`), {
+  await update(ref(db, `albumPhotos/${managingId}`), {
     [`${x.id}/order`]: y.order ?? swap,
     [`${y.id}/order`]: x.order ?? idx,
   });
+  await refreshAlbumCover(managingId);   // si la 1re photo change, la couverture suit
 }
 
 // ====================================================================
@@ -744,7 +826,7 @@ if (isConfigured) {
     albums = arr;
     renderAdminAlbums();
     refreshCatList();
-    if (managingId && !$("albumManager").hidden) renderManagerPhotos();
+    maybeMigrate(arr);   // bascule en douceur les albums encore en ancien format
   });
   onValue(ref(db, "youtube"), (snap) => {
     const arr = [];

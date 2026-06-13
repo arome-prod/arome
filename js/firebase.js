@@ -3,7 +3,7 @@
 // ====================================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { firebaseConfig } from "./firebase-config.js?v=83";
+import { firebaseConfig } from "./firebase-config.js?v=85";
 
 export let db = null;
 try {

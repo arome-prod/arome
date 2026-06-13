@@ -7,10 +7,11 @@
 import {
   ref,
   onValue,
+  get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=83";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=83";
+import { db, isConfigured } from "./firebase.js?v=85";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=85";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -363,13 +364,32 @@ function mediaThumb(m) {
   return m.youtube ? `https://img.youtube.com/vi/${m.youtube}/hqdefault.jpg` : (m.src || "");
 }
 function coverSrc(a) {
-  const ph = photosOf(a);
+  if (a.coverThumb) return a.coverThumb;       // mini-couverture légère (chargement paresseux)
+  const ph = photosOf(a);                       // repli : ancien format inline / démo
   if (a.coverId && ph.length) {
     const c = ph.find((p) => p.id === a.coverId);
     if (c) return mediaThumb(c);
   }
   if (ph.length) return mediaThumb(ph[0]);
   return a.cover || "";
+}
+
+// Photos d'un album : chargées à la demande depuis albumPhotos/<id> (puis mises en cache).
+// Repli sur les photos inline (anciens albums non migrés / albums de démo).
+const photoCache = {};
+async function loadAlbumPhotos(a) {
+  if (photoCache[a.id]) return photoCache[a.id];
+  let arr = [];
+  if (isConfigured) {
+    try {
+      const snap = await get(ref(db, "albumPhotos/" + a.id));
+      snap.forEach((c) => { arr.push({ id: c.key, ...c.val() }); });
+    } catch (e) { console.error("Chargement photos :", e); }
+  }
+  if (!arr.length) arr = photosOf(a);           // repli inline
+  arr.sort((x, y) => (x.order || 0) - (y.order || 0));
+  photoCache[a.id] = arr;
+  return arr;
 }
 
 function categoriesOf(list) {
@@ -471,7 +491,7 @@ function renderAlbums() {
 
   grid.innerHTML = demoNote + list.map((a) => {
     const cover = coverSrc(a);
-    const n = photosOf(a).length;
+    const n = a.count ?? photosOf(a).length;
     const media = cover
       ? `<span class="tile__media"><img src="${esc(cover)}" alt="${esc(a.title || "")}" loading="lazy" /></span>`
       : `<span class="tile__media"><span class="tile__empty">arome</span></span>`;
@@ -507,49 +527,48 @@ function setupAlbumHover() {
     const media = tile.querySelector(".tile__media");
     const base = media && media.querySelector("img");
     if (!a || !base) return;
-    const srcs = photosOf(a).map(mediaThumb).filter(Boolean);
-    if (srcs.length < 2) return;
+    // S'il n'y a qu'une seule photo (d'après le compteur), inutile de préparer le diaporama
+    if ((a.count ?? photosOf(a).length) < 2) return;
 
     const cover = base.getAttribute("src");
-    // Calque superposé qui apparaît en fondu par-dessus la couverture
-    const fade = document.createElement("img");
-    fade.className = "tile__fade";
-    fade.alt = "";
-    media.appendChild(fade);
+    let srcs = null, hovering = false, timer = null, i = 0, swap = null, fade = null;
 
-    let timer = null, i = 0, swap = null;
-
-    // Affiche `next` en fondu par-dessus l'image courante
     const show = (next) => {
-      fade.classList.remove("is-on");   // on repart d'une opacité 0…
+      fade.classList.remove("is-on");
       fade.src = next;
-      void fade.offsetWidth;            // …qu'on FORCE à être prise en compte (reflow)
-      fade.classList.add("is-on");      // puis on déclenche le fondu (0 → 1)
+      void fade.offsetWidth;            // reflow → garantit le fondu
+      fade.classList.add("is-on");
       clearTimeout(swap);
-      swap = setTimeout(() => {
-        base.src = next;                // une fois le fondu fini, la couverture devient `next`
-        fade.classList.remove("is-on"); // et le calque redisparaît (sans saut visible)
-      }, HOVER_FADE);
+      swap = setTimeout(() => { base.src = next; fade.classList.remove("is-on"); }, HOVER_FADE);
     };
-
     const step = () => {
       i = (i + 1) % srcs.length;
       const next = srcs[i];
-      const pre = new Image();          // on précharge avant de lancer le fondu
-      pre.onload = () => show(next);
+      const pre = new Image();
+      pre.onload = () => { if (hovering) show(next); };
       pre.src = next;
     };
 
-    tile.addEventListener("mouseenter", () => {
+    tile.addEventListener("mouseenter", async () => {
+      hovering = true;
+      if (!srcs) {                       // photos chargées à la demande, au 1er survol
+        const ph = await loadAlbumPhotos(a);
+        srcs = ph.map(mediaThumb).filter(Boolean);
+        if (!hovering || srcs.length < 2) return;
+        fade = document.createElement("img");
+        fade.className = "tile__fade"; fade.alt = "";
+        media.appendChild(fade);
+      }
+      if (srcs.length < 2) return;
       i = 0;
       clearInterval(timer); clearTimeout(swap);
-      // pas de changement immédiat : la couverture reste un instant, puis ça enchaîne en fondu
       timer = setInterval(step, HOVER_HOLD);
     });
     tile.addEventListener("mouseleave", () => {
+      hovering = false;
       clearInterval(timer); clearTimeout(swap);
       timer = null;
-      fade.classList.remove("is-on");
+      if (fade) fade.classList.remove("is-on");
       base.src = cover;
     });
   });
@@ -839,10 +858,9 @@ function renderInspirations() {
   if (typeof updateInspArrows === "function") requestAnimationFrame(updateInspArrows);
 }
 
-function openAlbum(id) {
+async function openAlbum(id) {
   const a = shownAlbums().find((x) => x.id === id);
   if (!a) return;
-  const ph = photosOf(a);
 
   $("albumCat").textContent = a.category || "";
   $("albumTitle").textContent = a.title || "";
@@ -852,6 +870,12 @@ function openAlbum(id) {
     : "";
 
   const grid = $("albumPhotos");
+  grid.innerHTML = '<div class="gallery__loading">Chargement…</div>';
+  $("albumsView").hidden = true;
+  $("albumView").hidden = false;
+  window.scrollTo(0, 0);
+
+  const ph = await loadAlbumPhotos(a);   // ← photos téléchargées seulement maintenant
   grid.innerHTML = ph.length
     ? ph.map((m, i) => {
         if (m.youtube) {
@@ -877,10 +901,6 @@ function openAlbum(id) {
       ? { type: "video", id: m.youtube, title: m.title || "" }
       : { type: "image", src: m.src, title: m.title || "" }
   );
-
-  $("albumsView").hidden = true;
-  $("albumView").hidden = false;
-  window.scrollTo(0, 0);
 }
 
 function closeAlbum() {

@@ -77,16 +77,22 @@
     if (!enabled) return;
     const c = ready(); if (!c) return;
     const t = c.currentTime;
-    const o = c.createOscillator();
+    // Note quasi fixe (mini fléchissement naturel, pas de sweep « laser »)
+    // + une quinte discrète pour la chaleur, le tout planant via le maître.
+    const o1 = c.createOscillator(); o1.type = "sine";
+    const o2 = c.createOscillator(); o2.type = "sine";
+    o1.frequency.setValueAtTime(262, t);
+    o1.frequency.linearRampToValueAtTime(248, t + 0.18);   // léger, naturel
+    o2.frequency.setValueAtTime(392, t);                   // quinte au-dessus
+    o2.frequency.linearRampToValueAtTime(372, t + 0.18);
     const g = c.createGain();
-    o.type = "sine";
-    o.frequency.setValueAtTime(360, t);
-    o.frequency.exponentialRampToValueAtTime(150, t + 0.28);
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.07, t + 0.035);     // attaque douce (pas de « tic »)
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.75);
-    o.connect(g).connect(master);
-    o.start(t); o.stop(t + 0.8);
+    g.gain.linearRampToValueAtTime(0.07, t + 0.04);        // attaque douce
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    const g2 = c.createGain(); g2.gain.value = 0.4;        // quinte plus discrète
+    o1.connect(g); o2.connect(g2).connect(g); g.connect(master);
+    o1.start(t); o2.start(t);
+    o1.stop(t + 0.75); o2.stop(t + 0.75);
   }
 
   // ---- Dwell : nappe douce qui monte/s'ouvre pendant le remplissage ----

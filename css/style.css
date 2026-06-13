@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=97") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=98") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -56,21 +56,36 @@ img { -webkit-user-drag: none; -khtml-user-drag: none; }
 
 ::selection { background: rgba(255, 255, 255, 0.16); }
 
-/* ===== Curseur personnalisé ===== */
+/* ===== Curseur personnalisé (point + anneau, deux vitesses) ===== */
 .cursor {
   position: fixed; top: 0; left: 0;
-  width: 13px; height: 13px;
+  width: 24px; height: 24px;
   border: 1px solid #fff;
   border-radius: 50%;
   pointer-events: none;
   z-index: 10000;
-  mix-blend-mode: difference;
+  mix-blend-mode: difference;   /* s'inverse selon le fond (clair/sombre) */
   opacity: 0;
   transition: width 0.22s ease, height 0.22s ease, opacity 0.3s ease;
 }
 .cursor.is-on { opacity: 1; }
-.cursor.is-hover { width: 30px; height: 30px; }
-.cursor.is-down { width: 10px; height: 10px; }
+.cursor.is-hover { width: 44px; height: 44px; }
+.cursor.is-down { width: 18px; height: 18px; }
+/* Point central : suit la souris au plus près (précision) */
+.cursor-dot {
+  position: fixed; top: 0; left: 0;
+  width: 5px; height: 5px;
+  background: #fff;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10001;
+  mix-blend-mode: difference;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.cursor-dot.is-on { opacity: 1; }
+@media (pointer: coarse) { .cursor-dot { display: none !important; } }
+html.cursor-cyber .cursor-dot { display: none !important; }
 /* On masque le curseur natif quand le personnalisé est actif (sauf champs texte) */
 html.cursor-on, html.cursor-on * { cursor: none !important; }
 html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] { cursor: auto !important; }
@@ -79,7 +94,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=97") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=98") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -894,7 +909,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=97") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=98") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

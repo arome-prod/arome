@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=113";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=113";
+import { db, isConfigured } from "./firebase.js?v=115";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=115";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -1021,10 +1021,10 @@ function showLb(i) {
   const multi = lbList.length > 1;
   $("lbPrev").style.display = multi ? "" : "none";
   $("lbNext").style.display = multi ? "" : "none";
-  // Zones cliquables : seulement pour les images (laisse l'iframe vidéo interactive)
-  const zones = multi && item.type !== "video";
-  $("lbZonePrev").hidden = !zones;
-  $("lbZoneNext").hidden = !zones;
+  // Zones cliquables désactivées : un clic en dehors de la photo ferme la lightbox.
+  // (navigation via les flèches, le clavier et le swipe)
+  $("lbZonePrev").hidden = true;
+  $("lbZoneNext").hidden = true;
 }
 function openLb(i) {
   showLb(i);
@@ -1047,7 +1047,11 @@ if ($("lbPrev")) $("lbPrev").addEventListener("click", (e) => { e.stopPropagatio
 if ($("lbNext")) $("lbNext").addEventListener("click", (e) => { e.stopPropagation(); showLb(lbIndex + 1); });
 if ($("lbZonePrev")) $("lbZonePrev").addEventListener("click", (e) => { e.stopPropagation(); showLb(lbIndex - 1); });
 if ($("lbZoneNext")) $("lbZoneNext").addEventListener("click", (e) => { e.stopPropagation(); showLb(lbIndex + 1); });
-if (lb) lb.addEventListener("click", (e) => { if (e.target === lb) closeLb(); });
+if (lb) lb.addEventListener("click", (e) => {
+  // Ferme si le clic n'est pas sur la photo, la vidéo, les flèches ou le bouton fermer
+  if (e.target.closest("#lbImg, #lbVideoWrap, .lightbox__nav, .lightbox__close, .lightbox__title")) return;
+  closeLb();
+});
 
 // Glissé (swipe) pour changer de photo sur mobile
 if (lb) {

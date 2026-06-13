@@ -116,7 +116,7 @@
   // Clic (manuel ou automatique via dwell), hors menu réglages
   const CLICKABLE = "a, button, .tile, .filter, .albums-arrow, [role='button'], summary, label";
   document.addEventListener("click", (e) => {
-    if (e.target.closest(".settings")) return;
+    if (e.target.closest(".settings, .info-modal")) return;
     if (e.target.closest(CLICKABLE)) drop();
   });
 
@@ -134,13 +134,40 @@
   const ICON_FS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
   const ICON_FS_EXIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
   const ICON_GEAR = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.49.49 0 0 0-.48-.41h-3.84a.49.49 0 0 0-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94 0 .32.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>';
+  const ICON_INFO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="7.6" r="0.6" fill="currentColor" stroke="none"/></svg>';
 
-  // ---- Menu réglages (roue crantée → son + plein écran) ----
+  // Fenêtre d'info (but du site + fonctionnement curseur/son)
+  function openInfo() {
+    if (document.querySelector(".info-modal")) return;
+    const m = document.createElement("div");
+    m.className = "info-modal";
+    m.innerHTML =
+      '<div class="info-card" role="dialog" aria-label="À propos du site">' +
+        '<button type="button" class="info-close" aria-label="Fermer">✕</button>' +
+        '<h3 class="info-title">arome</h3>' +
+        '<p class="info-lead">Portfolio photo · vidéo · design. Une promenade calme à travers mes projets et mes coups de cœur.</p>' +
+        '<ul class="info-list">' +
+          '<li><strong>Curseur</strong> — pose-le sur un bouton et garde-le immobile : l\'anneau se remplit puis valide tout seul. Tu peux aussi cliquer normalement.</li>' +
+          '<li><strong>Roue crantée</strong> (en bas à gauche) — active des sons doux et planants, ou passe le site en plein écran.</li>' +
+          '<li><strong>Astuce</strong> — laisse la page d\'accueil tranquille quelques instants pour voir la brume s\'épaissir.</li>' +
+        '</ul>' +
+      '</div>';
+    document.body.appendChild(m);
+    requestAnimationFrame(() => m.classList.add("is-on"));
+    const close = () => { m.classList.remove("is-on"); setTimeout(() => m.remove(), 300); };
+    m.addEventListener("click", (e) => { if (e.target === m || e.target.closest(".info-close")) close(); });
+    document.addEventListener("keydown", function esc(e) {
+      if (e.key === "Escape") { close(); document.removeEventListener("keydown", esc); }
+    });
+  }
+
+  // ---- Menu réglages (roue crantée → info + son + plein écran) ----
   function mount() {
     const wrap = document.createElement("div");
     wrap.className = "settings";
     wrap.innerHTML =
       '<div class="settings__menu">' +
+        '<button type="button" class="set-btn set-info" aria-label="À propos / aide">' + ICON_INFO + '</button>' +
         '<button type="button" class="set-btn set-sound' + (enabled ? " is-on" : "") +
           '" aria-pressed="' + (enabled ? "true" : "false") + '" aria-label="' +
           (enabled ? "Couper le son" : "Activer le son") + '">' + iconFor(enabled) + '</button>' +
@@ -152,11 +179,13 @@
     const gear = wrap.querySelector(".settings__gear");
     const sound = wrap.querySelector(".set-sound");
     const fs = wrap.querySelector(".set-fs");
+    const info = wrap.querySelector(".set-info");
 
     gear.addEventListener("click", () => {
       const open = wrap.classList.toggle("is-open");
       gear.setAttribute("aria-expanded", open ? "true" : "false");
     });
+    info.addEventListener("click", openInfo);
     // fermer le menu si on clique ailleurs
     document.addEventListener("click", (e) => {
       if (!wrap.contains(e.target)) { wrap.classList.remove("is-open"); gear.setAttribute("aria-expanded", "false"); }

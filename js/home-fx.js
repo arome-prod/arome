@@ -14,6 +14,15 @@ if (canvas && !reduce) {
   let W = 1, H = 1, wisps = [], raf = null, running = false;
   let intensity = 1;   // 1 = normal ; monte en mode ambiance (brume plus dense)
 
+  // Position souris normalisée (0..1) pour repousser les volutes
+  let mx = 0.5, my = 0.5, mouseIn = false;
+  window.addEventListener("mousemove", (e) => {
+    mx = e.clientX / window.innerWidth;
+    my = e.clientY / window.innerHeight;
+    mouseIn = true;
+  });
+  window.addEventListener("mouseleave", () => { mouseIn = false; });
+
   function resize() {
     W = Math.max(1, Math.floor(window.innerWidth * SCALE));
     H = Math.max(1, Math.floor(window.innerHeight * SCALE));
@@ -38,6 +47,7 @@ if (canvas && !reduce) {
       a: rand(0.08, 0.18),         // opacité max
       sway: rand(0.04, 0.1),       // amplitude d'ondulation horizontale
       swaySp: rand(0.15, 0.4),
+      ox: 0, oy: 0,                // décalage dû à la souris (revient à 0)
     };
   }
 
@@ -55,6 +65,9 @@ if (canvas && !reduce) {
     ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = "lighter";
 
+    const aspect = (window.innerWidth || 1) / (window.innerHeight || 1);
+    const PUSH_R = 0.26;   // rayon d'influence de la souris (en unités y)
+
     for (const w of wisps) {
       // déplacement (avec ré-entrée par le bas quand ça sort en haut)
       w.x += w.vx * 0.016;
@@ -62,8 +75,22 @@ if (canvas && !reduce) {
       if (w.y < -0.3) { w.y = 1.3; w.x = Math.random(); }
       if (w.x < -0.3) w.x = 1.3; else if (w.x > 1.3) w.x = -0.3;
 
-      const cx = (w.x + Math.sin(time * w.swaySp + w.ph) * w.sway) * W;
-      const cy = w.y * H;
+      // Répulsion douce par la souris (les volutes s'écartent puis reviennent)
+      if (mouseIn) {
+        const dx = (w.x - mx) * aspect, dy = w.y - my;
+        const d = Math.hypot(dx, dy);
+        if (d < PUSH_R && d > 0.0001) {
+          const f = (1 - d / PUSH_R) * 0.04;
+          w.ox += (dx / d) * f / aspect;
+          w.oy += (dy / d) * f;
+        }
+      }
+      w.ox *= 0.9; w.oy *= 0.9;                       // retour progressif
+      w.ox = Math.max(-0.25, Math.min(0.25, w.ox));
+      w.oy = Math.max(-0.25, Math.min(0.25, w.oy));
+
+      const cx = (w.x + w.ox + Math.sin(time * w.swaySp + w.ph) * w.sway) * W;
+      const cy = (w.y + w.oy) * H;
       const rad = w.r * Math.min(W, H);
       const alpha = w.a * intensity * (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(time * w.pulse + w.ph)));
 

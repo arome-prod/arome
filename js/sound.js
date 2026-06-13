@@ -87,12 +87,12 @@
     o2.frequency.linearRampToValueAtTime(372, t + 0.18);
     const g = c.createGain();
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.07, t + 0.04);        // attaque douce
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    g.gain.linearRampToValueAtTime(0.065, t + 0.05);       // attaque douce
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.15); // queue plus longue → plus planant
     const g2 = c.createGain(); g2.gain.value = 0.4;        // quinte plus discrète
     o1.connect(g); o2.connect(g2).connect(g); g.connect(master);
     o1.start(t); o2.start(t);
-    o1.stop(t + 0.75); o2.stop(t + 0.75);
+    o1.stop(t + 1.25); o2.stop(t + 1.25);
   }
 
   // ---- Dwell : nappe douce qui monte/s'ouvre pendant le remplissage ----

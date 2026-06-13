@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=125";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=125";
+import { db, isConfigured } from "./firebase.js?v=127";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=127";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -28,6 +28,23 @@ function playIn(el) {
   void el.offsetWidth;        // reflow → relance l'animation
   el.classList.add("view-in");
 }
+
+// Place / fait glisser le trait sous le filtre actif d'une barre de filtres.
+function syncFilterUnderline(bar) {
+  if (!bar) return;
+  const act = bar.querySelector(".filter.is-active");
+  let u = bar.querySelector(".filters__underline");
+  if (!act) { if (u) u.style.opacity = "0"; return; }
+  if (!u) { u = document.createElement("span"); u.className = "filters__underline"; bar.appendChild(u); }
+  u.style.opacity = "1";
+  u.style.width = act.offsetWidth + "px";
+  u.style.top = (act.offsetTop + act.offsetHeight - 1) + "px";
+  u.style.transform = `translateX(${act.offsetLeft}px)`;
+}
+window.addEventListener("resize", () => {
+  syncFilterUnderline($("filters"));
+  syncFilterUnderline($("inspFilters"));
+});
 
 // ====================================================================
 //  Navigation : la marque glisse de l'accueil vers la barre du haut
@@ -450,6 +467,7 @@ function renderFilters() {
     html += `<button class="filter${activeFilter === "__yt" ? " is-active" : ""}" data-filter="__yt">YouTube</button>`;
   }
   bar.innerHTML = html;
+  requestAnimationFrame(() => syncFilterUnderline(bar));
 }
 
 // Petite carte « écrit » (titre + type) — bloc plus compact
@@ -744,13 +762,17 @@ function updateAlbumArrows() {
   if (!reduceMotion) requestAnimationFrame(autoTick);
 })();
 
-// Filtres Inspirations
+// Filtres Inspirations : indicateur glissant, on ne reconstruit pas les boutons
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("#inspFilters .filter");
   if (!btn) return;
+  if (btn.dataset.ifilter === inspFilter) return;
   inspFilter = btn.dataset.ifilter;
+  const bar = $("inspFilters");
+  bar.querySelectorAll(".filter").forEach((b) => b.classList.toggle("is-active", b === btn));
+  syncFilterUnderline(bar);
   $("inspWall").scrollLeft = 0;
-  renderInspirations();
+  renderInspWall();
 });
 
 // Flèches + défilement auto de la rangée d'inspirations
@@ -809,12 +831,17 @@ function updateInspArrows() {
   if (!reduceMotion) requestAnimationFrame(autoTick);
 })();
 
-// Filtres
+// Filtres : on déplace l'indicateur (glissé) sans reconstruire les boutons
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("#filters .filter");
   if (!btn) return;
+  if (btn.dataset.filter === activeFilter) return;
   activeFilter = btn.dataset.filter;
-  renderAll();
+  const bar = $("filters");
+  bar.querySelectorAll(".filter").forEach((b) => b.classList.toggle("is-active", b === btn));
+  syncFilterUnderline(bar);     // glisse vers le filtre cliqué
+  renderAlbums();
+  playIn($("albums"));
 });
 
 // Ouvrir un album (page dédiée)
@@ -944,6 +971,7 @@ function renderInspFilters() {
     `<button class="filter${inspFilter === k ? " is-active" : ""}" data-ifilter="${k}">${esc(KIND_LABEL[k])}</button>`
   ).join("");
   bar.innerHTML = html;
+  requestAnimationFrame(() => syncFilterUnderline(bar));
 }
 
 function inspCardHTML(it) {
@@ -982,9 +1010,12 @@ function inspCardHTML(it) {
 }
 
 function renderInspirations() {
+  renderInspFilters();
+  renderInspWall();
+}
+function renderInspWall() {
   const wall = $("inspWall");
   if (!wall) return;
-  renderInspFilters();
   const all = shownInsp();
   const list = inspFilter === "all" ? all : all.filter((it) => (it.kind || "autre") === inspFilter);
   wall.innerHTML = list.length

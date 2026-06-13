@@ -20,6 +20,14 @@ if (fine && cur) {
   let x = window.innerWidth / 2, y = window.innerHeight / 2;
   let tx = x, ty = y;
 
+  // ---- Respiration : pulsation douce après 15 s sans bouger ----
+  let idleTimer = null;
+  function armIdle() {
+    cur.classList.remove("is-breathing");
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => cur.classList.add("is-breathing"), 15000);
+  }
+
   // ---- Dwell-click ----
   const DWELL_SEL = "a, button, .tile, .filter, .albums-arrow, [role='button']";
   const DWELL_DELAY = 1000;   // attente avant que le remplissage démarre
@@ -65,6 +73,7 @@ if (fine && cur) {
   document.addEventListener("mousemove", (e) => {
     tx = e.clientX; ty = e.clientY;
     cur.classList.add("is-on");
+    armIdle();                       // toute activité réarme la respiration
     let el = e.target.closest(DWELL_SEL);
     if (el && el.closest(".tile[data-album]")) el = null;   // pas de dwell sur les albums (conflit diaporama)
     if (el && el.closest(".tile[data-ytlb]")) el = null;    // ni sur les vidéos YouTube
@@ -74,7 +83,7 @@ if (fine && cur) {
     if (el !== dwellTarget) { if (el) startDwell(el); else cancelDwell(); }
   });
   document.addEventListener("mouseleave", () => { cur.classList.remove("is-on"); cancelDwell(); });
-  document.addEventListener("mousedown", () => { cur.classList.add("is-down"); cancelDwell(); });
+  document.addEventListener("mousedown", () => { cur.classList.add("is-down"); cancelDwell(); armIdle(); });
   document.addEventListener("mouseup", () => cur.classList.remove("is-down"));
 
   const CLICKABLE = "a, button, .tile, .filter, .albums-arrow, [role='button'], label, input, textarea, summary";
@@ -89,4 +98,5 @@ if (fine && cur) {
     requestAnimationFrame(loop);
   }
   loop();
+  armIdle();
 }

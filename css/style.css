@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=125") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=127") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -200,6 +200,22 @@ html { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparen
   70%  { width: 28px; height: 28px; }
   100% { width: 22px; height: 22px; }
 }
+/* Respiration : anneau « sonar » qui s'évase doucement après 15 s d'immobilité */
+.cursor::after {
+  content: "";
+  position: absolute; inset: -1px;
+  border-radius: 50%;
+  border: 1px solid #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+.cursor.is-breathing::after { animation: cursorBreath 3.4s ease-out infinite; }
+@keyframes cursorBreath {
+  0%   { transform: scale(1);   opacity: 0.5; }
+  70%  { transform: scale(2.6); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .cursor.is-breathing::after { animation: none; } }
 /* On masque le curseur natif quand le personnalisé est actif (sauf champs texte) */
 html.cursor-on, html.cursor-on * { cursor: none !important; }
 html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] { cursor: auto !important; }
@@ -208,7 +224,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=125") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=127") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -321,7 +337,7 @@ html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau 
 .section__lead { color: var(--muted); max-width: 56ch; margin-top: 0.8rem; }
 
 /* ===== Filtres ===== */
-.filters { display: flex; flex-wrap: wrap; gap: 1.4rem; margin-top: 1.6rem; }
+.filters { display: flex; flex-wrap: wrap; gap: 1.4rem; margin-top: 1.6rem; position: relative; }
 .filter {
   background: none;
   border: none;
@@ -333,10 +349,21 @@ html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau 
   padding: 0 0 0.3rem;
   cursor: pointer;
   border-bottom: 1px solid transparent;
-  transition: color 0.2s, border-color 0.2s;
+  transition: color 0.2s;
 }
 .filter:hover { color: var(--muted); }
-.filter.is-active { color: var(--text); border-color: var(--text); }
+.filter.is-active { color: var(--text); }
+/* Trait actif qui glisse d'un filtre à l'autre */
+.filters__underline {
+  position: absolute; left: 0; top: 0;
+  height: 1px; width: 0;
+  background: var(--text);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.38s cubic-bezier(0.22, 0.7, 0.25, 1),
+              width 0.38s cubic-bezier(0.22, 0.7, 0.25, 1),
+              top 0.38s ease, opacity 0.25s ease;
+}
 
 /* ===== Galerie ===== */
 .gallery {
@@ -1053,7 +1080,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=125") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=127") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;

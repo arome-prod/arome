@@ -53,10 +53,29 @@
     return ctx;
   }
 
+  // Renvoie le contexte uniquement s'il tourne vraiment.
+  // Évite d'empiler des sons sur un contexte « suspendu » (qui se déclencheraient
+  // tous d'un coup au premier clic). Tant que ce n'est pas le cas → aucun son.
+  function ready() {
+    const c = ensureCtx();
+    return (c && c.state === "running") ? c : null;
+  }
+
+  // Réveille l'audio au tout premier geste de l'utilisateur (clic ou touche),
+  // n'importe où sur la page — pas seulement en ouvrant la roue.
+  const UNLOCK_EVENTS = ["pointerdown", "keydown", "wheel", "touchstart"];
+  function unlockAudio() {
+    const c = ensureCtx();
+    if (c && c.state === "running") {
+      UNLOCK_EVENTS.forEach((ev) => document.removeEventListener(ev, unlockAudio));
+    }
+  }
+  UNLOCK_EVENTS.forEach((ev) => document.addEventListener(ev, unlockAudio, { passive: true }));
+
   // ---- Clic : « goutte » feutrée et planante (attaque douce, longue traîne réverbérée) ----
   function drop() {
     if (!enabled) return;
-    const c = ensureCtx(); if (!c) return;
+    const c = ready(); if (!c) return;
     const t = c.currentTime;
     const o = c.createOscillator();
     const g = c.createGain();
@@ -74,7 +93,7 @@
   let dwell = null;
   function dwellStart(ms) {
     if (!enabled) return;
-    const c = ensureCtx(); if (!c) return;
+    const c = ready(); if (!c) return;
     dwellStop(0);
     const t = c.currentTime, dur = Math.max(0.2, ms / 1000);
     const g = c.createGain();
@@ -126,7 +145,7 @@
   const NOTE_RATIOS = [1, 1.125, 1.25, 1.5, 1.6667, 2, 2.25, 2.5, 3, 3.3333];
   const NOTE_FREQS = NOTE_RATIOS.map((r) => NOTE_ROOT * r);
   function playNote(freq) {
-    const c = ensureCtx(); if (!c) return;
+    const c = ready(); if (!c) return;
     const t = c.currentTime;
     const o1 = c.createOscillator(); o1.type = "sine"; o1.frequency.value = freq;
     const o2 = c.createOscillator(); o2.type = "sine"; o2.frequency.value = freq; o2.detune.value = 6;

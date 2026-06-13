@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=145";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=145";
+import { db, isConfigured } from "./firebase.js?v=146";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=146";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -1124,9 +1124,8 @@ function inspCardHTML(it) {
   } else if (kind === "music" && it.embed) {
     // Hauteur "native" du lecteur (Apple plein = 450, Spotify = 352) pour le mettre à l'échelle
     const isApple = /music\.apple\./.test(it.embed);
-    const nh = isApple ? 450 : 352;     // hauteur de rendu (complète, pour que « Lire » existe)
-    const crop = isApple ? 412 : 352;   // on rogne juste sous « Lire » (cache « Afficher dans l'app »)
-    inner = `<iframe class="insp-embed" data-nh="${nh}" data-crop="${crop}" src="${esc(it.embed)}" title="${title || label}" loading="lazy"
+    const zoom = isApple ? 0.93 : 1;    // facteur de zoom du lecteur (0,93 = −7 %)
+    inner = `<iframe class="insp-embed" data-zoom="${zoom}" src="${esc(it.embed)}" title="${title || label}" loading="lazy"
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
   } else {
     inner = (it.cover
@@ -1172,13 +1171,13 @@ function fitInspEmbeds() {
     const box = f.parentElement;
     const bw = box.clientWidth, bh = box.clientHeight;
     if (!bw || !bh) return;
-    const nh = parseFloat(f.dataset.nh) || 450;
-    const crop = parseFloat(f.dataset.crop) || nh;   // hauteur visible avant rognage
-    const scale = bh / crop;
-    f.style.height = nh + "px";                        // rendu complet (« Lire » présent)
-    f.style.width = (bw / scale) + "px";
+    const z = parseFloat(f.dataset.zoom) || 0.9;       // zoom du lecteur (1 = natif)
+    // On rend le lecteur dans un cadre plus grand (÷z) puis on le réduit à l'échelle z
+    // → il remplit exactement la carte à la taille du portfolio.
+    f.style.width = (bw / z) + "px";
+    f.style.height = (bh / z) + "px";
     f.style.transformOrigin = "top left";
-    f.style.transform = `scale(${scale})`;             // le bas (texte rouge) sort du cadre → rogné
+    f.style.transform = `scale(${z})`;
   });
 }
 window.addEventListener("resize", fitInspEmbeds);

@@ -14,36 +14,25 @@ if (fine && cur) {
   let x = window.innerWidth / 2, y = window.innerHeight / 2;
   let tx = x, ty = y;
 
-  // Boutons aimantés (on évite ceux qui ont déjà un transform de mise en page,
-  // comme les flèches .albums-arrow centrées en translateY).
+  // Boutons aimantés : c'est l'ANNEAU qui se cale sur le bouton (le bouton ne bouge pas).
+  // On évite les flèches .albums-arrow (centrées par transform).
   const MAGNET = ".brand__nav button, .filter, .btn, .album-back";
-  const PULL_EL = 0.3;     // le bouton se déplace vers le curseur
-  const PULL_RING = 0.45;  // l'anneau est attiré vers le centre du bouton
+  const PULL_RING = 0.5;   // attraction de l'anneau vers le centre du bouton survolé
   let magEl = null, magCX = 0, magCY = 0;
-
-  function clearMag() {
-    if (!magEl) return;
-    const el = magEl; magEl = null;
-    el.style.transform = "";                       // revient en douceur (transition CSS .is-magnet)
-    setTimeout(() => { if (el !== magEl) el.classList.remove("is-magnet"); }, 260);
-  }
 
   document.addEventListener("mousemove", (e) => {
     tx = e.clientX; ty = e.clientY;
     cur.classList.add("is-on");
 
-    const el = e.target.closest(MAGNET);
-    if (el !== magEl) { clearMag(); magEl = el; if (magEl) magEl.classList.add("is-magnet"); }
+    magEl = e.target.closest(MAGNET);
     if (magEl) {
       const r = magEl.getBoundingClientRect();
       magCX = r.left + r.width / 2;
       magCY = r.top + r.height / 2;
-      const dx = e.clientX - magCX, dy = e.clientY - magCY;
-      magEl.style.transform = `translate(${dx * PULL_EL}px, ${dy * PULL_EL}px)`;
     }
   });
 
-  document.addEventListener("mouseleave", () => { cur.classList.remove("is-on"); clearMag(); });
+  document.addEventListener("mouseleave", () => { cur.classList.remove("is-on"); magEl = null; });
   document.addEventListener("mousedown", () => cur.classList.add("is-down"));
   document.addEventListener("mouseup", () => cur.classList.remove("is-down"));
 

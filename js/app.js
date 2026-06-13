@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=132";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=132";
+import { db, isConfigured } from "./firebase.js?v=133";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=133";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -634,10 +634,7 @@ function renderAlbums() {
   // Carte « Contenu YouTube » en fin de grille (vue « Tout »)
   // (les Textes ne sont accessibles que via leur onglet, pour ne pas
   //  casser l'harmonie de la rangée d'images)
-  if (activeFilter === "all") {
-    grid.insertAdjacentHTML("beforeend", sitesSummaryHTML());
-    grid.insertAdjacentHTML("beforeend", youtubeCardHTML());
-  }
+  // (YouTube et Sites web ne s'affichent plus dans « Tout » — uniquement via leurs onglets)
 
   setupAlbumHover();
   upgradeCovers();                 // remplace les mini-couvertures par les photos pleine qualité

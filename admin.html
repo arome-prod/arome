@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>arome — admin</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" type="image/svg+xml" href="images/favicon.svg?v=150" />
-  <link rel="apple-touch-icon" href="images/apple-touch-icon.png?v=150" />
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg?v=151" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png?v=151" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="css/style.css?v=150" />
-  <link rel="stylesheet" href="css/admin.css?v=150" />
+  <link rel="stylesheet" href="css/style.css?v=151" />
+  <link rel="stylesheet" href="css/admin.css?v=151" />
 </head>
 <body class="adm">
 
@@ -42,7 +42,7 @@
       <p class="adm-lead">Chaque bloc est repliable — clique sur un titre pour l'ouvrir ou le fermer. Tout est enregistré en direct sur le site.</p>
 
       <!-- ===== ALBUMS (liste) ===== -->
-      <details class="adm-acc" id="albumsSection" open>
+      <details class="adm-acc" id="albumsSection">
         <summary class="adm-acc__sum"><span class="adm-h2">Albums <span id="albumCount" class="adm-count">0</span></span></summary>
         <div class="adm-acc__body">
           <p class="adm-hint">Un album = un projet (ex. « Aquarium ») qui contient plusieurs photos. Crée l'album, puis clique « Gérer » pour y déposer tes photos.</p>
@@ -76,6 +76,15 @@
           <button type="button" class="btn btn--sm" id="saveAlbumMeta">Enregistrer les infos</button>
         </div>
 
+        <h3 class="adm-h3" style="margin-top:1.5rem">Couverture de l'album</h3>
+        <p class="adm-hint">Importe une image dédiée pour la couverture. À défaut, la 1re photo (ou celle marquée ★) est utilisée.</p>
+        <div class="adm-preview" id="mgr-coverPrev"></div>
+        <label class="adm-addphotos">
+          <span>+ Importer une couverture dédiée (compressée auto)</span>
+          <input id="mgr-coverFile" type="file" accept="image/*" />
+        </label>
+        <button type="button" class="btn btn--sm" id="mgr-coverClear" style="display:none">Retirer la couverture dédiée</button>
+
         <h3 class="adm-h3" style="margin-top:1.5rem">Médias <span id="mgrPhotoCount" class="adm-count">0</span></h3>
         <label class="adm-addphotos">
           <span>+ Ajouter des photos (plusieurs à la fois — compressées auto)</span>
@@ -106,6 +115,7 @@
               <input id="yt-title" placeholder="Titre (récupéré auto si possible)" />
             </div>
             <button type="button" class="btn" id="ytAdd">+ Ajouter la vidéo</button>
+            <button type="button" class="btn btn--sm" id="ytCancel" style="display:none">Annuler la modification</button>
           </div>
 
           <div class="adm-albumgrid" id="ytList"></div>
@@ -125,6 +135,7 @@
             </div>
             <input id="site-desc" placeholder="Courte description (optionnel)" />
             <button type="button" class="btn" id="siteAdd">+ Ajouter le site</button>
+            <button type="button" class="btn btn--sm" id="siteCancel" style="display:none">Annuler la modification</button>
           </div>
 
           <div class="adm-albumgrid" id="siteList"></div>
@@ -161,6 +172,7 @@
             </label>
             <div class="adm-preview" id="insp-coverPrev"></div>
             <button type="button" class="btn" id="inspAdd">+ Ajouter</button>
+            <button type="button" class="btn btn--sm" id="inspCancel" style="display:none">Annuler la modification</button>
           </div>
 
           <div class="adm-albumgrid" id="inspList"></div>
@@ -262,6 +274,6 @@
 
   <div id="toast" class="adm-toast"></div>
 
-  <script type="module" src="js/admin-page.js?v=150"></script>
+  <script type="module" src="js/admin-page.js?v=151"></script>
 </body>
 </html>

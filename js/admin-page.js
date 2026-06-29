@@ -10,8 +10,8 @@ import {
   ref, onValue, set, update, push, remove, get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=150";
-import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=150";
+import { db, isConfigured } from "./firebase.js?v=151";
+import { ADMIN_PASSWORD, DEFAULTS, IMAGE_MAX_DIM, IMAGE_QUALITY } from "./config.js?v=151";
 
 console.log("admin-page chargé · Firebase configuré :", isConfigured);
 
@@ -35,6 +35,9 @@ let insp = [];
 let inspCover = "";
 let writings = [];
 let editingWr = null;
+let editingSite = null;     // id du site en cours d'édition (sinon null = création)
+let editingVideo = null;    // id de la vidéo YouTube en cours d'édition
+let editingInsp = null;     // id du coup de cœur en cours d'édition
 let tl = [];
 let editingTl = null;
 let managingId = null;
@@ -71,6 +74,11 @@ async function refreshAlbumCover(id) {
   } catch (e) { console.error(e); }
   ph.sort((x, y) => (x.order || 0) - (y.order || 0));
   const a = albumById(id) || {};
+  // Couverture dédiée (image importée exprès) → elle a la priorité absolue.
+  if (a.coverImg) {
+    await update(ref(db, "albums/" + id), { coverThumb: a.coverImg, count: ph.length, cv: COVER_VER });
+    return;
+  }
   let cov = ph.find((p) => p.id === a.coverId) || ph[0] || null;
   // Couverture en pleine qualité : on stocke directement l'image complète
   // (pas de mini-vignette compressée) pour une netteté maximale dans la grille.
@@ -204,6 +212,7 @@ function mediaThumb(m) {
   return m.youtube ? `https://img.youtube.com/vi/${m.youtube}/hqdefault.jpg` : (m.src || "");
 }
 function coverSrc(a) {
+  if (a.coverImg) return a.coverImg;
   if (a.coverThumb) return a.coverThumb;
   const ph = photosOf(a);
   if (a.coverId) { const c = ph.find((p) => p.id === a.coverId); if (c) return mediaThumb(c); }
@@ -374,6 +383,7 @@ async function openManager(id) {
   $("m-link").value = a.link || "";
   mgrPhotos = [];
   renderManagerPhotos();
+  renderCoverPicker();
   window.scrollTo(0, 0);
 
   // Sécurité : migre tout de suite si cet album est encore en ancien format
@@ -491,6 +501,34 @@ async function setCover(pid) {
   await refreshAlbumCover(managingId);
   toast("Couverture définie ✦");
 }
+
+// ---- Couverture dédiée (image importée exprès, prioritaire sur les photos) ----
+function renderCoverPicker() {
+  const a = albumById(managingId) || {};
+  const prev = $("mgr-coverPrev");
+  if (prev) prev.innerHTML = a.coverImg ? `<img src="${esc(a.coverImg)}" alt="" /><span>Couverture dédiée</span>` : "";
+  const clr = $("mgr-coverClear");
+  if (clr) clr.style.display = a.coverImg ? "" : "none";
+}
+async function setCoverImage(file) {
+  if (!managingId) return;
+  try {
+    const dataURL = await fileToDataURL(file);
+    await update(ref(db, "albums/" + managingId), { coverImg: dataURL, coverThumb: dataURL, cv: COVER_VER });
+    $("mgr-coverFile").value = "";
+    $("mgr-coverPrev").innerHTML = `<img src="${dataURL}" alt="" /><span>Couverture dédiée</span>`;
+    $("mgr-coverClear").style.display = "";
+    toast("Couverture dédiée importée ✦");
+  } catch (e) { console.error(e); toast("Image non valide."); }
+}
+async function clearCoverImage() {
+  if (!managingId) return;
+  await remove(ref(db, "albums/" + managingId + "/coverImg"));
+  await refreshAlbumCover(managingId);
+  $("mgr-coverPrev").innerHTML = "";
+  $("mgr-coverClear").style.display = "none";
+  toast("Couverture dédiée retirée");
+}
 async function delPhoto(pid) {
   if (!managingId) return;
   if (!confirm("Supprimer cette photo ?")) return;
@@ -541,12 +579,19 @@ function wire() {
   $("m-files").addEventListener("change", (e) => {
     if (e.target.files && e.target.files.length) addPhotos(e.target.files);
   });
+  if ($("mgr-coverFile")) $("mgr-coverFile").addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) setCoverImage(f);
+  });
+  if ($("mgr-coverClear")) $("mgr-coverClear").addEventListener("click", clearCoverImage);
 
   // Sites web
   if ($("siteAdd")) $("siteAdd").addEventListener("click", addSite);
+  if ($("siteCancel")) $("siteCancel").addEventListener("click", resetSiteForm);
 
   // Contenu YouTube (indépendant)
   $("ytAdd").addEventListener("click", addYoutube);
+  if ($("ytCancel")) $("ytCancel").addEventListener("click", resetYoutubeForm);
   $("yt-url").addEventListener("blur", async () => {
     const id = youtubeId($("yt-url").value);
     if (id && !$("yt-title").value.trim()) {
@@ -571,6 +616,7 @@ function wire() {
 
   // Inspirations
   $("inspAdd").addEventListener("click", addInspiration);
+  if ($("inspCancel")) $("inspCancel").addEventListener("click", resetInspForm);
   $("insp-kind").addEventListener("change", toggleInspCover);
   $("insp-cover").addEventListener("change", async (e) => {
     const f = e.target.files && e.target.files[0];
@@ -598,6 +644,7 @@ function renderVideos() {
         <span class="adm-arow__meta">YouTube · ${esc(v.vid)}</span>
       </div>
       <div class="adm-arow__actions">
+        <button data-vact="edit" data-id="${v.id}" class="btn btn--sm">Modifier</button>
         <button data-vact="up" data-id="${v.id}" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button>
         <button data-vact="down" data-id="${v.id}" ${i === videos.length - 1 ? "disabled" : ""} aria-label="Descendre">↓</button>
         <button data-vact="del" data-id="${v.id}" class="adm-danger" aria-label="Supprimer">Suppr.</button>
@@ -606,11 +653,29 @@ function renderVideos() {
   box.querySelectorAll("[data-vact]").forEach((b) => {
     const id = b.dataset.id, act = b.dataset.vact;
     b.addEventListener("click", () => {
-      if (act === "del") delVideo(id);
+      if (act === "edit") editVideo(id);
+      else if (act === "del") delVideo(id);
       else if (act === "up") moveVideo(id, -1);
       else if (act === "down") moveVideo(id, 1);
     });
   });
+}
+
+function resetYoutubeForm() {
+  editingVideo = null;
+  $("yt-url").value = ""; $("yt-title").value = "";
+  $("ytAdd").textContent = "+ Ajouter la vidéo";
+  if ($("ytCancel")) $("ytCancel").style.display = "none";
+}
+function editVideo(id) {
+  const v = videos.find((x) => x.id === id);
+  if (!v) return;
+  editingVideo = id;
+  $("yt-url").value = v.vid ? `https://youtu.be/${v.vid}` : "";
+  $("yt-title").value = v.title || "";
+  $("ytAdd").textContent = "Enregistrer les modifications";
+  if ($("ytCancel")) $("ytCancel").style.display = "";
+  $("ytSection").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function addYoutube() {
@@ -619,12 +684,17 @@ async function addYoutube() {
   if (!id) { toast("Lien YouTube non reconnu."); return; }
   let title = $("yt-title").value.trim();
   if (!title) title = await fetchYoutubeTitle(id);
-  const order = videos.length ? Math.max(...videos.map((v) => v.order || 0)) + 1 : 0;
   const btn = $("ytAdd"); btn.disabled = true;
   try {
-    await push(ref(db, "youtube"), { vid: id, title: title || "", order, createdAt: Date.now() });
-    $("yt-url").value = ""; $("yt-title").value = "";
-    toast("Vidéo ajoutée ✦");
+    if (editingVideo) {
+      await update(ref(db, "youtube/" + editingVideo), { vid: id, title: title || "" });
+      toast("Vidéo mise à jour ✦");
+    } else {
+      const order = videos.length ? Math.max(...videos.map((v) => v.order || 0)) + 1 : 0;
+      await push(ref(db, "youtube"), { vid: id, title: title || "", order, createdAt: Date.now() });
+      toast("Vidéo ajoutée ✦");
+    }
+    resetYoutubeForm();
   } catch (e) {
     console.error(e);
     toast("Échec : " + (e.message || "écriture refusée"));
@@ -633,6 +703,7 @@ async function addYoutube() {
 async function delVideo(id) {
   if (!confirm("Supprimer cette vidéo ?")) return;
   await remove(ref(db, "youtube/" + id));
+  if (editingVideo === id) resetYoutubeForm();
   toast("Vidéo supprimée");
 }
 
@@ -650,6 +721,7 @@ function renderSites() {
         <span class="adm-arow__meta">${esc(s.url || "")}</span>
       </div>
       <div class="adm-arow__actions">
+        <button data-sact="edit" data-id="${s.id}" class="btn btn--sm">Modifier</button>
         <button data-sact="up" data-id="${s.id}" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button>
         <button data-sact="down" data-id="${s.id}" ${i === sites.length - 1 ? "disabled" : ""} aria-label="Descendre">↓</button>
         <button data-sact="del" data-id="${s.id}" class="adm-danger" aria-label="Supprimer">Suppr.</button>
@@ -658,11 +730,29 @@ function renderSites() {
   box.querySelectorAll("[data-sact]").forEach((b) => {
     const id = b.dataset.id, act = b.dataset.sact;
     b.addEventListener("click", () => {
-      if (act === "del") delSite(id);
+      if (act === "edit") editSite(id);
+      else if (act === "del") delSite(id);
       else if (act === "up") moveSite(id, -1);
       else if (act === "down") moveSite(id, 1);
     });
   });
+}
+function resetSiteForm() {
+  editingSite = null;
+  $("site-url").value = ""; $("site-title").value = ""; $("site-desc").value = "";
+  $("siteAdd").textContent = "+ Ajouter le site";
+  if ($("siteCancel")) $("siteCancel").style.display = "none";
+}
+function editSite(id) {
+  const s = sites.find((x) => x.id === id);
+  if (!s) return;
+  editingSite = id;
+  $("site-url").value = s.url || "";
+  $("site-title").value = s.title || "";
+  $("site-desc").value = s.desc || "";
+  $("siteAdd").textContent = "Enregistrer les modifications";
+  if ($("siteCancel")) $("siteCancel").style.display = "";
+  $("sitesSection").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 async function addSite() {
   if (!isConfigured) { toast("Firebase non configuré."); return; }
@@ -671,12 +761,17 @@ async function addSite() {
   if (!/^https?:\/\//i.test(url)) url = "https://" + url;
   const title = ($("site-title").value || "").trim();
   const desc = ($("site-desc").value || "").trim();
-  const order = sites.length ? Math.max(...sites.map((s) => s.order || 0)) + 1 : 0;
   const btn = $("siteAdd"); btn.disabled = true;
   try {
-    await push(ref(db, "sites"), { url, title: title || url, desc, order, createdAt: Date.now() });
-    $("site-url").value = ""; $("site-title").value = ""; $("site-desc").value = "";
-    toast("Site ajouté ✦");
+    if (editingSite) {
+      await update(ref(db, "sites/" + editingSite), { url, title: title || url, desc });
+      toast("Site mis à jour ✦");
+    } else {
+      const order = sites.length ? Math.max(...sites.map((s) => s.order || 0)) + 1 : 0;
+      await push(ref(db, "sites"), { url, title: title || url, desc, order, createdAt: Date.now() });
+      toast("Site ajouté ✦");
+    }
+    resetSiteForm();
   } catch (e) {
     console.error(e);
     toast("Échec : " + (e.message || "écriture refusée"));
@@ -685,6 +780,7 @@ async function addSite() {
 async function delSite(id) {
   if (!confirm("Supprimer ce site ?")) return;
   await remove(ref(db, "sites/" + id));
+  if (editingSite === id) resetSiteForm();
   toast("Site supprimé");
 }
 async function moveSite(id, dir) {
@@ -761,6 +857,7 @@ function renderInspAdmin() {
           <span class="adm-arow__meta">${esc(label)}${it.subtitle ? " · " + esc(it.subtitle) : ""}</span>
         </div>
         <div class="adm-arow__actions">
+          <button data-iact="edit" data-id="${it.id}" class="btn btn--sm">Modifier</button>
           <button data-iact="up" data-id="${it.id}" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button>
           <button data-iact="down" data-id="${it.id}" ${i === insp.length - 1 ? "disabled" : ""} aria-label="Descendre">↓</button>
           <button data-iact="del" data-id="${it.id}" class="adm-danger" aria-label="Supprimer">Suppr.</button>
@@ -770,11 +867,35 @@ function renderInspAdmin() {
   box.querySelectorAll("[data-iact]").forEach((b) => {
     const id = b.dataset.id, act = b.dataset.iact;
     b.addEventListener("click", () => {
-      if (act === "del") delInsp(id);
+      if (act === "edit") editInsp(id);
+      else if (act === "del") delInsp(id);
       else if (act === "up") moveInsp(id, -1);
       else if (act === "down") moveInsp(id, 1);
     });
   });
+}
+
+function resetInspForm() {
+  editingInsp = null;
+  $("insp-url").value = ""; $("insp-title").value = ""; $("insp-sub").value = "";
+  $("insp-cover").value = ""; inspCover = ""; $("insp-coverPrev").innerHTML = "";
+  $("inspAdd").textContent = "+ Ajouter";
+  if ($("inspCancel")) $("inspCancel").style.display = "none";
+}
+function editInsp(id) {
+  const it = insp.find((x) => x.id === id);
+  if (!it) return;
+  editingInsp = id;
+  $("insp-kind").value = it.kind || "autre";
+  $("insp-url").value = it.url || "";
+  $("insp-title").value = it.title || "";
+  $("insp-sub").value = it.subtitle || "";
+  inspCover = it.cover || "";
+  $("insp-coverPrev").innerHTML = inspCover ? `<img src="${inspCover}" alt="" /><span>Couverture actuelle</span>` : "";
+  toggleInspCover();
+  $("inspAdd").textContent = "Enregistrer les modifications";
+  if ($("inspCancel")) $("inspCancel").style.display = "";
+  $("inspSection").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function addInspiration() {
@@ -797,17 +918,22 @@ async function addInspiration() {
     toast("Donne un titre."); return;
   }
 
-  const order = insp.length ? Math.max(...insp.map((x) => x.order || 0)) + 1 : 0;
   const btn = $("inspAdd"); btn.disabled = true;
   try {
-    await push(ref(db, "inspirations"), {
+    const payload = {
       kind, source, embed, h,
       url: url || "", title: title || "", subtitle: subtitle || "",
-      cover: inspCover || "", order, createdAt: Date.now(),
-    });
-    $("insp-url").value = ""; $("insp-title").value = ""; $("insp-sub").value = "";
-    $("insp-cover").value = ""; inspCover = ""; $("insp-coverPrev").innerHTML = "";
-    toast("Inspiration ajoutée ✦");
+      cover: inspCover || "",
+    };
+    if (editingInsp) {
+      await update(ref(db, "inspirations/" + editingInsp), payload);
+      toast("Coup de cœur mis à jour ✦");
+    } else {
+      const order = insp.length ? Math.max(...insp.map((x) => x.order || 0)) + 1 : 0;
+      await push(ref(db, "inspirations"), { ...payload, order, createdAt: Date.now() });
+      toast("Inspiration ajoutée ✦");
+    }
+    resetInspForm();
   } catch (e) {
     console.error(e);
     toast("Échec : " + (e.message || "écriture refusée"));
@@ -817,6 +943,7 @@ async function addInspiration() {
 async function delInsp(id) {
   if (!confirm("Supprimer cette inspiration ?")) return;
   await remove(ref(db, "inspirations/" + id));
+  if (editingInsp === id) resetInspForm();
   toast("Inspiration supprimée");
 }
 async function moveInsp(id, dir) {

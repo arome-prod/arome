@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=150";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=150";
+import { db, isConfigured } from "./firebase.js?v=151";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=151";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>
@@ -825,6 +825,25 @@ function attachDragScroll(el) {
 }
 attachDragScroll($("albums"));
 attachDragScroll($("inspWall"));
+
+// Molette de la souris → défilement horizontal de la rangée.
+function attachWheelScroll(el) {
+  if (!el) return;
+  el.addEventListener("wheel", (e) => {
+    // On laisse les lecteurs intégrés (Apple Music, Spotify, YouTube…) gérer leur propre molette
+    if (e.target.closest && e.target.closest("iframe")) return;
+    const max = el.scrollWidth - el.clientWidth;
+    if (max <= 4) return;                       // pas de débordement → scroll vertical normal de la page
+    const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    if (!delta) return;
+    // Aux extrémités : on rend la main à la page (scroll vertical naturel)
+    if ((delta < 0 && el.scrollLeft <= 0) || (delta > 0 && el.scrollLeft >= max - 1)) return;
+    el.scrollLeft += delta;
+    e.preventDefault();
+  }, { passive: false });
+}
+attachWheelScroll($("albums"));
+attachWheelScroll($("inspWall"));
 
 // Flèches de défilement de la rangée d'albums
 function updateAlbumArrows() {

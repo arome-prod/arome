@@ -9,8 +9,8 @@
 
 (function () {
   const KEY = "arome-sound";
-  let enabled = false;
-  try { enabled = localStorage.getItem(KEY) === "on"; } catch (e) {}
+  let enabled = true;   // activé par défaut ; coupé seulement si l'utilisateur l'a choisi
+  try { const v = localStorage.getItem(KEY); if (v) enabled = (v === "on"); } catch (e) {}
   let ctx = null, master = null;
 
   function iconFor(on) {
@@ -236,7 +236,7 @@
     m.innerHTML =
       '<div class="info-card" role="dialog" aria-label="À propos du site">' +
         '<button type="button" class="info-close" aria-label="Fermer">✕</button>' +
-        '<img class="info-logo" src="images/arome_logo.svg?v=150" alt="arome" />' +
+        '<img class="info-logo" src="images/arome_logo.svg?v=151" alt="arome" />' +
         '<p class="info-lead">Portfolio photo · vidéo · design. Une promenade calme à travers mes projets et mes coups de cœur.</p>' +
         '<ul class="info-list">' +
           '<li><strong>Curseur</strong> — en le posant sur un bouton et en le gardant immobile, l\'anneau se remplit puis valide tout seul. Le clic classique fonctionne aussi.</li>' +

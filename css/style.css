@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=151") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=152") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -55,6 +55,15 @@ a { color: var(--text); text-decoration: none; }
 img { -webkit-user-drag: none; -khtml-user-drag: none; }
 
 ::selection { background: rgba(255, 255, 255, 0.16); }
+
+/* ===== Accessibilité & confort tactile (additif, invisible à la souris) ===== */
+/* Empêche iOS de gonfler la taille du texte en paysage */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+/* Supprime le flash gris au tap sur mobile (feedback géré par :active) */
+a, button, .tile, .filter, .insp-card, .txtcard, [role="button"] { -webkit-tap-highlight-color: transparent; }
+/* Anneau de focus visible uniquement au clavier (aucune incidence à la souris) */
+:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; border-radius: 2px; }
+:focus:not(:focus-visible) { outline: none; }
 
 /* Petit message éphémère (ex. « Adresse copiée ») */
 .toast {
@@ -247,7 +256,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=151") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=152") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -1150,61 +1159,128 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=151") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=152") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;
   }
 
-  /* Barre du haut compacte : logo réduit + onglets sur une seule ligne */
-  body:not(.mode-home) .brand { padding: 0.65rem 0.8rem; align-items: center; gap: 0.6rem; }
+  /* Hauteur d'écran dynamique : la barre du navigateur ne rogne plus l'accueil */
+  body.mode-home { height: 100dvh; }
+  body.mode-home .brand { height: 100dvh; padding: 2rem 1.2rem; }
+  .stage { min-height: 100dvh; padding-top: 52px; }
+
+  /* --- Barre du haut : logo + onglets, cibles tactiles agrandies --- */
+  body:not(.mode-home) .brand { padding: 0.5rem 0.9rem; align-items: center; gap: 0.5rem; }
   body:not(.mode-home) .brand__logo { flex: none; }
-  body:not(.mode-home) .brand__logomark { width: 58px; }
+  body:not(.mode-home) .brand__logomark { width: 60px; }
   body:not(.mode-home) .brand__nav {
     flex: 1; min-width: 0;
     flex-wrap: nowrap;
     justify-content: flex-end;
-    gap: 0.7rem;
+    gap: 0.35rem;
     overflow-x: auto;                 /* filet de sécurité sur très petits écrans */
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
   body:not(.mode-home) .brand__nav::-webkit-scrollbar { display: none; }
+  /* padding vertical en em → hauteur ∝ taille (transition accueil↔barre fluide) */
   body:not(.mode-home) .brand__nav button {
-    font-size: 0.62rem; letter-spacing: 0.08em;
+    font-size: 0.68rem; letter-spacing: 0.08em;
     white-space: nowrap;              /* « À PROPOS » ne se coupe plus en deux */
-    padding: 0.2rem 0;
+    padding: 0.6em 0.35rem;
   }
-  .stage { padding-top: 50px; }
 
-  /* Barre de filtres : une seule ligne défilante (au lieu de retours à la ligne) */
+  /* --- Accueil : accroche lisible, onglets aérés et faciles à viser --- */
+  body.mode-home .brand__nav { gap: 1rem 1.4rem; margin-top: 2.4rem; }
+  body.mode-home .brand__nav button { padding: 0.6em 0.2rem; }
+  body.mode-home .brand__tag {
+    font-size: 0.6rem; letter-spacing: 0.16em;
+    padding: 0 1.2rem; line-height: 1.9;
+  }
+
+  /* --- Sections : marges resserrées, hiérarchie calibrée --- */
+  .section { padding-left: 1.1rem; padding-right: 1.1rem; }
+  .section__head { margin-bottom: 1.6rem; }
+  .section__lead { font-size: 0.95rem; margin-top: 0.7rem; }
+  .eyebrow { font-size: 0.64rem; margin-bottom: 0.8rem; }
+
+  /* --- Filtres : une ligne défilante, boutons plus faciles à toucher --- */
   .filters {
-    margin-top: 1.1rem;
-    gap: 0.95rem;
+    margin-top: 1.2rem;
+    gap: 1.1rem;
     flex-wrap: nowrap;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding-bottom: 3px;             /* laisse la place au trait actif */
+    padding-bottom: 4px;             /* laisse la place au trait actif */
   }
   .filters::-webkit-scrollbar { display: none; }
-  .filter { font-size: 0.66rem; white-space: nowrap; flex: 0 0 auto; }
-  .filter--sub { font-size: 0.6rem; }
-  .filters__sep { margin: 0 0.15rem; }
-  .section__head { margin-bottom: 1.8rem; }
+  .filter { font-size: 0.72rem; white-space: nowrap; flex: 0 0 auto; padding: 0.15rem 0 0.5rem; }
+  .filter--sub { font-size: 0.66rem; }
+  .filters__sep { margin: 0 0.1rem; }
 
-  /* Accueil : un peu plus d'air, accroche resserrée */
-  body.mode-home .brand__nav { gap: 1.1rem 1.4rem; }
-  .brand__tag { letter-spacing: 0.3em; }
+  /* --- Cartes portfolio / coups de cœur : légendes plus lisibles --- */
+  .albums > .tile,
+  .albums > .insp-card { width: clamp(240px, 76vw, 300px); }
+  .tile__name, .insp-cap__title { font-size: 0.95rem; }
+  .tile__cat, .insp-cap__sub { font-size: 0.72rem; }
+  .tile__cap { margin-top: 0.7rem; }
 
-  /* Sections : marges latérales réduites pour gagner de la largeur */
-  .section { padding-left: 1.1rem; padding-right: 1.1rem; }
-  .prose { font-size: 1rem; line-height: 1.85; }
+  /* --- Album ouvert : une colonne, images plein cadre --- */
+  .gallery { grid-template-columns: 1fr; gap: 1.4rem; }
 
-  /* Lightbox : moins de marges, flèches plus discrètes (zones tactiles gèrent le reste) */
-  .lightbox { padding: 3vh 3vw; }
-  .lightbox__nav { font-size: 2rem; padding: 0 0.4rem; }
-  .lightbox__close { top: 0.9rem; right: 1rem; }
+  /* --- Vidéos YouTube : pleine largeur (plus de débordement) --- */
+  .yt-list { grid-template-columns: 1fr; gap: 1.6rem; }
+
+  /* --- Textes / lecture : confort de lecture --- */
+  .prose { font-size: 1.05rem; line-height: 1.9; }
+  .album-back { font-size: 0.82rem; padding: 0.5rem 0.2rem 0.5rem 0; margin-bottom: 1.2rem; }
+
+  /* --- Boutons & liens : cibles tactiles plus généreuses --- */
+  .btn { font-size: 0.8rem; padding: 0.5rem 0; }
+  .contact-links { gap: 1.1rem 1.8rem; margin: 1.4rem 0 3rem; }
+  .about__files { gap: 1.1rem 1.8rem; }
+  .about__big { margin: 0.3rem 0 1.3rem; }
+  .about__text p { font-size: 1rem; }
+
+  /* --- Frise « Mon parcours » : cartes un peu plus larges --- */
+  .timeline__item { width: clamp(200px, 70vw, 240px); }
+
+  /* --- Réglages : roue + options dimensionnées pour le doigt --- */
+  .settings { left: 0.9rem; bottom: 0.9rem; }
+  .set-btn { width: 44px; height: 44px; }
+  .set-btn svg { width: 19px; height: 19px; }
+
+  /* --- Feedback tactile discret --- */
+  .tile:active, .insp-card:active, .btn:active,
+  .filter:active, .brand__nav button:active { opacity: 0.6; }
+
+  /* --- Lightbox : marges réduites, fermeture facile à viser --- */
+  .lightbox { padding: 2.5vh 3vw; }
+  .lightbox__nav { font-size: 2.2rem; padding: 0 0.3rem; }
+  .lightbox__close { top: 0.5rem; right: 0.6rem; font-size: 1.8rem; padding: 0.35rem 0.5rem; }
+  .lightbox__title { font-size: 0.9rem; }
+
+  /* --- Fenêtre d'info : marges adaptées + texte plus lisible --- */
+  .info-card { padding: 1.8rem 1.4rem 1.5rem; }
+  .info-list li { font-size: 0.92rem; }
+
+  /* --- Pied de page compact --- */
+  .foot { padding: 0.85rem 1.1rem 1rem; }
+
+  /* --- Mode ambiance : lecteur remonté au-dessus de la barre du navigateur --- */
+  .ambient-player { bottom: 1.4rem; }
+}
+
+/* ===== Très petits écrans (≤ 400px) ===== */
+@media (max-width: 400px) {
+  body:not(.mode-home) .brand__logomark { width: 52px; }
+  body:not(.mode-home) .brand__nav button { font-size: 0.64rem; padding: 0.6em 0.28rem; }
+  .section__title { font-size: 1.9rem; }
+  .section__title--xl { font-size: 2.2rem; }
+  .albums > .tile,
+  .albums > .insp-card { width: 82vw; }
 }
 
 /* ===== Accessibilité ===== */

@@ -10,8 +10,8 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { db, isConfigured } from "./firebase.js?v=151";
-import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=151";
+import { db, isConfigured } from "./firebase.js?v=152";
+import { DEFAULTS, DEMO, DEMO_INSP } from "./config.js?v=152";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") =>

@@ -31,7 +31,7 @@ html {
   /* Fond = ton image (dépose-la dans images/bg.jpg).
      Si elle est absente, on retombe sur un dégradé proche. */
   background:
-    url("../images/fond_page.jpg?v=154") center center / cover no-repeat fixed,
+    url("../images/fond_page.jpg?v=155") center center / cover no-repeat fixed,
     radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
     no-repeat fixed,
     #060607;
@@ -259,7 +259,7 @@ html.cursor-on input, html.cursor-on textarea, html.cursor-on [contenteditable] 
 /* ===== Easter egg : curseur « cyberpunk » (taper cyberpunk) ===== */
 /* Curseur fourni (images/curseur.svg). Placé APRÈS pour l'emporter sur cursor:none. */
 html.cursor-cyber, html.cursor-cyber * {
-  cursor: url("../images/curseur.svg?v=154") 10 10, auto !important;
+  cursor: url("../images/curseur.svg?v=155") 10 10, auto !important;
 }
 html.cursor-cyber .cursor { display: none !important; }   /* on masque l'anneau perso */
 
@@ -1162,7 +1162,7 @@ body.mode-home .stage { display: none; }
   /* Fond portrait dédié (plus adapté qu'un recadrage du fond bureau) */
   html {
     background:
-      url("../images/fond_page_tel.jpg?v=154") center center / cover no-repeat fixed,
+      url("../images/fond_page_tel.jpg?v=155") center center / cover no-repeat fixed,
       radial-gradient(125% 95% at 50% 128%, #38383b 0%, #1a1a1c 38%, #0b0b0c 72%, #060607 100%)
       no-repeat fixed,
       #060607;
@@ -1193,6 +1193,11 @@ body.mode-home .stage { display: none; }
     white-space: nowrap;              /* « À PROPOS » ne se coupe plus en deux */
     padding: 0.6em 0.1rem;
   }
+
+  /* Nav alignée à droite → le trait glissant (JS) se décale : on le remplace
+     par un soulignement simple de l'onglet actif (toujours bien calé). */
+  .brand__nav__underline { display: none !important; }
+  body:not(.mode-home) .brand__nav button.is-active { border-bottom-color: var(--text); }
 
   /* Roue crantée (son / plein écran / infos) inutile sur mobile → masquée */
   .settings { display: none; }

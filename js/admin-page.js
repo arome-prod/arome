@@ -156,6 +156,8 @@ const INSP_LABEL = {
 function unlock() {
   $("gate").hidden = true;
   $("app").hidden = false;
+  // Ce navigateur ne sera plus compté dans les stats GoatCounter (tes propres visites)
+  try { localStorage.setItem("skipgc", "t"); } catch (e) {}
   try { fillContentForms(); } catch (e) { console.error(e); }
   if (!isConfigured) toast("⚠️ Firebase non configuré : l'enregistrement ne marchera pas.");
 }
